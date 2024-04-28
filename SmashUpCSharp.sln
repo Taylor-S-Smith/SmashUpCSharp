@@ -7,6 +7,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Console", "SmashUpCSharp.Co
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Models", "SmashUpCSharp.CardSystem\Models.csproj", "{61114C2E-176A-45A0-A4DD-8A141DFF6A30}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Services", "Services\Services.csproj", "{70121F43-A2BB-4ECF-9675-184CB1DC8AD9}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Repositories", "Repositories\Repositories.csproj", "{FB23D230-6C1C-4956-B7B2-07624E7B0662}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +25,14 @@ Global
 		{61114C2E-176A-45A0-A4DD-8A141DFF6A30}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{61114C2E-176A-45A0-A4DD-8A141DFF6A30}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{61114C2E-176A-45A0-A4DD-8A141DFF6A30}.Release|Any CPU.Build.0 = Release|Any CPU
+		{70121F43-A2BB-4ECF-9675-184CB1DC8AD9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{70121F43-A2BB-4ECF-9675-184CB1DC8AD9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{70121F43-A2BB-4ECF-9675-184CB1DC8AD9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{70121F43-A2BB-4ECF-9675-184CB1DC8AD9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FB23D230-6C1C-4956-B7B2-07624E7B0662}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FB23D230-6C1C-4956-B7B2-07624E7B0662}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FB23D230-6C1C-4956-B7B2-07624E7B0662}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FB23D230-6C1C-4956-B7B2-07624E7B0662}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
