@@ -1,0 +1,33 @@
+﻿using Models.Player;
+
+namespace Models.Cards
+{
+    public class BaseCard(string title, IList<string> graphic, int printedBreakpoint, int[] pointArray) : PrimitiveCard(title, graphic)
+    {
+        public int PrintedBreakpoint { get; set; } = printedBreakpoint;
+        public int CurrentBreakpoint { get; set; } = printedBreakpoint;
+        public int[] PointArray = pointArray;
+
+        private Dictionary<PrimitivePlayer, List<PlayableCard>> PlayerCards = new();
+
+        public int TotalPower { get; set; } = 0;
+
+        public void UpdateTotalPower()
+        {
+            TotalPower = 0;
+            foreach (KeyValuePair<PrimitivePlayer, List<PlayableCard>> cards in PlayerCards)
+            {
+                TotalPower += cards.Value.Sum(x => x.CurrentPower);
+            }
+
+        }
+
+        /*
+        public abstract void AfterScores();
+        public abstract void StartOfTurn();
+        public abstract void CardPlayedHere();
+        public abstract void CardDestroyedHere();
+        */
+
+    }
+}
