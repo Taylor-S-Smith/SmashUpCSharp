@@ -5,6 +5,7 @@ namespace SmashUp.Rendering
     public abstract class PrimitivePage
     {
         public abstract void Render(int consoleWidth, int consoleHeight);
-        public abstract PrimitivePage? ChangeState(UserKeyPress keyPress, ref bool needToRender);
+        public abstract PrimitivePage? ChangeState(UserKeyPress keyPress, ref bool stateChanged);
+        public virtual Dictionary<ConsoleKey, UserKeyPress> KeyMappings { get; set; } = GameplayKeyMappings;
     }
 }

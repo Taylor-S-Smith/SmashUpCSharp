@@ -1,10 +1,6 @@
-﻿using Models.Cards;
-using Repositories;
-using SmashUp.Models.Games;
+﻿using SmashUp.Models.Games;
 using SmashUp.Utilities;
-using System.Net.Http.Headers;
-using System.Reflection.Metadata.Ecma335;
-using System.Reflection.PortableExecutable;
+using Repositories;
 using System.Text;
 
 namespace SmashUp.Rendering
@@ -32,9 +28,9 @@ namespace SmashUp.Rendering
         public BattlePage(Battle game)
         {
             BaseCardRepository baseRepo = new();
+            game.ActiveBases.Add(baseRepo.Get(0)!);
             game.ActiveBases.Add(baseRepo.Get(1)!);
             game.ActiveBases.Add(baseRepo.Get(2)!);
-            game.ActiveBases.Add(baseRepo.Get(3)!);
 
 
             Game = game;
@@ -124,7 +120,7 @@ namespace SmashUp.Rendering
             }
         }
 
-        public override PrimitivePage? ChangeState(UserKeyPress keyPress, ref bool needToRender)
+        public override PrimitivePage? ChangeState(UserKeyPress keyPress, ref bool stateChanged)
         {
             switch (keyPress)
             {

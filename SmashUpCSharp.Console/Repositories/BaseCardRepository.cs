@@ -31,15 +31,14 @@ namespace Repositories
             "The Homeworld",
                 [
                     " ____________________________ ",
-                    "     The Homeworld      ",
+                    "|       The Mothership       |",
                     "|      4      2      1       |",
                     "|                            |",
-                    "|After each time a minion is |",
-                    "| played here, it's owner may|",
-                    "|  play an extra minion of   |",
-                    "|      power 3 or less.      |",
+                    "|After this base scores, the |",
+                    "|winner may return one of his|",
+                    "|or her minions of power 3 or|",
+                    "|less from here to their hand|",
                     "|____________________________|",
-                    "                              ",
                 ],
                 23,
                 [4, 2, 1]
@@ -48,15 +47,15 @@ namespace Repositories
         private BaseCard TheMotherShip = new(
             "The Mother Ship",
             [
-                @" ____________________________ ",
-                @"     The Mothership     ",
-                @"|      4      2      1       |",
-                @"|                            |",
-                @"|After this base scores, the |",
-                @"|winner may return one of his|",
-                @"|or her minions of power 3 or|",
-                @"|less from here to their hand|",
-                @"|____________________________|",
+                @"╔════════════════════════════╗",
+                @"║      The Mothership        ║",
+                @"║      4      2      1       ║",
+                @"║                            ║",
+                @"║After this base scores, the ║",
+                @"║winner may return one of his║",
+                @"║or her minions of power 3 or║",
+                @"║less from here to their hand║",
+                @"╚════════════════════════════╝",
             ],
             20,
             [4, 2, 1]
@@ -64,15 +63,15 @@ namespace Repositories
         private BaseCard JungleOasis = new(
             "Jungle Oasis",
             [
-                " ____________________________ ",
-                "      Jungle Oasis      ",
-                "|      2      0      0       |",
-                "|                            |",
-                "|                            |",
-                "|                            |",
-                "|                            |",
-                "|                            |",
-                "|____________________________|",
+                "┌────────────────────────────┐",
+                "│      The Mothership        │",
+                "│      4      2      1       │",
+                "│                            │",
+                "│After this base scores, the │",
+                "│winner may return one of his│",
+                "│or her minions of power 3 or│",
+                "│less from here to their hand│",
+                "└────────────────────────────┘",
                 "                              ",
             ],
             12,
@@ -107,7 +106,6 @@ namespace Repositories
                 "|   winner may destroy any   |",
                 "|        one minion.         |",
                 "|____________________________|",
-                "                              ",
             ],
             18,
             [2, 3, 2]
@@ -124,7 +122,6 @@ namespace Repositories
                 "|  power minion here on the  |",
                 "|bottom of its owner's deck. |",
                 "|____________________________|",
-                "                              ",
             ],
             18,
             [4, 2, 1]
@@ -141,7 +138,6 @@ namespace Repositories
                 "|  from here to another base |",
                 "|instead of the discard pile.|",
                 "|____________________________|",
-                "                              ",
             ],
             17,
             [3, 1, 1]
@@ -158,7 +154,6 @@ namespace Repositories
                 "|of his or her minions to the|",
                 "|base that replaces this base|",
                 "|____________________________|",
-                "                              ",
             ],
             21,
             [4, 3, 2]
@@ -175,7 +170,6 @@ namespace Repositories
                 "|winner gains 1 VP for every |",
                 "|5 power that player has here|",
                 "|____________________________|",
-                "                              ",
             ],
             22,
             [2, 2, 1]
@@ -192,7 +186,6 @@ namespace Repositories
                 "|    Each minion here has    |",
                 "|         +1 power.          |",
                 "|____________________________|",
-                "                              ",
             ],
             19,
             [4, 2, 1]
@@ -209,7 +202,6 @@ namespace Repositories
                 "| destroyed here, its owner  |",
                 "|        gains 1 VP.         |",
                 "|____________________________|",
-                "                              ",
             ],
             23,
             [4, 2, 1]
@@ -226,7 +218,6 @@ namespace Repositories
                 "|may move one other player's |",
                 "|minion from any base to here|",
                 "|____________________________|",
-                "                              ",
             ],
             20,
             [4, 2, 1]
@@ -243,7 +234,6 @@ namespace Repositories
                 "|chooses one to replace this |",
                 "|base, and returns the others|",
                 "|____________________________|",
-                "                              ",
             ],
             20,
             [4, 2, 1]
@@ -260,7 +250,6 @@ namespace Repositories
                 "| players with minions here  |",
                 "|     may draw one card.     |",
                 "|____________________________|",
-                "                              ",
             ],
             22,
             [4, 2, 1]
@@ -277,7 +266,6 @@ namespace Repositories
 				"| winner discards his or her |",
 				"| hand and draws five cards. |",
 				"|____________________________|",
-				"                              ",
 			],
 			20,
 			[5, 3, 1]
@@ -294,7 +282,6 @@ namespace Repositories
                     "| player gains 1 VP for each |",
                     "|minion that player has here.|",
                     "|____________________________|",
-                    "                              ",
                 ],
                 24,
                 [0, 0, 0]
