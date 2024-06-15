@@ -52,7 +52,7 @@ namespace SmashUp.Pages.GameSetUp
                         PlayerNum++;
                         if (PlayerNum == gameSetUp.Players.Count)
                         {
-                            return new Quit();
+                            return new BattlePage(gameSetUp);
                         }
                     }
                     stateChanged = true;

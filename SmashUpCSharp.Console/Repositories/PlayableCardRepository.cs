@@ -1,13 +1,10 @@
 ﻿using Models.Cards;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace Repositories
 {
     internal class PlayableCardRepository : PrimitiveRepository<PlayableCard>
     {
         protected override IList<PlayableCard> _items { get; } = [];
-
-        private int _idCount = 1;
 
         private PlayableCard Collector = new
         (

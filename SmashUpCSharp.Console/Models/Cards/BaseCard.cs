@@ -2,8 +2,9 @@
 
 namespace Models.Cards
 {
-    public class BaseCard(string title, IList<string> graphic, int printedBreakpoint, int[] pointArray) : PrimitiveCard(title, graphic)
+    public class BaseCard(int factionId, string title, IList<string> graphic, int printedBreakpoint, int[] pointArray) : PrimitiveCard(title, graphic)
     {
+        public int FactionId = factionId;
         public int PrintedBreakpoint { get; set; } = printedBreakpoint;
         public int CurrentBreakpoint { get; set; } = printedBreakpoint;
         public int[] PointArray = pointArray;

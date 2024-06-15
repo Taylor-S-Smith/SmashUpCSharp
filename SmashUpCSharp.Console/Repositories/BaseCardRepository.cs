@@ -27,7 +27,13 @@ namespace Repositories
             Create(RhodesPlazaMall);
         }
 
+        public List<BaseCard> Get(Faction faction)
+        {
+            return _items.Where(x => x.FactionId == faction.Id).ToList();
+        }
+
         private BaseCard TheHomeworld = new(
+            0,
             "The Homeworld",
                 [
                     " ____________________________ ",
@@ -45,6 +51,7 @@ namespace Repositories
         );
 
         private BaseCard TheMotherShip = new(
+            0,
             "The Mother Ship",
             [
                 @"╔════════════════════════════╗",
@@ -61,6 +68,7 @@ namespace Repositories
             [4, 2, 1]
         );
         private BaseCard JungleOasis = new(
+            1,
             "Jungle Oasis",
             [
                 "┌────────────────────────────┐",
@@ -78,6 +86,7 @@ namespace Repositories
             [2, 0, 0]
         );
         private BaseCard TarPits = new(
+            1,
             "Tar Pits",
             [
                 " ____________________________ ",
@@ -95,6 +104,7 @@ namespace Repositories
             [4, 3, 1]
         );
         private BaseCard NinjaDojo = new(
+            2,
             "Ninja Dojo",
             [
                 " ____________________________ ",
@@ -111,6 +121,7 @@ namespace Repositories
             [2, 3, 2]
         );
         private BaseCard TempleOfGoju = new(
+            2,
             "Temple of Goju",
             [
                 " ____________________________ ",
@@ -127,6 +138,7 @@ namespace Repositories
             [4, 2, 1]
         );
         private BaseCard TheGreyOpal = new(
+            3,
             "The Grey Opal",
             [
                 " ____________________________ ",
@@ -143,6 +155,7 @@ namespace Repositories
             [3, 1, 1]
         );
         private BaseCard Tortuga = new(
+            3,
             "Tortuga",
             [
                 " ____________________________ ",
@@ -159,6 +172,7 @@ namespace Repositories
             [4, 3, 2]
         );
         private BaseCard Factory4361337 = new(
+            4,
             "Factory 436-1337",
             [
                 " ____________________________ ",
@@ -175,6 +189,7 @@ namespace Repositories
             [2, 2, 1]
         );
         private BaseCard TheCentralBrain = new(
+            4,
             "The Central Brain",
             [
                 " ____________________________ ",
@@ -191,6 +206,7 @@ namespace Repositories
             [4, 2, 1]
         );
         private BaseCard CaveOfShinies = new(
+            5,
             "Cave of Shinies",
             [
                 " ____________________________ ",
@@ -207,6 +223,7 @@ namespace Repositories
             [4, 2, 1]
         );
         private BaseCard MushroomKingdom = new(
+            5,
             "Mushroom Kingdom",
             [
                 " ____________________________ ",
@@ -223,6 +240,7 @@ namespace Repositories
             [4, 2, 1]
         );
         private BaseCard SchoolOfWizardry = new(
+            6,
             "School of Wizardry",
             [
                 " ____________________________ ",
@@ -239,6 +257,7 @@ namespace Repositories
             [4, 2, 1]
         );
         private BaseCard GreatLibrary = new(
+            6,
             "The Great Library",
             [
                 " ____________________________ ",
@@ -255,6 +274,7 @@ namespace Repositories
             [4, 2, 1]
         );
         private BaseCard EvansCityCemetary = new(
+            7,
             "Evans City Cemetery",
             [
 				" ____________________________ ",
@@ -271,6 +291,7 @@ namespace Repositories
 			[5, 3, 1]
         );
         private BaseCard RhodesPlazaMall = new(
+            7,
             "Rhodes Plaza Mall",
                 [
                     " ____________________________ ",

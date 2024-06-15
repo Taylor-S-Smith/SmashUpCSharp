@@ -15,9 +15,25 @@
         {
 
         }
-        public void DrawCard()
+        public List<T> DrawCards(int numCards = 1)
         {
+            List<T> drawnCards = new();
+            for (int i = 0; i < numCards; i++)
+            {
+                if (Cards.Count > 0)
+                {
+                    T card = Cards[Cards.Count - 1];
+                    Cards.RemoveAt(Cards.Count - 1);
+                    drawnCards.Add(card);
+                }
+                else
+                {
+                    // Handle case where there are not enough cards to draw
+                    break;
+                }
+            }
 
+            return drawnCards;
         }
 
     }

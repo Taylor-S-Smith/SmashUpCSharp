@@ -7,8 +7,6 @@ namespace Repositories
     {
         protected override IList<Faction> _items { get; } = [];
 
-        private int _idCount = 0;
-
         Faction Aliens = new Faction("Aliens");
         Faction Dinosaurs = new Faction("Dinosaurs");
         Faction Ninjas = new Faction("Ninjas");

@@ -2,38 +2,42 @@
 using SmashUp.Utilities;
 using Repositories;
 using System.Text;
+using Models.Cards;
 
 namespace SmashUp.Rendering
 {
     public class BattlePage : PrimitivePage
     {
-        //Visual Elements
+        //Static Variables
+        baseGraphicLength = 
+
+
+        //Repositories
+        BaseService _baseService = new();
 
         //Bases in play
         private string[] BaseField = [""];
         private int BaseFieldPadding;
+
         //Minions and actions in play
         private string[] CardField = [""];
         private int CardFieldPadding;
+
         //Game statistics (Active Player, Minion/Action count , VP total, etc.)
         private string[] StatField = [""];
         private int StatFieldPadding;
+
         //The player's input area. Usually will be their hand, but is also how they view their decks
         private string[] ConsoleField = [""];
 
         //Game Objects
-        private Battle Game { get; set; }
+        private Battle Game { get; set; } = new();
 
-        //Temporary COnstructor to manupulate the game state for testing
-        public BattlePage(Battle game)
+        public BattlePage(GameSetUpModel gameSetUp)
         {
-            BaseCardRepository baseRepo = new();
-            game.ActiveBases.Add(baseRepo.Get(0)!);
-            game.ActiveBases.Add(baseRepo.Get(1)!);
-            game.ActiveBases.Add(baseRepo.Get(2)!);
-
-
-            Game = game;
+            Game.Players = gameSetUp.Players;
+            Game.BaseDeck.Cards = _baseService.GetBaseCards(gameSetUp.Players.SelectMany(x => x.Factions).ToList());
+            Game.ActiveBases = Game.BaseDeck.DrawCards();
         }
 
         public override void Render(int consoleWidth, int consoleHeight)
@@ -100,6 +104,9 @@ namespace SmashUp.Rendering
 			Console.Write(buffer);			
 		}
 
+        /// <summary>
+        /// Generates the base graphics
+        /// </summary>
         private void GenerateBaseField()
         {
             int numBases = Game.ActiveBases.Count;
@@ -119,6 +126,31 @@ namespace SmashUp.Rendering
                 }
             }
         }
+
+        /// <summary>
+        /// Generates the text that lists the cards at each base for each player
+        /// </summary>
+        private void GenerateCardField()
+        {
+
+        }
+
+        /// <summary>
+        /// Generates the field that lists the game statistics
+        /// </summary>
+        private void GenerateConsoleField(int consoleWidth, int consoleHeight)
+        {
+
+        }
+
+        /// <summary>
+        /// Generates the field that displays the result of user input
+        /// </summary>
+        private void GenerateStatField()
+        {
+
+        }
+
 
         public override PrimitivePage? ChangeState(UserKeyPress keyPress, ref bool stateChanged)
         {
