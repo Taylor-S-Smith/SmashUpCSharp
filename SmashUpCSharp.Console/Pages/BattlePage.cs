@@ -1,15 +1,17 @@
 ﻿using SmashUp.Models.Games;
 using SmashUp.Utilities;
+using Models.Cards;
 using Repositories;
 using System.Text;
-using Models.Cards;
+using Models.Player;
+using System.Runtime.InteropServices;
+using System.Runtime.CompilerServices;
 
 namespace SmashUp.Rendering
 {
     public class BattlePage : PrimitivePage
     {
         //Static Variables
-        baseGraphicLength = 
 
 
         //Repositories
@@ -45,6 +47,7 @@ namespace SmashUp.Rendering
             //Initalize vars and generate fields
             StringBuilder? buffer = null;
             GenerateBaseField();
+            GenerateCardField();
 
             //Ensure the current console size will fit the header
             int renderWidth = new[] {
@@ -132,7 +135,22 @@ namespace SmashUp.Rendering
         /// </summary>
         private void GenerateCardField()
         {
-
+            //Iterate through all lines
+            int lineNum = 0;
+            while(true)
+            {
+                CardField.Append("");
+                foreach(BaseCard baseCard in Game.ActiveBases)
+                {
+                    foreach(PrimitivePlayer player in Game.Players)
+                    {
+                        CardField[lineNum] += baseCard.GetCardsByPlayer(player)[lineNum];
+                    }
+                    CardField[lineNum] += " ";
+                }
+                lineNum++;
+            }
+                
         }
 
         /// <summary>

@@ -13,6 +13,7 @@ namespace Models.Cards
 
         public int TotalPower { get; set; } = 0;
 
+        //HELPER
         public void UpdateTotalPower()
         {
             TotalPower = 0;
@@ -20,7 +21,12 @@ namespace Models.Cards
             {
                 TotalPower += cards.Value.Sum(x => x.CurrentPower);
             }
+        }
 
+        //GET
+        public List<PlayableCard> GetCardsByPlayer(PrimitivePlayer player)
+        {
+            return PlayerCards[player];
         }
 
         /*
