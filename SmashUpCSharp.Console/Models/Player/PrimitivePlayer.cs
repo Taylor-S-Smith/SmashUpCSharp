@@ -2,8 +2,9 @@
 
 namespace Models.Player
 {
-    public class PrimitivePlayer
+    public class PrimitivePlayer : IIdentifiable
     {
+        public int Id { get; set; }
         public string Name { get; set; } = "";
         public List<Faction> Factions = new();
         public PlayerDeck DrawDeck { get; set; } = new();

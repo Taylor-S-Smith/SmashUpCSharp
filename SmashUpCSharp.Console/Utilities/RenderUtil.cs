@@ -2,7 +2,7 @@
 
 namespace SmashUp.Utilities
 {
-    public static class PageUtil
+    public static class RenderUtil
     {
 
         /// <summary>Generates a text selection menu</summary>
@@ -49,7 +49,7 @@ namespace SmashUp.Utilities
                         }
                     }
 
-                    buffer = ScreenUtil.Center(render, (consoleHeight - 1, consoleWidth - 1));
+                    buffer = RenderUtil.Center(render, (consoleHeight - 1, consoleWidth - 1));
                 }
             }
             //If the console is too small to show the regular menu, print the tiny one instead
@@ -66,7 +66,7 @@ namespace SmashUp.Utilities
                     $@"{(SelectedOption is 3 ? ">" : " ")} Exit",
                     */
                 ];
-                buffer = ScreenUtil.Center(render, (consoleHeight - 1, consoleWidth - 1));
+                buffer = RenderUtil.Center(render, (consoleHeight - 1, consoleWidth - 1));
             }
 
             return buffer;
@@ -117,7 +117,7 @@ namespace SmashUp.Utilities
                         }
                     }
 
-                    buffer = ScreenUtil.Center(render, (consoleHeight - 1, consoleWidth - 1));
+                    buffer = RenderUtil.Center(render, (consoleHeight - 1, consoleWidth - 1));
                 }
             }
             //If the console is too small to show the regular menu, print the tiny one instead
@@ -134,10 +134,52 @@ namespace SmashUp.Utilities
                     $@"{(SelectedOption is 3 ? ">" : " ")} Exit",
                     */
                 ];
-                buffer = ScreenUtil.Center(render, (consoleHeight - 1, consoleWidth - 1));
+                buffer = RenderUtil.Center(render, (consoleHeight - 1, consoleWidth - 1));
             }
 
             return buffer;
+        }
+
+        public static StringBuilder Center(string[] render, (int Height, int Width) bufferSize, (int J, int I)? renderCenterPoint = null)
+        {
+            int renderWidth = render.Max(line => line is null ? 0 : line.Length);
+            renderCenterPoint ??= (render.Length / 2, renderWidth / 2);
+            (int J, int I) offset = ((bufferSize.Height - render.Length) / 2, (bufferSize.Width - renderWidth) / 2);
+            offset = (offset.J + renderCenterPoint.Value.J - render.Length / 2, offset.I + renderCenterPoint.Value.I - renderWidth / 2);
+            StringBuilder sb = new(bufferSize.Height * bufferSize.Width);
+            for (int j = 0; j < bufferSize.Height; j++)
+            {
+                for (int i = 0; i < bufferSize.Width; i++)
+                {
+                    var (dj, di) = (j - offset.J, i - offset.I);
+                    if (dj >= 0 && dj < render.Length && di >= 0 && render[dj] is not null && di < render[dj].Length)
+                    {
+                        char c = render[dj][di];
+                        sb.Append(c);
+                    }
+                    else
+                    {
+                        sb.Append(' ');
+                    }
+                }
+                sb.AppendLine();
+            }
+            return sb;
+        }
+
+        public static string CenterString(string stringToCenter, int totalLength)
+        {
+            if (stringToCenter.Length <= totalLength)
+            {
+                return stringToCenter.PadLeft(((totalLength - stringToCenter.Length) / 2)
+                                + stringToCenter.Length)
+                       .PadRight(totalLength);
+            }
+            else
+            {
+                return stringToCenter.Substring(0, totalLength);
+            }
+
         }
     }
 }

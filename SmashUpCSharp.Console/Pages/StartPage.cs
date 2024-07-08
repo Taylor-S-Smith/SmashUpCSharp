@@ -4,31 +4,34 @@ using System.Text;
 
 namespace SmashUp.Rendering
 {
-    public class StartPage : PrimitivePage
+    internal class StartPage(PlayerNumPage playerNumPage) : PrimitivePage
     {
         private string[] Header  =
-        {
+        [
             "███████╗███╗   ███╗ █████╗ ███████╗██╗  ██╗    ██╗   ██╗██████╗ ██╗",
             "██╔════╝████╗ ████║██╔══██╗██╔════╝██║  ██║    ██║   ██║██╔══██╗██║",
             "███████╗██╔████╔██║███████║███████╗███████║    ██║   ██║██████╔╝██║",
             "╚════██║██║╚██╔╝██║██╔══██║╚════██║██╔══██║    ██║   ██║██╔═══╝ ╚═╝",
             "███████║██║ ╚═╝ ██║██║  ██║███████║██║  ██║    ╚██████╔╝██║     ██╗",
             "╚══════╝╚═╝     ╚═╝╚═╝  ╚═╝╚══════╝╚═╝  ╚═╝     ╚═════╝ ╚═╝     ╚═╝"
-        };
+        ];
 
         //State Variables
         private int SelectedOption = 0;
         private string[] Options =
-        {
+        [
             "Start",
             "Show Collection",
             "Options",
             "Exit"
-        };
+        ];
+
+        //Navigation
+        private PlayerNumPage _playerNumPage = playerNumPage;
 
         public override void Render(int consoleWidth, int consoleHeight)
         {
-            StringBuilder? buffer = PageUtil.generateTextSelect(consoleWidth, consoleHeight, Header, Options, SelectedOption);
+            StringBuilder? buffer = RenderUtil.generateTextSelect(consoleWidth, consoleHeight, Header, Options, SelectedOption);
 
 			Console.SetCursorPosition(0, 0);
 			Console.Write(buffer);			
@@ -50,7 +53,7 @@ namespace SmashUp.Rendering
                     switch (SelectedOption)
                     {
                         case 0:
-                            return new PlayerNumPage(new());
+                            return _playerNumPage;
                         case 1:
                             Console.WriteLine("Showing collection...");
                             break;

@@ -1,4 +1,6 @@
 ﻿using Models.Player;
+using Repositories;
+using Services;
 
 namespace Models.Cards
 {
@@ -8,25 +10,59 @@ namespace Models.Cards
         public int PrintedBreakpoint { get; set; } = printedBreakpoint;
         public int CurrentBreakpoint { get; set; } = printedBreakpoint;
         public int[] PointArray = pointArray;
+        private List<PlayableCard> attachedCards = [];
+             
 
-        private Dictionary<PrimitivePlayer, List<PlayableCard>> PlayerCards = new();
+        public void AttachCard(PlayableCard Card)
+        {
+            attachedCards.Add(Card);
+            UpdateTotalPower();
+        }
 
         public int TotalPower { get; set; } = 0;
 
         //HELPER
         public void UpdateTotalPower()
         {
-            TotalPower = 0;
-            foreach (KeyValuePair<PrimitivePlayer, List<PlayableCard>> cards in PlayerCards)
-            {
-                TotalPower += cards.Value.Sum(x => x.CurrentPower);
-            }
+            TotalPower = GetAttachedCards().Sum(x => x.CurrentPower);
         }
 
         //GET
-        public List<PlayableCard> GetCardsByPlayer(PrimitivePlayer player)
+        private List<PlayableCard> GetAttachedCards()
         {
-            return PlayerCards[player];
+            return attachedCards;
+        }
+
+        public List<String> GetDisplayList()
+        {
+            List<String> DisplayList = [];
+            attachedCards = attachedCards.OrderBy(x => x.Owner).ToList();
+            int? currPlayer = null;
+
+            int cardIndex = 1;
+            foreach (PlayableCard card in attachedCards)
+            {
+                if (currPlayer != card.Owner)
+                {
+                    DisplayList.Add($"Player {card.Owner}'s cards:");
+                    currPlayer = card.Owner;
+                }
+
+                if(card.CurrentPower > 0)
+                {
+                    DisplayList.Add($"{cardIndex}. {card.Title} ({card.CurrentPower})");
+                } else
+                {
+                    DisplayList.Add($"{cardIndex}. {card.Title}");
+                }
+            }
+
+            return DisplayList;
+        }
+
+        internal string GetCardsByIndex(int num)
+        {
+            throw new NotImplementedException();
         }
 
         /*

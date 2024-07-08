@@ -1,33 +1,35 @@
 ﻿using SmashUp.Models.Games;
 using SmashUp.Utilities;
-using Models.Cards;
 using Repositories;
+using Models.Cards;
 using System.Text;
-using Models.Player;
-using System.Runtime.InteropServices;
-using System.Runtime.CompilerServices;
+using Services;
 
 namespace SmashUp.Rendering
 {
-    public class BattlePage : PrimitivePage
+    internal class BattlePage : PrimitivePage
     {
         //Static Variables
+        readonly string HORIZONTAL_PADDING = " ";
+        readonly int MIN_CARD_FIELD_SIZE = 15;
 
-
-        //Repositories
-        BaseService _baseService = new();
+        //SERVICES
+        readonly IBaseService _baseService;
+        readonly IPlayableCardService _playableCardService;
+        readonly IPlayerService _playerService;
 
         //Bases in play
         private string[] BaseField = [""];
-        private int BaseFieldPadding;
+        private readonly int BaseFieldPadding = 0;
+        private int BaseGraphicLength = 0;
 
         //Minions and actions in play
         private string[] CardField = [""];
-        private int CardFieldPadding;
+        private readonly int CardFieldPadding = 0;
 
         //Game statistics (Active Player, Minion/Action count , VP total, etc.)
         private string[] StatField = [""];
-        private int StatFieldPadding;
+        private readonly int StatFieldPadding = 0;
 
         //The player's input area. Usually will be their hand, but is also how they view their decks
         private string[] ConsoleField = [""];
@@ -35,11 +37,21 @@ namespace SmashUp.Rendering
         //Game Objects
         private Battle Game { get; set; } = new();
 
-        public BattlePage(GameSetUpModel gameSetUp)
+        //Navigation
+        public BattlePage(IBaseService baseService, IPlayableCardService playableCardService, IPlayerService playerService)
         {
-            Game.Players = gameSetUp.Players;
-            Game.BaseDeck.Cards = _baseService.GetBaseCards(gameSetUp.Players.SelectMany(x => x.Factions).ToList());
-            Game.ActiveBases = Game.BaseDeck.DrawCards();
+            _baseService = baseService;
+            _playableCardService = playableCardService;
+            _playerService = playerService;
+
+            Game.Players = _playerService.GetAll();
+            Game.BaseDeck.Cards = _baseService.GetBaseCards(Game.Players.SelectMany(x => x.Factions).ToList());
+            Game.ActiveBases = Game.BaseDeck.DrawCards(Game.Players.Count + 1);
+
+            //JUST TO TEST
+            Game.ActiveBases[0].AttachCard(_playableCardService.Get(0));
+            Game.ActiveBases[1].AttachCard(_playableCardService.Get(1));
+            Game.ActiveBases[2].AttachCard(_playableCardService.Get(2));
         }
 
         public override void Render(int consoleWidth, int consoleHeight)
@@ -91,7 +103,7 @@ namespace SmashUp.Rendering
                     render[i++] = line;
                 }
 
-                buffer = ScreenUtil.Center(render, (Game.ActiveBases[0].Graphic.Count + 6, consoleWidth - 1));
+                buffer = RenderUtil.Center(render, (Game.ActiveBases[0].Graphic.Count + 6, consoleWidth - 1));
 			}
             //Let the user know the screen is too small
             if (buffer is null)
@@ -100,7 +112,7 @@ namespace SmashUp.Rendering
                 [
                     $@"Please increase your screen size"
                 ];
-                buffer = ScreenUtil.Center(render, (consoleHeight - 1, consoleWidth - 1));
+                buffer = RenderUtil.Center(render, (consoleHeight - 1, consoleWidth - 1));
             }
 
 			Console.SetCursorPosition(0, 0);
@@ -113,18 +125,18 @@ namespace SmashUp.Rendering
         private void GenerateBaseField()
         {
             int numBases = Game.ActiveBases.Count;
-            int baseGraphicLength = Game.ActiveBases[0].Graphic.Count;
+            BaseGraphicLength = Game.ActiveBases[0].Graphic.Count;
 
-            BaseField = new string[baseGraphicLength];
+            BaseField = new string[BaseGraphicLength];
 
-            for (int i = 0; i < baseGraphicLength; i++)
+            for (int i = 0; i < BaseGraphicLength; i++)
             {
                 for (int j = 0; j < numBases; j++)
                 {
                     BaseField[i] += Game.ActiveBases[j].Graphic[i];
                     if(j < numBases - 1)
                     {
-                        BaseField[i] += " ";
+                        BaseField[i] += HORIZONTAL_PADDING;
                     }
                 }
             }
@@ -135,28 +147,34 @@ namespace SmashUp.Rendering
         /// </summary>
         private void GenerateCardField()
         {
-            //Iterate through all lines
-            int lineNum = 0;
-            while(true)
+            //Gather the base lists
+            List<List<String>> baseLists = [];
+            foreach (BaseCard baseCard in Game.ActiveBases)
             {
-                CardField.Append("");
-                foreach(BaseCard baseCard in Game.ActiveBases)
-                {
-                    foreach(PrimitivePlayer player in Game.Players)
-                    {
-                        CardField[lineNum] += baseCard.GetCardsByPlayer(player)[lineNum];
-                    }
-                    CardField[lineNum] += " ";
-                }
-                lineNum++;
+                baseLists.Add(baseCard.GetDisplayList());
             }
-                
+
+            //Iterate through all lines in cardfield
+            CardField = new string[Math.Max(baseLists.Max(x => x.Count), MIN_CARD_FIELD_SIZE)];
+            for(int i = 0; i < CardField.Length; i++)
+            {
+                foreach (List<String> baseList in baseLists)
+                {
+                    string currString = "";
+                    if(i < baseList.Count)
+                    {
+                        currString = baseList[i];
+                    }
+                    CardField[i] += RenderUtil.CenterString(currString, BaseGraphicLength);
+                    CardField[i] += HORIZONTAL_PADDING;
+                }
+            }                
         }
 
         /// <summary>
         /// Generates the field that lists the game statistics
         /// </summary>
-        private void GenerateConsoleField(int consoleWidth, int consoleHeight)
+        private void GenerateConsoleField()
         {
 
         }
@@ -175,7 +193,7 @@ namespace SmashUp.Rendering
             switch (keyPress)
             {
                 case UserKeyPress.Escape:
-                    return new StartPage();
+                    return null;
             }
 
 			return null;

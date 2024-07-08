@@ -1,21 +1,24 @@
-﻿using Models.Cards;
-using static System.Net.Mime.MediaTypeNames;
+﻿using Repositories;
+using Models.Cards;
 
-namespace Repositories
+namespace Services
 {
-    internal class BaseService
+    internal class BaseService : IBaseService
     {
-        BaseCardRepository _baseRepo = new();
+        readonly IBaseCardRepository _baseCardRepo;
 
-        public BaseService() { }
+        public BaseService(IBaseCardRepository baseCardRepo)
+        {
+            _baseCardRepo = baseCardRepo;
+        }
 
         public List<BaseCard> GetBaseCards(List<Faction> factions)
         {
-            List<BaseCard> baseCards = new();
+            List<BaseCard> baseCards = [];
 
             foreach (Faction faction in factions)
             {
-                baseCards.AddRange(_baseRepo.Get(faction));
+                baseCards.AddRange(_baseCardRepo.Get(faction));
             }
 
             return baseCards;

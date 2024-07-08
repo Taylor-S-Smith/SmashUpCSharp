@@ -7,7 +7,7 @@ namespace SmashUp.Models.Games
     {
         public BaseDeck BaseDeck { get; set; } = new();
         public List<BaseCard> ActiveBases { get; set; } = [];
-        public List<PrimitivePlayer> Players { get; set; } = new();
+        public List<PrimitivePlayer> Players { get; set; } = [];
 
 
     }

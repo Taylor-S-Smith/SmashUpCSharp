@@ -1,24 +1,39 @@
 ﻿using Models.Player;
+using Services;
 using SmashUp.Models.Games;
 using SmashUp.Rendering;
 using SmashUp.Utilities;
-using System.Reflection.PortableExecutable;
 using System.Text;
 
 namespace SmashUp.Pages.GameSetUp
 {
-    public class PlayerNamePage(GameSetUpModel gameSetUp) : PrimitivePage
+    internal class PlayerNamePage : PrimitivePage
     {
-        //Initial Variables
-        public override Dictionary<ConsoleKey, UserKeyPress> KeyMappings { get; set; } = AlphaKeyMappings;
+
+        //State Variables
+        private readonly List<PrimitivePlayer> Players;
+        private int ActivePlayerIndex = 0;
 
         //Display Variables
         private string[] Header = AsciiUtil.ToAscii($"Player 1 Name:");
-        private string[] Body = new string[5];
+        private readonly string[] Body = new string[5];
         private string PlayerName = "";
 
-        //State Variables
-        private int ActivePlayerIndex = 0;
+        //Other Variables
+        public override Dictionary<ConsoleKey, UserKeyPress> KeyMappings { get; set; } = AlphaKeyMappings;
+
+        //SERVICES
+        readonly IPlayerService _playerService;
+
+        //Navigation
+        DeckSelectionPage _deckSelectionPage;
+
+        public PlayerNamePage(DeckSelectionPage deckSelectionPage, IPlayerService playerService)
+        {
+            _deckSelectionPage = deckSelectionPage;
+            _playerService = playerService;
+            Players = _playerService.GetAll();
+        }
 
         public override void Render(int consoleWidth, int consoleHeight)
         {
@@ -64,7 +79,7 @@ namespace SmashUp.Pages.GameSetUp
                 render[i++] = line;
             }
 
-            buffer = ScreenUtil.Center(render, (consoleHeight - 1, consoleWidth - 1));
+            buffer = RenderUtil.Center(render, (consoleHeight - 1, consoleWidth - 1));
             Console.SetCursorPosition(0, 0);
             Console.Write(buffer);
         }
@@ -79,9 +94,9 @@ namespace SmashUp.Pages.GameSetUp
                     break;
                 case UserKeyPress.Confirm:
                     //Set current player name, reset name buffer, progress to next player or deck selection
-                    gameSetUp.Players[ActivePlayerIndex].Name = PlayerName;
-                    if (++ActivePlayerIndex == gameSetUp.Players.Count) {
-                        return new DeckSelectionPage(gameSetUp);
+                    Players[ActivePlayerIndex].Name = PlayerName;
+                    if (++ActivePlayerIndex == Players.Count) {
+                        return _deckSelectionPage;
                     }
                     PlayerName = "";
                     Header = AsciiUtil.ToAscii($"Player {ActivePlayerIndex + 1} Name:");

@@ -2,40 +2,44 @@
 
 namespace Repositories
 {
-    internal class PlayableCardRepository : PrimitiveRepository<PlayableCard>
+    internal class PlayableCardRepository : IPlayableCardRepository
     {
-        protected override IList<PlayableCard> _items { get; } = [];
+        private int _idCount = 0;
+        private List<PlayableCard> Items { get; } = [];
 
-        private PlayableCard Collector = new
-        (
-            "Collector",
-            2,
-            ["(o)", "       -|-r======", "/ \\", "-------"],
-            PlayLocation.Base,
-            () => Console.WriteLine("Returning a minion of power 3 or less on this base to its owner's hand")
-        );
-        private PlayableCard Scout = new
-        (
-            "Scout",
-            3,
-            ["(o)", " 0|-r ", "/ >"],
-            PlayLocation.Base,
-            () => { }
-        );
-        private PlayableCard Invader = new
-        (
-            "Invader",
-            3,
-            ["    ___", "(o) [___]", "   -|--|    ", "  / \\ |"],
-            PlayLocation.Base,
-            () => Console.WriteLine("You gained 1 VP")
-        );
+        //Protects against instantiation outised of dependency injection
+        public PlayableCardRepository() { }
 
-
-        public PlayableCardRepository()
+        public int Create(PlayableCard item)
         {
-            Create(Collector);
-            Create(Scout);
+            item.Id = _idCount++;
+            Items.Add(item);
+            return item.Id;
+        }
+
+        public PlayableCard Get(int id)
+        {
+            return Items.SingleOrDefault(x => x.Id == id) ?? throw new Exception($"Can't get PlayableCard with Id {id}"); ;
+        }
+
+        public List<PlayableCard> GetAll()
+        {
+            return Items;
+        }
+
+        public int Save(PlayableCard item)
+        {
+            PlayableCard? databaseVersion = Get(item.Id);
+            if (databaseVersion == null)
+            {
+                Create(item);
+            }
+            else
+            {
+                Items[Items.IndexOf(databaseVersion)] = item;
+            }
+
+            return item.Id;
         }
     }
 }

@@ -1,36 +1,35 @@
-﻿using Models.Cards;
-using static System.Net.Mime.MediaTypeNames;
+﻿using Models.Player;
 
 namespace Repositories
 {
-    internal class FactionRepository : IFactionRepository
+    internal class PlayerRepository : IPlayerRepository
     {
         private int _idCount = 0;
-        private List<Faction> Items { get; } = [];
+        private List<PrimitivePlayer> Items { get; } = [];
 
         //Protects against instantiation outised of dependency injection
-        public FactionRepository() { }
+        public PlayerRepository() { }
 
-        public int Create(Faction item)
+        public int Create(PrimitivePlayer item)
         {
             item.Id = _idCount++;
             Items.Add(item);
             return item.Id;
         }
 
-        public Faction Get(int id)
+        public PrimitivePlayer Get(int id)
         {
-            return Items.SingleOrDefault(x => x.Id == id) ?? throw new Exception($"Can't get Faction with Id {id}"); ;
+            return Items.SingleOrDefault(x => x.Id == id) ?? throw new Exception($"Can't get Player with Id {id}"); ;
         }
 
-        public List<Faction> GetAll()
+        public List<PrimitivePlayer> GetAll()
         {
             return Items;
         }
 
-        public int Save(Faction item)
+        public int Save(PrimitivePlayer item)
         {
-            Faction? databaseVersion = Get(item.Id);
+            PrimitivePlayer? databaseVersion = Get(item.Id);
             if (databaseVersion == null)
             {
                 Create(item);
