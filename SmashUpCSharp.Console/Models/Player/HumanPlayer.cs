@@ -1,8 +1,5 @@
-﻿using Models.Cards;
+﻿namespace Models.Player;
 
-namespace Models.Player
+public class HumanPlayer: PrimitivePlayer
 {
-    public class HumanPlayer : PrimitivePlayer
-    {
-    }
 }

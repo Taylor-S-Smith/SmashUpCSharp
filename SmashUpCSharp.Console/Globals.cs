@@ -1,4 +1,4 @@
-﻿using SmashUp.Utilities;
+﻿using SmashUp.Frontend.Utilities;
 
 namespace SmashUp
 {
