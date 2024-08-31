@@ -39,7 +39,10 @@ namespace SmashUp.The___Database__
 
             _playableCardRepo.Create(Collector);
             _playableCardRepo.Create(Scout);
+            _playableCardRepo.Create(SupremeOverlord);
             _playableCardRepo.Create(Invader);
+            _playableCardRepo.Create(BeamUp);
+            _playableCardRepo.Create(Disintegrator);
         }
 
         //FACTIONS
@@ -338,17 +341,15 @@ namespace SmashUp.The___Database__
             "Collector",
             2,
             [
-                @" _________________________ ",
-                @"|2       Collector       2|",
-                @"|         (o)             |",
-                @"|         -|-r======      |",
-                @"|         / \             |",
-                @"|       -------           |",
-                @"| You may return a minion |",
-                @"|  of power 3 or less on  |",
-                @"| this base to its owner's|",
-                @"|         hand.           |",
-                @"|_________________________|",
+                @"2       Collector       2",
+                @"         (o)             ",
+                @"         -|-r======      ",
+                @"         / \             ",
+                @"       -------           ",
+                @" You may return a minion ",
+                @"  of power 3 or less on  ",
+                @" this base to its owner's",
+                @"         hand.           ",
             ],
             PlayLocation.Base,
             () => Console.WriteLine("Returning a minion of power 3 or less on this base to its owner's hand")
@@ -358,17 +359,17 @@ namespace SmashUp.The___Database__
             "Scout",
             3,
             [   
-                @" _________________________ ",
-                @"|3         Scout         3|",
-                @"|         (o)             |",
-                @"|         0|-r            |",
-                @"|         / >             |",
-                @"|Special: After this base |",
-                @"|is scored, you may place |",
-                @"|  this minion into your  |",
-                @"|   hand instead of the   |",
-                @"|      discard pile       |",
-                @"|_________________________|",
+
+                @"3         Scout         3",
+                @"         (o)             ",
+                @"         0|-r            ",
+                @"         / >             ",
+                @"Special: After this base ",
+                @"is scored, you may place ",
+                @"  this minion into your  ",
+                @"   hand instead of the   ",
+                @"      discard pile       ",
+
             ],
             PlayLocation.Base,
             () => { }
@@ -378,20 +379,83 @@ namespace SmashUp.The___Database__
             "Invader",
             3,
             [
-                @" _________________________ ",
-                @"|3        Invader        3|",
-                @"|              ___        |",
-                @"|         (o) [___]       |",
-                @"|         -|--|           |",
-                @"|         / \ |           |",
-                @"|                         |",
-                @"|                         |",
-                @"|       Gain 1 VP         |",
-                @"|                         |",
-                @"|_________________________|",
+
+                @"3        Invader        3",
+                @"              ___        ",
+                @"         (o) [___]       ",
+                @"         -|--|           ",
+                @"         / \ |           ",
+                @"                         ",
+                @"                         ",
+                @"       Gain 1 VP         ",
+                @"                         ",
+
             ],
             PlayLocation.Base,
             () => Console.WriteLine("You gained 1 VP")
+        );
+
+        private readonly PlayableCard SupremeOverlord = new
+        (
+            "Supreme Overlord",
+            5,
+            [
+
+                @"5   Supreme Overlord    5",
+                @"          _ w _          ",
+                @"         / (o) \         ",
+                @"        |_/-|-\_|        ",
+                @"       ()___|___()       ",
+                @"       ||__/_\__||       ",
+                @"                         ",
+                @" You may return a minion ",
+                @"   to its owner's hand.  ",
+
+            ],
+            PlayLocation.Base,
+            () => Console.WriteLine("Tremble before my might!!!")
+        );
+
+        private readonly PlayableCard BeamUp = new
+        (
+            "Beam Up",
+            0,
+            [
+
+                @"A        Beam Up        A",
+                @"      \___________/      ",
+                @"         |     |         ",
+                @"         | \ / |         ",
+                @"         |  |  |         ",
+                @"         | /o\ |         ",
+                @"                         ",
+                @" Return a minion to its  ",
+                @"      owner's hand.      ",
+
+            ],
+            PlayLocation.Base,
+            () => Console.WriteLine("Aaaaah!")
+        );
+
+        private readonly PlayableCard Disintegrator = new
+        (
+            "Disintegrator",
+            0,
+            [
+
+                @"A     Disintegrator     A",
+                @" \___________/           ",
+                @"   |                     ",
+                @"   |               \o/   ",
+                @"   [}--------|      |    ",
+                @"            / \    / \   ",
+                @"Place a minion of power 3",
+                @"or less on the bottom of ",
+                @"     its owner's deck.   ",
+
+            ],
+            PlayLocation.Base,
+            () => Console.WriteLine("Tremble before my death ray!!!")
         );
 
 

@@ -11,24 +11,34 @@ namespace SmashUp.Frontend.Pages
 {
     internal class BattlePage : PrimitivePage
     {
-        //STATIC VARIABLES
+        // STATIC VARIABLES
         readonly int MIN_CARD_FIELD_SIZE = 15;
 
-        //SERVICES
+        // SERVICES
         readonly IBaseService _baseService;
         readonly IFactionService _factionService;
         readonly IPlayableCardService _playableCardService;
         readonly IPlayerService _playerService;
 
-        //RENDERING VARS
+        // RENDERING VARS
         private readonly int BaseFieldPadding = 1;
         private readonly int CardFieldPadding = 1;
         private readonly int StatFieldPadding = 1;
 
         private int BaseAreaWidth;
 
-        //GAME OBJECTS
+        // GAME OBJECTS
         private Battle Game { get; set; }
+
+        // USER INPUT AREA
+        int SelectedIndex = 0;
+
+        List<PlayableCard> LeftBuffer = [];
+        List<PlayableCard> CardsDisplayed = [];
+        List<PlayableCard> RightBuffer = [];
+
+        List<PlayableCard> SelectableCards;
+
 
         public BattlePage(IBaseService baseService, IFactionService factionService, IPlayableCardService playableCardService, IPlayerService playerService)
         {
@@ -39,7 +49,15 @@ namespace SmashUp.Frontend.Pages
             _playableCardService = playableCardService;
             _playerService = playerService;
 
-            List<PlayableCard> testCards = [_playableCardService.Get(0), _playableCardService.Get(1), _playableCardService.Get(2)];
+            List<PlayableCard> testCards =
+            [
+                _playableCardService.Get(0),
+                _playableCardService.Get(1),
+                _playableCardService.Get(2),
+                _playableCardService.Get(3),
+                _playableCardService.Get(4),
+                _playableCardService.Get(5)
+            ];
 
             Faction faction0 = _factionService.Get(0);
             Faction faction1 = _factionService.Get(1);
@@ -67,6 +85,8 @@ namespace SmashUp.Frontend.Pages
             Game.ActiveBases[0].AttachCard(testCards[0]);
             Game.ActiveBases[1].AttachCard(testCards[1]);
             Game.ActiveBases[2].AttachCard(testCards[2]);
+
+            SelectableCards = Game.CurrentTurn.ActivePlayer.Hand;
         }
 
         public override void Render(int consoleWidth, int consoleHeight)
@@ -240,21 +260,27 @@ namespace SmashUp.Frontend.Pages
             if (allCards.Count > 0)
             {
                 int cardHeight = allCards.Max(card => card.GetGraphic().Count);
-                int cardLength = allCards.Max(card => card.GetGraphic().Max(graphic => graphic.Length));
+                int cardLength = allCards.Max(card => card.GetGraphic().Max(line => line.Length));
 
                 inputField = new string[cardHeight];
 
-                int numCardsToRender = Math.Min(fieldLength/cardLength, allCards.Count);
+                int numCardsToDisplay = Math.Min(fieldLength/(cardLength+1), allCards.Count);
 
-                List<PlayableCard> cardsToRender = allCards[..numCardsToRender];
+                CardsDisplayed = allCards[..numCardsToDisplay];
+                RightBuffer = allCards[numCardsToDisplay..];
 
                 for (int i = 0; i < cardHeight; i++)
                 {
                     StringBuilder lineBuilder = new();
 
-                    foreach (PlayableCard card in cardsToRender)
+                    for (int j = 0; j < numCardsToDisplay; j++)
                     {
-                        lineBuilder.Append(card.GetGraphic()[i]);
+                        var selectedCard = SelectableCards[SelectedIndex];
+                        var cardToDisplay = CardsDisplayed[j];
+
+                        bool cardIsSelected = selectedCard == cardToDisplay;
+                        lineBuilder.Append(CardsDisplayed[j].GetGraphic(cardIsSelected)[i]);
+                        if (j < numCardsToDisplay - 1) lineBuilder.Append(' ');
                     }
 
                     inputField[i] = lineBuilder.ToString();
@@ -267,11 +293,23 @@ namespace SmashUp.Frontend.Pages
 
         public override string? ChangeState(UserKeyPress keyPress, ref bool stateChanged)
         {
-            return keyPress switch
+            switch (keyPress)
             {
-                UserKeyPress.Escape => "QUIT",
-                _ => null,
-            };
+                case UserKeyPress.Left:
+                    SelectedIndex = Math.Max(0, SelectedIndex - 1);
+                    stateChanged = true;
+                    break;
+                case UserKeyPress.Right:
+                    SelectedIndex = Math.Min(SelectableCards.Count - 1, SelectedIndex + 1);
+                    stateChanged = true;
+                    break;
+                case UserKeyPress.Escape:
+                    return "QUIT";
+                default:
+                    return null;
+            }
+
+            return null;
         }
     }
 }
