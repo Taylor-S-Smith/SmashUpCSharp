@@ -17,7 +17,7 @@
         }
         public List<T> DrawCards(int numCards = 1)
         {
-            List<T> drawnCards = new();
+            List<T> drawnCards = [];
             for (int i = 0; i < numCards; i++)
             {
                 if (Cards.Count > 0)

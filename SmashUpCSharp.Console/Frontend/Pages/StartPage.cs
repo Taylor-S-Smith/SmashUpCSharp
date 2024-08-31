@@ -4,7 +4,7 @@ using System.Text;
 
 namespace SmashUp.Frontend.Pages
 {
-    internal class StartPage(IFactionService factionService) : PrimitivePage
+    internal class StartPage : PrimitivePage
     {
         private readonly string[] Header =
         [
@@ -25,9 +25,6 @@ namespace SmashUp.Frontend.Pages
             "Options",
             "Exit"
         ];
-
-        //Services
-        private readonly IFactionService _factionService = factionService;
 
         public override void Render(int consoleWidth, int consoleHeight)
         {

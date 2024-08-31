@@ -177,7 +177,7 @@ namespace SmashUp.Frontend.Utilities
             }
             else
             {
-                return stringToCenter.Substring(0, totalLength);
+                return stringToCenter[..totalLength];
             }
         }
 

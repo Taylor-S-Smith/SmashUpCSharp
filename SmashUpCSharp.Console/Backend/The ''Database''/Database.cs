@@ -3,7 +3,7 @@ using SmashUp.Backend.Repositories;
 
 namespace SmashUp.The___Database__
 {
-    internal class DatabaseLoader(IBaseCardRepository baseCardRepo, IFactionRepository factionRepo, IPlayableCardRepository playableCardRepo) : IDatabaseLoader
+    internal class Database(IBaseCardRepository baseCardRepo, IFactionRepository factionRepo, IPlayableCardRepository playableCardRepo) : IDatabaseLoader
     {
         readonly IBaseCardRepository _baseCardRepo = baseCardRepo;
         readonly IFactionRepository _factionRepo = factionRepo;
@@ -337,10 +337,19 @@ namespace SmashUp.The___Database__
         (
             "Collector",
             2,
-            [@"(o)", 
-             @"       -|-r======", 
-             @"/ \", 
-             @"-------"],
+            [
+                @" _________________________ ",
+                @"|2       Collector       2|",
+                @"|         (o)             |",
+                @"|         -|-r======      |",
+                @"|         / \             |",
+                @"|       -------           |",
+                @"| You may return a minion |",
+                @"|  of power 3 or less on  |",
+                @"| this base to its owner's|",
+                @"|         hand.           |",
+                @"|_________________________|",
+            ],
             PlayLocation.Base,
             () => Console.WriteLine("Returning a minion of power 3 or less on this base to its owner's hand")
         );
@@ -348,9 +357,19 @@ namespace SmashUp.The___Database__
         (
             "Scout",
             3,
-            ["(o)",
-             " 0|-r ",
-             "/ >"],
+            [   
+                @" _________________________ ",
+                @"|3         Scout         3|",
+                @"|         (o)             |",
+                @"|         0|-r            |",
+                @"|         / >             |",
+                @"|Special: After this base |",
+                @"|is scored, you may place |",
+                @"|  this minion into your  |",
+                @"|   hand instead of the   |",
+                @"|      discard pile       |",
+                @"|_________________________|",
+            ],
             PlayLocation.Base,
             () => { }
         );
@@ -358,10 +377,19 @@ namespace SmashUp.The___Database__
         (
             "Invader",
             3,
-            [@"    ___",
-             @"(o) [___]",
-             @"   -|--|    ",
-             @"  / \ |"],
+            [
+                @" _________________________ ",
+                @"|3        Invader        3|",
+                @"|              ___        |",
+                @"|         (o) [___]       |",
+                @"|         -|--|           |",
+                @"|         / \ |           |",
+                @"|                         |",
+                @"|                         |",
+                @"|       Gain 1 VP         |",
+                @"|                         |",
+                @"|_________________________|",
+            ],
             PlayLocation.Base,
             () => Console.WriteLine("You gained 1 VP")
         );
