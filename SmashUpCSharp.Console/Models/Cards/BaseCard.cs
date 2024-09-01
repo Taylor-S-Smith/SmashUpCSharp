@@ -9,20 +9,21 @@ public class BaseCard(int factionId, string title, string[] graphic, int printed
     public int PrintedBreakpoint { get; set; } = printedBreakpoint;
     public int CurrentBreakpoint { get; set; } = printedBreakpoint;
     public int[] PointArray = pointArray;
-    private List<PlayableCard> attachedCards = [];
+    public List<PlayableCard> AttachedCards { get; set; } = [];
     public int TotalPower { get; set; } = 0;
     
 
     //GET
-    public string[] GetAttachedCardsGraphic()
+    public string[] GetAttachedCardsGraphic(PrimitiveCard? selectedCard)
     {
-        int numLines = attachedCards.Count + attachedCards.Select(x => x.Owner).Distinct().Count();
+        int numLines = AttachedCards.Count + AttachedCards.Select(x => x.Owner).Distinct().Count();
         string[] displayList = new string[numLines];
 
         int? currOwner = null;
         int cardIndex = 1;
         int displayIndex = 0;
-        foreach (PlayableCard card in attachedCards)
+
+        foreach (PlayableCard card in AttachedCards)
         {
             // Whenever the owner changes, add a new owner header line
             if (currOwner != card.Owner)
@@ -31,13 +32,25 @@ public class BaseCard(int factionId, string title, string[] graphic, int printed
                 currOwner = card.Owner;
             }
 
-            string cardLine = $"{cardIndex}. {card.Title}";
-            if (card.CurrentPower != null)
+            StringBuilder lineBuilder = new();
+
+            if(card == selectedCard)
             {
-                cardLine += $" ({card.CurrentPower})";
+                lineBuilder.Append('>');
             }
 
-            displayList[displayIndex++] = cardLine;
+            lineBuilder.Append($"{cardIndex}. {card.Title}");
+
+            if (card.CurrentPower.HasValue)
+            {   
+                lineBuilder.Append($" ({card.CurrentPower})");
+            }
+            if (card == selectedCard)
+            {
+                lineBuilder.Append('<');
+            }
+
+            displayList[displayIndex++] = lineBuilder.ToString();
             cardIndex++;
         }
 
@@ -52,7 +65,7 @@ public class BaseCard(int factionId, string title, string[] graphic, int printed
     //MODIFY
     public void AttachCard(PlayableCard Card)
     {
-        attachedCards.Add(Card);
+        AttachedCards.Add(Card);
         UpdateTotalPower();
     }
 
@@ -65,7 +78,7 @@ public class BaseCard(int factionId, string title, string[] graphic, int printed
 
     private void UpdateTotalPower()
     {
-        TotalPower = attachedCards.Sum(x => x.CurrentPower ?? 0);
+        TotalPower = AttachedCards.Sum(x => x.CurrentPower ?? 0);
     }
 
     protected override string BuildTitleLine(int width, bool useAltBorder)

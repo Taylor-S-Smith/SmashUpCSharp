@@ -28,7 +28,7 @@ namespace SmashUp.Frontend.Pages.GameSetUp
             Console.Write(buffer);
         }
 
-        public override string? ChangeState(UserKeyPress keyPress, ref bool stateChanged)
+        public override string? HandleKeyPress(UserKeyPress keyPress, ref bool stateChanged)
         {
             switch (keyPress)
             {

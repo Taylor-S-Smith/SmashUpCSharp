@@ -40,7 +40,7 @@ namespace SmashUp.Frontend.Pages
                 if (Console.KeyAvailable)
                 {
                     UserKeyPress keyPress = ActiveKeyMappings.GetValueOrDefault(Console.ReadKey(true).Key);
-                    string? navigation = ActivePage.ChangeState(keyPress, ref NeedToRender);
+                    string? navigation = ActivePage.HandleKeyPress(keyPress, ref NeedToRender);
 
                     //Perform redirection if needed
                     if (navigation != null)

@@ -17,9 +17,7 @@ namespace Models.Cards
             {
                 n--;
                 int k = rng.Next(n + 1);
-                T value = Cards[k];
-                Cards[k] = Cards[n];
-                Cards[n] = value;
+                (Cards[n], Cards[k]) = (Cards[k], Cards[n]);
             }
         }
         public void GetCard()

@@ -1,5 +1,4 @@
 ﻿using SmashUp.Frontend.Utilities;
-using System;
 
 namespace Models.Cards
 {
@@ -43,11 +42,11 @@ namespace Models.Cards
             return returnGraphic;
         }
 
-        protected string BuildBorder(char leftChar, char middleChar, char rightChar, int width)
+        protected static string BuildBorder(char leftChar, char middleChar, char rightChar, int width)
         {
             return $"{leftChar}{new string(middleChar, width)}{rightChar}";
         }
-        protected string BuildContentLine(string content, int width, bool useAltBorder)
+        protected static string BuildContentLine(string content, int width, bool useAltBorder)
         {
             char borderChar = useAltBorder ? '║' : '|';
             string centeredContent = RenderUtil.CenterString(content, width);

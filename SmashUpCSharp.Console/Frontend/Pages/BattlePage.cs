@@ -24,18 +24,19 @@ namespace SmashUp.Frontend.Pages
         // USER INPUT AREA
 
         //Hand
-        List<PlayableCard> LeftBuffer = [];
-        List<PlayableCard> CardsDisplayed = [];
-        List<PlayableCard> RightBuffer = [];
+        PlayableCard[] LeftBuffer = [];
+        PlayableCard[] HandCardsDisplayed = [];
+        PlayableCard[] RightBuffer = [];
 
         //Field
-        int SelectedIndex = 0;
+        int SelectedXIndex = 0;
+        int SelectedYIndex = -1;
         PrimitiveCard[][] SelectableFieldCards;
 
-        PlayableCard SelectedHandCard;
-        PrimitiveCard SelectedFieldCard;
+        PrimitiveCard? SelectedCard;
 
-        PrimitiveCard ActiveSelectedCard;
+        // MODES
+        bool InCardViewMode = false;
 
 
         public BattlePage(IBaseService baseService, IFactionService factionService, IPlayableCardService playableCardService, IPlayerService playerService)
@@ -75,7 +76,8 @@ namespace SmashUp.Frontend.Pages
 
 
             //Initialize Selections
-            //SelectableFieldCards = Game.ActiveBases.Select(x => x.GetAttachedCardsGraphic)
+            SelectableFieldCards = Game.ActiveBases.Select(x => x.AttachedCards.Cast<PrimitiveCard>().ToArray()).ToArray();
+            SelectedCard = Game.CurrentTurn.ActivePlayer.Hand[SelectedXIndex];
         }
 
         public override void Render(int consoleWidth, int consoleHeight)
@@ -156,12 +158,12 @@ namespace SmashUp.Frontend.Pages
 
             // Get Active Bases Graphics
             string[][] activeBasesGraphics = Game.ActiveBases
-                .Select(activeBase => activeBase.GetGraphic(ActiveSelectedCard == activeBase))
+                .Select(activeBase => activeBase.GetGraphic(SelectedCard == activeBase))
                 .ToArray();
 
             // Get Attached Cards Graphics
             string[][] attachedCardGraphics = Game.ActiveBases
-                .Select(baseCard => baseCard.GetAttachedCardsGraphic())
+                .Select(baseCard => baseCard.GetAttachedCardsGraphic(SelectedCard))
                 .ToArray();
 
             if (activeBasesGraphics.Length != attachedCardGraphics.Length) throw new Exception($"Recieved {activeBasesGraphics.Length} active bases but only {attachedCardGraphics.Length} attached card graphics. They should be equal");
@@ -241,61 +243,212 @@ namespace SmashUp.Frontend.Pages
         /// </summary>
         private string[] GenerateInputField(int fieldLength)
         {
-            List<PlayableCard> allCardsInHand = Game.CurrentTurn.ActivePlayer.Hand;
+            string[][] GraphicsToDisplay = [];
 
-            string[] inputField = [""];
-            if (allCardsInHand.Count > 0)
+            if (InCardViewMode)
             {
-                string[][] graphics = Game.CurrentTurn.ActivePlayer.Hand.Select(card => card.GetGraphic(ActiveSelectedCard == card)).ToArray();
-                int cardHeight = graphics.Max(graphic => graphic.Length);
-                int cardLength = graphics.Max(graphic => graphic.Max(line => line.Length));
-
-                inputField = new string[cardHeight];
-
-                int numCardsToDisplay = Math.Min(fieldLength/(cardLength+1), allCardsInHand.Count);
-
-                CardsDisplayed = allCardsInHand[..numCardsToDisplay];
-                RightBuffer = allCardsInHand[numCardsToDisplay..];
-
-                for (int i = 0; i < cardHeight; i++)
+                if (SelectedCard != null)
                 {
-                    StringBuilder lineBuilder = new();
+                    GraphicsToDisplay = [SelectedCard.GetGraphic(true)];
+                }
+            } 
+            else
+            {
+                PlayableCard[] allCardsInHand = Game.CurrentTurn.ActivePlayer.Hand.ToArray();
+                if (allCardsInHand.Length > 0)
+                {
+                    string[][] allGraphics = Game.CurrentTurn.ActivePlayer.Hand.Select(card => card.GetGraphic(SelectedCard == card)).ToArray();
 
-                    for (int j = 0; j < numCardsToDisplay; j++)
-                    {
-                        var cardToDisplay = CardsDisplayed[j];
-                        
-                        lineBuilder.Append(graphics[j][i]);
-                        if (j < numCardsToDisplay - 1) lineBuilder.Append(' ');
-                    }
+                    int cardLength = allGraphics.Max(graphic => graphic.Max(line => line.Length));
+                    int numCardsToDisplay = Math.Min(fieldLength / (cardLength + 1), allCardsInHand.Length);
 
-                    inputField[i] = lineBuilder.ToString();
+                    HandCardsDisplayed = allCardsInHand[..numCardsToDisplay];
+                    RightBuffer = allCardsInHand[numCardsToDisplay..];
+                    GraphicsToDisplay = allGraphics[..numCardsToDisplay];
                 }
             }
-            
+
+            int cardHeight = GraphicsToDisplay.Max(graphic => graphic.Length);
+            string[] inputField = new string[cardHeight];
+
+            for (int i = 0; i < cardHeight; i++)
+            {
+                StringBuilder lineBuilder = new();
+
+                for (int j = 0; j < GraphicsToDisplay.Length; j++)
+                {
+                    lineBuilder.Append(GraphicsToDisplay[j][i]);
+                    if (j < GraphicsToDisplay.Length - 1) lineBuilder.Append(' ');
+                }
+
+                inputField[i] = lineBuilder.ToString();
+            }
+
             return inputField;
         }
 
 
-        public override string? ChangeState(UserKeyPress keyPress, ref bool stateChanged)
+        public override string? HandleKeyPress(UserKeyPress keyPress, ref bool stateChanged)
         {
-            switch (keyPress)
+            if(InCardViewMode)
             {
-                case UserKeyPress.Left:
-                    SelectedIndex = Math.Max(0, SelectedIndex - 1);
-                    stateChanged = true;
-                    break;
-                case UserKeyPress.Right:
-                    SelectedIndex = Math.Min(CardsDisplayed.Count - 1, SelectedIndex + 1);
-                    stateChanged = true;
-                    break;
-                case UserKeyPress.Escape:
-                    return "QUIT";
-                default:
-                    return null;
+                switch (keyPress)
+                {
+                    case UserKeyPress.Escape:
+                        ToggleCardViewMode();
+                        stateChanged = true;
+                        break;
+                    default:
+                        return null;
+                }
+
+            }
+            else
+            {
+                switch (keyPress)
+                {
+                    case UserKeyPress.Left:
+                        int proposedXIndex = Math.Max(0, SelectedXIndex - 1);
+
+                        if (IsSelectionInHand())
+                        {
+                            SelectedXIndex = proposedXIndex;
+                            SelectedCard = HandCardsDisplayed[SelectedXIndex];
+                        }
+                        else
+                        {
+                            SetIndexToNextAvailable(proposedXIndex, SelectedYIndex, -1);
+                            SelectedCard = SelectableFieldCards[SelectedXIndex][SelectedYIndex];
+                        }
+                        stateChanged = true;
+                        break;
+
+                    case UserKeyPress.Right:
+                        if (IsSelectionInHand())
+                        {
+                            SelectedXIndex = Math.Min(HandCardsDisplayed.Length - 1, SelectedXIndex + 1);
+                            SelectedCard = HandCardsDisplayed[SelectedXIndex];
+                        }
+                        else
+                        {
+                            proposedXIndex = Math.Min(SelectableFieldCards.Length - 1, SelectedXIndex + 1);
+                            SetIndexToNextAvailable(proposedXIndex, SelectedYIndex, 1);
+                            SelectedCard = SelectableFieldCards[SelectedXIndex][SelectedYIndex];
+                        }
+                        stateChanged = true;
+                        break;
+
+                    case UserKeyPress.Up:
+                        if (IsSelectionInHand())
+                        {
+                            //Go into base field
+
+                            //Try getting closest to the right
+                            SetIndexToNextAvailable(GetClosestIndexConversion(SelectedXIndex, HandCardsDisplayed.Length, SelectableFieldCards.Length), 99, 1);
+
+                            //Did we get out?
+                            if (IsSelectionInHand())
+                            {
+                                //Try getting closest to the left
+                                proposedXIndex = GetClosestIndexConversion(SelectedXIndex, HandCardsDisplayed.Length - 1, SelectableFieldCards.Length - 1);
+                                SetIndexToNextAvailable(proposedXIndex, 99, 1);
+                            }
+
+                            SelectedCard = SelectableFieldCards[SelectedXIndex][SelectedYIndex];
+                        }
+                        else
+                        {
+                            SelectedYIndex = Math.Max(0, SelectedYIndex - 1);
+                            SelectedCard = SelectableFieldCards[SelectedXIndex][SelectedYIndex];
+                        }
+                        stateChanged = true;
+                        break;
+
+                    case UserKeyPress.Down:
+                        if (!IsSelectionInHand())
+                        {
+                            //Is YIndex at end of list?
+                            if (SelectedYIndex == SelectableFieldCards[SelectedXIndex].Length - 1)
+                            {
+                                //Go down to hand
+                                SelectedXIndex = GetClosestIndexConversion(SelectedXIndex, SelectableFieldCards.Length - 1, HandCardsDisplayed.Length - 1);
+                                SelectedYIndex = -1;
+                                SelectedCard = HandCardsDisplayed[SelectedXIndex];
+                            }
+                            else
+                            {
+                                SelectedYIndex++;
+                                SelectedCard = SelectableFieldCards[SelectedXIndex][SelectedYIndex];
+                            }
+
+                            stateChanged = true;
+                        }
+                        break;
+
+                    case UserKeyPress.Confirm:
+                        ToggleCardViewMode();
+                        stateChanged = true;
+                        break;
+                    case UserKeyPress.Escape:
+                        return "QUIT";
+                    default:
+                        return null;
+                }
             }
 
             return null;
+        }
+
+        private void SetIndexToNextAvailable(int proposedXIndex, int proposedYIndex, int iterNum)
+        {
+            //Does the proposed base have enough cards?
+            if (proposedYIndex < SelectableFieldCards[proposedXIndex].Length)
+            {
+                SelectedXIndex = proposedXIndex;
+                SelectedYIndex = proposedYIndex;
+            }
+            else
+            {
+                //Does the base have any cards?
+                if (SelectableFieldCards[proposedXIndex].Length != 0)
+                {
+                    //Go to the next selectable card
+                    SelectedXIndex = proposedXIndex;
+                    SelectedYIndex = SelectableFieldCards[proposedXIndex].Length - 1;
+                }
+                else
+                {
+                    //Do we still have bases to our side?
+                    if (proposedXIndex > 0)
+                    {
+                        //Try again one base to the side
+                        SetIndexToNextAvailable(proposedXIndex + iterNum, proposedYIndex, iterNum);
+                    }
+                }
+            }
+        }
+
+        private int GetClosestIndexConversion(int index, int oldIndexBase, int newIndexBase)
+        {
+            //if (index == 0) return 0;
+            //if (index == oldIndexBase) return newIndexBase;
+
+            // Compute the proportion in base 10
+            double proportion = (double)index / oldIndexBase;
+
+            // Convert the proportion to the new base
+            int mappedValue = (int)Math.Round(proportion * newIndexBase);
+
+            return mappedValue;
+        }
+
+        private bool IsSelectionInHand()
+        {
+            return SelectedYIndex == -1;
+        }
+        private void ToggleCardViewMode()
+        {
+            InCardViewMode = !InCardViewMode;            
         }
     }
 }
