@@ -1,11 +1,11 @@
 ﻿
 using SmashUp.Frontend.Utilities;
+using System.Text;
 
 namespace Models.Cards;
 
-public class BaseCard(int factionId, string title, IList<string> graphic, int printedBreakpoint, int[] pointArray) : PrimitiveCard(title, graphic)
+public class BaseCard(int factionId, string title, string[] graphic, int printedBreakpoint, int[] pointArray) : PrimitiveCard(title, graphic, factionId)
 {
-    public int FactionId = factionId;
     public int PrintedBreakpoint { get; set; } = printedBreakpoint;
     public int CurrentBreakpoint { get; set; } = printedBreakpoint;
     public int[] PointArray = pointArray;
@@ -46,17 +46,6 @@ public class BaseCard(int factionId, string title, IList<string> graphic, int pr
         throw new NotImplementedException();
     }
 
-    public override IList<string> GetGraphic()
-    {
-        int graphicVerticleLength = Graphic[0].Length;
-        string paddedTitle = RenderUtil.CenterString(Title, graphicVerticleLength - 6);
-        string titleLine = $"|{TotalPower.ToString().PadLeft(2, '0')}{paddedTitle}{CurrentBreakpoint.ToString().PadLeft(2, '0')}|";
-
-        Graphic[1] = titleLine;
-        return Graphic;
-    }
-
-
     //MODIFY
     public void AttachCard(PlayableCard Card)
     {
@@ -73,11 +62,16 @@ public class BaseCard(int factionId, string title, IList<string> graphic, int pr
 
     private void UpdateTotalPower()
     {
-        TotalPower = GetAttachedCards().Sum(x => x.CurrentPower);
+        TotalPower = attachedCards.Sum(x => x.CurrentPower);
     }
 
-    private List<PlayableCard> GetAttachedCards()
+    protected override string BuildTitleLine(int width, bool useAltBorder)
     {
-        return attachedCards;
+        char borderChar = useAltBorder ? '║' : '|';
+        string power = TotalPower.ToString().PadLeft(2, '0');
+        string breakpoint = CurrentBreakpoint.ToString().PadLeft(2, '0');
+        string centeredTitle = RenderUtil.CenterString(Title, width - 4);
+
+        return $"{borderChar}{power}{centeredTitle}{breakpoint}{borderChar}";
     }
 }

@@ -1,5 +1,7 @@
-﻿namespace Models.Player;
+﻿using Models.Cards;
 
-public class HumanPlayer: PrimitivePlayer
+namespace Models.Player;
+
+public class HumanPlayer(string name, List<Faction> factions) : PrimitivePlayer(name, factions)
 {
 }

@@ -11,6 +11,12 @@ namespace SmashUp.Backend.Repositories
         BaseCard Get(int id);
 
         /// <summary>
+        /// Gets all BaseCards with the specified faction
+        /// </summary>
+        /// <returns>A List of type BaseCard</returns>
+        List<BaseCard> GetByFaction(int factionId);
+
+        /// <summary>
         /// Gets all BaseCards
         /// </summary>
         /// <returns>A List of all objects of type T</returns>
@@ -29,11 +35,5 @@ namespace SmashUp.Backend.Repositories
         /// <param name="baseCard"></param>
         /// <returns>The ID of the baseCard updated or created</returns>
         int Save(BaseCard baseCard);
-
-        /// <summary>
-        /// Gets all BaseCards with the specified faction
-        /// </summary>
-        /// <returns>A List of type BaseCard</returns>
-        List<BaseCard> Get(Faction faction);
     }
 }

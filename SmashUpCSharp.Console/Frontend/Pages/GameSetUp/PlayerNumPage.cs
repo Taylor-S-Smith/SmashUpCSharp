@@ -5,7 +5,7 @@ using SmashUp.Frontend.Utilities;
 
 namespace SmashUp.Frontend.Pages.GameSetUp
 {
-    internal class PlayerNumPage(IPlayerService playerService) : PrimitivePage
+    internal class PlayerNumPage : PrimitivePage
     {
         //State Variables
         private int numPlayers;
@@ -19,9 +19,6 @@ namespace SmashUp.Frontend.Pages.GameSetUp
 
         //Display Variables
         private readonly string[] Header = AsciiUtil.ToAscii("How many players?");
-
-        //SERVICES
-        readonly IPlayerService _playerService = playerService;
 
         public override void Render(int consoleWidth, int consoleHeight)
         {
@@ -45,10 +42,6 @@ namespace SmashUp.Frontend.Pages.GameSetUp
                     break;
                 case UserKeyPress.Confirm:
                     numPlayers = SelectedOption + 2;
-                    for (int i = 0; i < numPlayers; i++)
-                    {
-                        _playerService.Create(new HumanPlayer());
-                    }
                     return "PlayerNamePage";
                 case UserKeyPress.Escape:
                     Console.WriteLine("Escaping game...");

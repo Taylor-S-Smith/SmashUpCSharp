@@ -21,6 +21,11 @@ namespace SmashUp.Backend.Repositories
         {
             return Items.SingleOrDefault(x => x.Id == id) ?? throw new Exception($"Can't get PlayableCard with Id {id}"); ;
         }
+        
+        public List<PlayableCard> GetByFaction(long factionId)
+        {
+            return Items.Where(x => x.FactionId == factionId).ToList();
+        }
 
         public List<PlayableCard> GetAll()
         {

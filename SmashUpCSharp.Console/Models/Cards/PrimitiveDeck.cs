@@ -1,9 +1,9 @@
 ﻿namespace Models.Cards
 {
-    public abstract class PrimitiveDeck<T> : IIdentifiable where T : PrimitiveCard
+    public abstract class PrimitiveDeck<T>(IList<T> cards) : IIdentifiable where T : PrimitiveCard
     {
 
-        public virtual IList<T> Cards { get; set; } = [];
+        public virtual IList<T> Cards { get; set; } = cards;
 
         public int Id { get; set;  }
 
@@ -15,7 +15,7 @@
         {
 
         }
-        public List<T> DrawCards(int numCards = 1)
+        public List<T> Draw(int numCards = 1)
         {
             List<T> drawnCards = [];
             for (int i = 0; i < numCards; i++)
@@ -28,7 +28,6 @@
                 }
                 else
                 {
-                    // Handle case where there are not enough cards to draw
                     break;
                 }
             }

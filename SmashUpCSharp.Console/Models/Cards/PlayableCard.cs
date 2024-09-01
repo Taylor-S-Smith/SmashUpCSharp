@@ -5,51 +5,22 @@ using System.Text;
 
 namespace Models.Cards
 {
-    public class PlayableCard(string title, int printedPower, IList<string> graphic, PlayLocation playLocation, Action onPlay) : PrimitiveCard(title, graphic)
+    public class PlayableCard(int factionId, string title, string[] graphic) : PrimitiveCard(title, graphic, factionId)
     {
         public int Owner { get; set; } = 0;
         public int Controller { get; set; } = 0;
-        public PlayLocation PlayLocation { get; set; } = playLocation;
-        public int PrintedPower { get; set; } = printedPower;
-        public int CurrentPower { get; set; } = printedPower;
-        public Action OnPlay { get; set; } = onPlay;
+        public PlayLocation PlayLocation { get; set; } = PlayLocation.Base;
+        public int PrintedPower { get; set; } = 0;
+        public int CurrentPower { get; set; } = 0;
+        public Action OnPlay { get; set; } = () => { };
         public IList<PlayableCard> AttachedCards { get; set; } = [];
 
-        public IList<string> GetGraphic(bool useAltBorder=false)
+        protected override string BuildTitleLine(int width, bool useAltBorder)
         {
-            int graphicWidth = Graphic.Max(line => line.Length);
-            int graphicHeight = Graphic.Count;
+            char borderChar = useAltBorder ? '║' : '|';
+            string centeredTitle = RenderUtil.CenterString(Title, width - 2);
 
-            string[] returnGraphic = new string[graphicHeight + 2];
-
-            // Top Border
-            StringBuilder topBorder = new();
-            topBorder.Append(useAltBorder ? '╔': ' ');
-            topBorder.Append(useAltBorder ? '═' : '_', graphicWidth);
-            topBorder.Append(useAltBorder ? '╗' : ' ');
-
-            returnGraphic[0] = topBorder.ToString();
-
-            // Card Content
-            for (int i = 0; i < Graphic.Count; i++)
-            {
-                StringBuilder lineBuilder = new();
-                lineBuilder.Append(useAltBorder ? '║' : '|');
-                lineBuilder.Append(RenderUtil.CenterString(Graphic[i], graphicWidth));
-                lineBuilder.Append(useAltBorder ? '║' : '|');
-
-                returnGraphic[i + 1] = lineBuilder.ToString();
-            }
-
-            // Bottom Border
-            StringBuilder bottomBorder = new();
-            bottomBorder.Append(useAltBorder ? '╚' : '|');
-            bottomBorder.Append(useAltBorder ? '═' : '_', graphicWidth);
-            bottomBorder.Append(useAltBorder ? '╝' : '|');
-
-            returnGraphic[^1] = bottomBorder.ToString();
-
-            return returnGraphic;
+            return $"{borderChar}{PrintedPower}{centeredTitle}{PrintedPower}{borderChar}";
         }
     }
 }

@@ -10,6 +10,8 @@ namespace SmashUp.Backend.Repositories
         /// <returns>An object of type T</returns>
         PlayableCard Get(int id);
 
+        List<PlayableCard> GetByFaction(long factionId);
+
         /// <summary>
         /// Gets all PlayableCards
         /// </summary>

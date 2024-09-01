@@ -19,7 +19,7 @@ namespace SmashUp.Models.Games
         {
             Players = players;
             BaseDeck = new(baseCards);
-            ActiveBases = BaseDeck.DrawCards(Players.Count + 1);
+            ActiveBases = BaseDeck.Draw(Players.Count + 1);
 
             CurrentTurn = new(Players[randomGenerator.Next(Players.Count)]);
         }

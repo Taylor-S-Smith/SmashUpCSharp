@@ -22,9 +22,9 @@ namespace SmashUp.Backend.Repositories
             return Items.SingleOrDefault(x => x.Id == id) ?? throw new Exception($"Can't get BaseCard with Id {id}");
         }
 
-        public List<BaseCard> Get(Faction faction)
+        public List<BaseCard> GetByFaction(int factionId)
         {
-            return Items.Where(x => x.FactionId == faction.Id).ToList();
+            return Items.Where(x => x.FactionId == factionId).ToList();
         }
 
         public List<BaseCard> GetAll()

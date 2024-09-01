@@ -11,5 +11,17 @@ namespace SmashUp.Backend.Services
         {
             return _playableCardRepo.Get(id);
         }
+
+        public List<PlayableCard> Get(List<Faction> factions)
+        {
+            List<PlayableCard> factionCards = [];
+
+            foreach (Faction faction in factions)
+            {
+                factionCards.AddRange(_playableCardRepo.GetByFaction(faction.Id));
+            }
+
+            return factionCards;
+        }
     }
 }

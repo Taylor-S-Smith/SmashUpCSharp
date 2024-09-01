@@ -7,13 +7,13 @@ namespace SmashUp.Backend.Services
     {
         readonly IBaseCardRepository _baseCardRepo = baseCardRepo;
 
-        public List<BaseCard> GetBaseCards(List<Faction> factions)
+        public List<BaseCard> Get(List<Faction> factions)
         {
             List<BaseCard> baseCards = [];
 
             foreach (Faction faction in factions)
             {
-                baseCards.AddRange(_baseCardRepo.Get(faction));
+                baseCards.AddRange(_baseCardRepo.GetByFaction(faction.Id));
             }
 
             return baseCards;

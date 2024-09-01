@@ -64,21 +64,11 @@ namespace SmashUp.Frontend.Pages
             Faction faction2 = _factionService.Get(2);
             Faction faction3 = _factionService.Get(3);
 
-            _playerService.Create(new HumanPlayer()
-            {
-                Name = "Taylor",
-                Factions = [faction0, faction1],
-                Hand = testCards
-            });
-            _playerService.Create(new HumanPlayer()
-            {
-                Name = "Andrew",
-                Factions = [faction2, faction3],
-                Hand = testCards
-            });
+            _playerService.Create(new HumanPlayer("Taylor", [faction0, faction1]));
+            _playerService.Create(new HumanPlayer("Andrew", [faction2, faction3]));
 
             var players = _playerService.GetAll();
-            var bases = _baseService.GetBaseCards(players.SelectMany(x => x.Factions).ToList());
+            var bases = _baseService.Get(players.SelectMany(x => x.Factions).ToList());
 
             Game = new(players, bases);
 
@@ -171,15 +161,16 @@ namespace SmashUp.Frontend.Pages
         private string[] GenerateBaseField(int consoleWidth)
         {
             int numBases = Game.ActiveBases.Count;
-            int baseGraphicVerticalLength = Game.ActiveBases[0].GetGraphic().Count;
-            int baseGraphicHorizontalLength = Game.ActiveBases[0].GetGraphic()[0].Length;
 
-            int horizontalPaddingLength = (consoleWidth-1 - (baseGraphicHorizontalLength * numBases)) / (numBases+1);
-            BaseAreaWidth = baseGraphicHorizontalLength + horizontalPaddingLength;
+            int baseGraphicHeight = Game.ActiveBases.Max(baseCard => baseCard.GetGraphic().Length);
+            int baseGraphicWidth = Game.ActiveBases.Max(baseCard => baseCard.GetGraphic().Max(line => line.Length));
 
-            var baseField = new string[baseGraphicVerticalLength];
+            int horizontalPaddingLength = (consoleWidth-1 - (baseGraphicWidth * numBases)) / (numBases+1);
+            BaseAreaWidth = baseGraphicWidth + horizontalPaddingLength;
 
-            for (int i = 0; i < baseGraphicVerticalLength; i++)
+            var baseField = new string[baseGraphicHeight];
+
+            for (int i = 0; i < baseGraphicHeight; i++)
             {
                 StringBuilder lineBuilder = new();
 
@@ -259,7 +250,7 @@ namespace SmashUp.Frontend.Pages
             string[] inputField = [""];
             if (allCards.Count > 0)
             {
-                int cardHeight = allCards.Max(card => card.GetGraphic().Count);
+                int cardHeight = allCards.Max(card => card.GetGraphic().Length);
                 int cardLength = allCards.Max(card => card.GetGraphic().Max(line => line.Length));
 
                 inputField = new string[cardHeight];
