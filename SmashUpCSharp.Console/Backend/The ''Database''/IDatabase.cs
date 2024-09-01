@@ -1,6 +1,6 @@
 ﻿namespace SmashUp.The___Database__
 {
-    internal interface IDatabaseLoader
+    internal interface IDatabase
     {
         void Load();
     }

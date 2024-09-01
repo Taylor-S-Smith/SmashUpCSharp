@@ -3,7 +3,7 @@ using SmashUp.Backend.Repositories;
 
 namespace SmashUp.The___Database__
 {
-    internal class Database(IBaseCardRepository baseCardRepo, IFactionRepository factionRepo, IPlayableCardRepository playableCardRepo) : IDatabaseLoader
+    internal class Database(IBaseCardRepository baseCardRepo, IFactionRepository factionRepo, IPlayableCardRepository playableCardRepo) : IDatabase
     {
         readonly IBaseCardRepository _baseCardRepo = baseCardRepo;
         readonly IFactionRepository _factionRepo = factionRepo;
@@ -1138,7 +1138,7 @@ namespace SmashUp.The___Database__
                 @"  /           | |   __  /",
                 @"O|____        | |   __ | ",
                 @" /    \_______| |     __\",
-                @"      |      \_|        ",
+                @"|      |      \_|        ",
                 @" \____/                  ",
                 @"Destroy up to two minions",
                 @"   of power 2 or less.   ",

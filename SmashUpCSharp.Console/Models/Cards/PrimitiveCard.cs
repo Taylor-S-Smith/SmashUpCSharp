@@ -1,4 +1,5 @@
 ﻿using SmashUp.Frontend.Utilities;
+using System;
 
 namespace Models.Cards
 {
@@ -14,23 +15,30 @@ namespace Models.Cards
             int graphicWidth = Graphic.Max(line => line.Length);
             int graphicHeight = Graphic.Length;
 
-            // We add exactly 3 additional lines through this process, two borders and a title 
-            string[] returnGraphic = new string[graphicHeight + 3];
+            string? title = BuildTitleLine(graphicWidth, useAltBorder);
+
+            // We add 2 borders and sometimes a title
+            string[] returnGraphic = new string[graphicHeight + (title!= null ? 3 : 2)];
+
+            int index = 0;
 
             // Top Border
-            returnGraphic[0] = BuildBorder(useAltBorder ? '╔' : ' ', useAltBorder ? '═' : '_', useAltBorder ? '╗' : ' ', graphicWidth);
+            returnGraphic[index++] = BuildBorder(useAltBorder ? '╔' : ' ', useAltBorder ? '═' : '_', useAltBorder ? '╗' : ' ', graphicWidth);
 
             // Title
-            returnGraphic[1] = BuildTitleLine(graphicWidth, useAltBorder);
+            if (title != null)
+            {
+                returnGraphic[index++] = title;
+            }
 
             // Content
             for (int i = 0; i < graphicHeight; i++)
             {
-                returnGraphic[i + 2] = BuildContentLine(Graphic[i], graphicWidth, useAltBorder);
+                returnGraphic[index++] = BuildContentLine(Graphic[i], graphicWidth, useAltBorder);
             }
 
             // Bottom Border
-            returnGraphic[^1] = BuildBorder(useAltBorder ? '╚' : '|', useAltBorder ? '═' : '_', useAltBorder ? '╝' : '|', graphicWidth);
+            returnGraphic[index] = BuildBorder(useAltBorder ? '╚' : '|', useAltBorder ? '═' : '_', useAltBorder ? '╝' : '|', graphicWidth);
 
             return returnGraphic;
         }
@@ -46,7 +54,7 @@ namespace Models.Cards
 
             return $"{borderChar}{centeredContent}{borderChar}";
         }
-        protected abstract string BuildTitleLine(int graphicWidth, bool useAltBorder);
+        protected abstract string? BuildTitleLine(int graphicWidth, bool useAltBorder);
     }
 
 }

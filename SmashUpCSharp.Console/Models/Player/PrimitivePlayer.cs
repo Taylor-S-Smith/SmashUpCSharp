@@ -15,15 +15,15 @@ public class PrimitivePlayer : IIdentifiable
     public List<PlayableCard> Hand { get; set; }
     public int VictoryPoints { get; set; }
 
-    public PrimitivePlayer(string name, List<Faction> factions)
+    public PrimitivePlayer(string name, List<Faction> factions, List<PlayableCard> deckCards)
     {
         Name = name;
         Factions = factions;
 
-        var deckCards = new PlayableCardService(new PlayableCardRepository()).Get(factions);
-
         DrawDeck = new(deckCards);
         DiscardDeck = new([]);
+
+        DrawDeck.Shuffle();
 
         Hand = DrawDeck.Draw(5);
     }

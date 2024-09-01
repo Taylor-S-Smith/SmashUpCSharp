@@ -1,4 +1,6 @@
-﻿namespace Models.Cards
+﻿using System.Collections.Generic;
+
+namespace Models.Cards
 {
     public abstract class PrimitiveDeck<T>(IList<T> cards) : IIdentifiable where T : PrimitiveCard
     {
@@ -9,7 +11,16 @@
 
         public void Shuffle()
         {
-
+            Random rng = new();
+            int n = Cards.Count;
+            while (n > 1)
+            {
+                n--;
+                int k = rng.Next(n + 1);
+                T value = Cards[k];
+                Cards[k] = Cards[n];
+                Cards[n] = value;
+            }
         }
         public void GetCard()
         {

@@ -1,18 +1,16 @@
-﻿using SmashUp.Models.Games;
+﻿using SmashUp.Frontend.Utilities;
+using SmashUp.Backend.Services;
+using SmashUp.Models.Games;
+using Models.Player;
 using Models.Cards;
 using System.Text;
-using SmashUp.Backend.Services;
-using SmashUp.Frontend.Utilities;
-using Models.Player;
-using System.Linq.Expressions;
-using System.Numerics;
 
 namespace SmashUp.Frontend.Pages
 {
     internal class BattlePage : PrimitivePage
     {
         // STATIC VARIABLES
-        readonly int MIN_CARD_FIELD_SIZE = 15;
+        readonly int CARD_FIELD_SIZE = 15;
 
         // SERVICES
         readonly IBaseService _baseService;
@@ -20,24 +18,24 @@ namespace SmashUp.Frontend.Pages
         readonly IPlayableCardService _playableCardService;
         readonly IPlayerService _playerService;
 
-        // RENDERING VARS
-        private readonly int BaseFieldPadding = 1;
-        private readonly int CardFieldPadding = 1;
-        private readonly int StatFieldPadding = 1;
-
-        private int BaseAreaWidth;
-
         // GAME OBJECTS
         private Battle Game { get; set; }
 
         // USER INPUT AREA
-        int SelectedIndex = 0;
 
+        //Hand
         List<PlayableCard> LeftBuffer = [];
         List<PlayableCard> CardsDisplayed = [];
         List<PlayableCard> RightBuffer = [];
 
-        List<PlayableCard> SelectableCards;
+        //Field
+        int SelectedIndex = 0;
+        PrimitiveCard[][] SelectableFieldCards;
+
+        PlayableCard SelectedHandCard;
+        PrimitiveCard SelectedFieldCard;
+
+        PrimitiveCard ActiveSelectedCard;
 
 
         public BattlePage(IBaseService baseService, IFactionService factionService, IPlayableCardService playableCardService, IPlayerService playerService)
@@ -49,23 +47,22 @@ namespace SmashUp.Frontend.Pages
             _playableCardService = playableCardService;
             _playerService = playerService;
 
+            Random testRandom = new();
+
             List<PlayableCard> testCards =
             [
-                _playableCardService.Get(0),
-                _playableCardService.Get(1),
-                _playableCardService.Get(2),
-                _playableCardService.Get(3),
-                _playableCardService.Get(4),
-                _playableCardService.Get(5)
+                _playableCardService.Get(testRandom.Next(93)),
+                _playableCardService.Get(testRandom.Next(93)),
+                _playableCardService.Get(testRandom.Next(93))
             ];
 
-            Faction faction0 = _factionService.Get(0);
-            Faction faction1 = _factionService.Get(1);
-            Faction faction2 = _factionService.Get(2);
-            Faction faction3 = _factionService.Get(3);
+            List<Faction> Factions1 = [_factionService.Get(testRandom.Next(8)), _factionService.Get(testRandom.Next(8))];
+            List<Faction> Factions2 = [_factionService.Get(testRandom.Next(8)), _factionService.Get(testRandom.Next(8))];
 
-            _playerService.Create(new HumanPlayer("Taylor", [faction0, faction1]));
-            _playerService.Create(new HumanPlayer("Andrew", [faction2, faction3]));
+            var deckCards = _playableCardService.Get(Factions1);
+            _playerService.Create(new HumanPlayer("Taylor", Factions1, deckCards));
+            deckCards = _playableCardService.Get(Factions2);
+            _playerService.Create(new HumanPlayer("Andrew", Factions2, deckCards));
 
             var players = _playerService.GetAll();
             var bases = _baseService.Get(players.SelectMany(x => x.Factions).ToList());
@@ -76,36 +73,36 @@ namespace SmashUp.Frontend.Pages
             Game.ActiveBases[1].AttachCard(testCards[1]);
             Game.ActiveBases[2].AttachCard(testCards[2]);
 
-            SelectableCards = Game.CurrentTurn.ActivePlayer.Hand;
+
+            //Initialize Selections
+            //SelectableFieldCards = Game.ActiveBases.Select(x => x.GetAttachedCardsGraphic)
         }
 
         public override void Render(int consoleWidth, int consoleHeight)
         {
-            int OtherRenderGraphicsLength = 1;
+            int baseFieldPadding = 1;
+            int statFieldPadding = 1;
+            int otherRenderGraphicsLength = 1;
 
             //Initalize vars and generate fields
             StringBuilder? buffer = null;
             var baseField = GenerateBaseField(consoleWidth);
-            var cardField = GenerateCardField();
             var statField = GenerateStatField();
-            var consoleField = GenerateInputField(new[] {baseField.Max(line => line.Length), cardField.Max(line => line.Length), statField.Max(line => line.Length)}.Max());
+            var consoleField = GenerateInputField(new[] {baseField.Max(line => line.Length), statField.Max(line => line.Length)}.Max());
 
             //Ensure the current console size will fit the header
             int renderWidth = new[] {
                 baseField.Max(line => line.Length),
-                cardField.Max(line => line.Length),
                 statField.Max(line => line.Length),
                 consoleField.Max(line => line.Length)
             }.Max();
 
             int renderHeight = baseField.Length +
-                               BaseFieldPadding +
-                               cardField.Length +
-                               CardFieldPadding +
+                               baseFieldPadding +
                                statField.Length +
-                               StatFieldPadding +
+                               statFieldPadding +
                                consoleField.Length +
-                               OtherRenderGraphicsLength;
+                               otherRenderGraphicsLength;
 
             //Make sure the whole render can fit in the console
             if (consoleHeight - 1 >= renderHeight && consoleWidth - 1 >= renderWidth)
@@ -117,12 +114,7 @@ namespace SmashUp.Frontend.Pages
                 {
                     render[i++] = line;
                 }
-                i += BaseFieldPadding;
-                foreach (string line in cardField)
-                {
-                    render[i++] = line;
-                }
-                i += CardFieldPadding;
+                i += baseFieldPadding;
 
                 //Separation Graphic
                 StringBuilder lineBuilder = new();
@@ -133,7 +125,7 @@ namespace SmashUp.Frontend.Pages
                 {
                     render[i++] = line;
                 }
-                i += StatFieldPadding;
+                i += statFieldPadding;
                 foreach (string line in consoleField)
                 {
                     render[i++] = line;
@@ -162,61 +154,65 @@ namespace SmashUp.Frontend.Pages
         {
             int numBases = Game.ActiveBases.Count;
 
-            int baseGraphicHeight = Game.ActiveBases.Max(baseCard => baseCard.GetGraphic().Length);
-            int baseGraphicWidth = Game.ActiveBases.Max(baseCard => baseCard.GetGraphic().Max(line => line.Length));
+            // Get Active Bases Graphics
+            string[][] activeBasesGraphics = Game.ActiveBases
+                .Select(activeBase => activeBase.GetGraphic(ActiveSelectedCard == activeBase))
+                .ToArray();
 
+            // Get Attached Cards Graphics
+            string[][] attachedCardGraphics = Game.ActiveBases
+                .Select(baseCard => baseCard.GetAttachedCardsGraphic())
+                .ToArray();
+
+            if (activeBasesGraphics.Length != attachedCardGraphics.Length) throw new Exception($"Recieved {activeBasesGraphics.Length} active bases but only {attachedCardGraphics.Length} attached card graphics. They should be equal");
+
+            // Calculate array size
+            int baseGraphicHeight = activeBasesGraphics.Max(baseGraphic => baseGraphic.Length);
+            int paddingHeight = 1;
+            int numCardFieldLines = Math.Max(attachedCardGraphics.Max(x => x.Length), CARD_FIELD_SIZE);
+            var baseField = new string[baseGraphicHeight + paddingHeight +  numCardFieldLines];
+
+            // Calculate padding
+            int baseGraphicWidth = activeBasesGraphics.Max(baseGraphic => baseGraphic.Max(line => line.Length));
             int horizontalPaddingLength = (consoleWidth-1 - (baseGraphicWidth * numBases)) / (numBases+1);
-            BaseAreaWidth = baseGraphicWidth + horizontalPaddingLength;
 
-            var baseField = new string[baseGraphicHeight];
-
-            for (int i = 0; i < baseGraphicHeight; i++)
+            // Generate combined graphics
+            for (int i = 0; i < baseField.Length; i++)
             {
                 StringBuilder lineBuilder = new();
 
                 for (int j = 0; j < numBases; j++)
                 {
-                    lineBuilder.Append(Game.ActiveBases[j].GetGraphic()[i]);
+                    if (i < activeBasesGraphics[j].Length)
+                    {
+                        lineBuilder.Append(activeBasesGraphics[j][i]);
 
-                    if (j < numBases - 1 && horizontalPaddingLength > 0) 
-                        lineBuilder.Append(' ', horizontalPaddingLength);
+                        if (j < numBases - 1 && horizontalPaddingLength > 0)
+                            lineBuilder.Append(' ', horizontalPaddingLength);
+                    }
+                    else if(i < activeBasesGraphics[j].Length + paddingHeight)
+                    {
+                        lineBuilder.Append(String.Empty);
+                    }
+                    else
+                    {
+                        int attachedCardIndex = i - (baseGraphicHeight + paddingHeight);
+                        int currBaseArea = activeBasesGraphics[j].Max(x => x.Length) + horizontalPaddingLength;
+
+                        string currString = attachedCardIndex < attachedCardGraphics[j].Length
+                            ? attachedCardGraphics[j][attachedCardIndex]
+                            : string.Empty;
+
+                        lineBuilder.Append(RenderUtil.LeftJustifyString(currString, currBaseArea));
+                    }
                 }
 
                 baseField[i] = lineBuilder.ToString();
             }
+
             return baseField;
         }
 
-        /// <summary>
-        /// Generates the text that lists the cards at each base for each player
-        /// </summary>
-        private string[] GenerateCardField()
-        {
-            //Gather the base lists
-            List<List<string>> baseLists = [];
-            foreach (BaseCard baseCard in Game.ActiveBases)
-            {
-                baseLists.Add(baseCard.GetDisplayList());
-            }
-
-            //Determine number of lines needed
-            int maxLines = Math.Max(baseLists.Max(x => x.Count), MIN_CARD_FIELD_SIZE);
-            var cardField = new string[maxLines];
-
-            for (int i = 0; i < maxLines; i++)
-            {
-                StringBuilder lineBuilder = new();
-                foreach (List<string> baseList in baseLists)
-                {
-                    string currString = i < baseList.Count ? baseList[i] : string.Empty;
-                    lineBuilder.Append(RenderUtil.LeftJustifyString(currString, BaseAreaWidth));
-                }
-
-                cardField[i] = lineBuilder.ToString();
-            }
-
-            return cardField;
-        }
 
         /// <summary>
         /// Generates the field that lists the game statistics
@@ -245,20 +241,21 @@ namespace SmashUp.Frontend.Pages
         /// </summary>
         private string[] GenerateInputField(int fieldLength)
         {
-            List<PlayableCard> allCards = Game.CurrentTurn.ActivePlayer.Hand;
+            List<PlayableCard> allCardsInHand = Game.CurrentTurn.ActivePlayer.Hand;
 
             string[] inputField = [""];
-            if (allCards.Count > 0)
+            if (allCardsInHand.Count > 0)
             {
-                int cardHeight = allCards.Max(card => card.GetGraphic().Length);
-                int cardLength = allCards.Max(card => card.GetGraphic().Max(line => line.Length));
+                string[][] graphics = Game.CurrentTurn.ActivePlayer.Hand.Select(card => card.GetGraphic(ActiveSelectedCard == card)).ToArray();
+                int cardHeight = graphics.Max(graphic => graphic.Length);
+                int cardLength = graphics.Max(graphic => graphic.Max(line => line.Length));
 
                 inputField = new string[cardHeight];
 
-                int numCardsToDisplay = Math.Min(fieldLength/(cardLength+1), allCards.Count);
+                int numCardsToDisplay = Math.Min(fieldLength/(cardLength+1), allCardsInHand.Count);
 
-                CardsDisplayed = allCards[..numCardsToDisplay];
-                RightBuffer = allCards[numCardsToDisplay..];
+                CardsDisplayed = allCardsInHand[..numCardsToDisplay];
+                RightBuffer = allCardsInHand[numCardsToDisplay..];
 
                 for (int i = 0; i < cardHeight; i++)
                 {
@@ -266,11 +263,9 @@ namespace SmashUp.Frontend.Pages
 
                     for (int j = 0; j < numCardsToDisplay; j++)
                     {
-                        var selectedCard = SelectableCards[SelectedIndex];
                         var cardToDisplay = CardsDisplayed[j];
-
-                        bool cardIsSelected = selectedCard == cardToDisplay;
-                        lineBuilder.Append(CardsDisplayed[j].GetGraphic(cardIsSelected)[i]);
+                        
+                        lineBuilder.Append(graphics[j][i]);
                         if (j < numCardsToDisplay - 1) lineBuilder.Append(' ');
                     }
 
@@ -291,7 +286,7 @@ namespace SmashUp.Frontend.Pages
                     stateChanged = true;
                     break;
                 case UserKeyPress.Right:
-                    SelectedIndex = Math.Min(SelectableCards.Count - 1, SelectedIndex + 1);
+                    SelectedIndex = Math.Min(CardsDisplayed.Count - 1, SelectedIndex + 1);
                     stateChanged = true;
                     break;
                 case UserKeyPress.Escape:

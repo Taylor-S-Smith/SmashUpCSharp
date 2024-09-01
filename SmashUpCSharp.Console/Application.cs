@@ -4,9 +4,9 @@ using SmashUp.Frontend.Utilities;
 
 namespace SmashUp
 {
-    internal class Application(IDatabaseLoader databaseLoader)
+    internal class Application(IDatabase databaseLoader)
     {
-        readonly IDatabaseLoader _databaseLoader = databaseLoader;
+        readonly IDatabase _databaseLoader = databaseLoader;
 
         internal void Run(Dictionary<string, Func<PrimitivePage>> availablePageDictionary)
         {

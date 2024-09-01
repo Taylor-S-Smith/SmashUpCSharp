@@ -35,7 +35,7 @@ namespace SmashUpCSharp.Program
             services.AddSingleton<BattlePage>();
 
             //Other
-            services.AddSingleton<IDatabaseLoader, Database>();
+            services.AddSingleton<IDatabase, Database>();
             services.AddSingleton<Application>();
 
             ServiceProvider serviceProvider = services.BuildServiceProvider();

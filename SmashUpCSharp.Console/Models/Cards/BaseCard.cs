@@ -14,31 +14,34 @@ public class BaseCard(int factionId, string title, string[] graphic, int printed
     
 
     //GET
-    public List<string> GetDisplayList()
+    public string[] GetAttachedCardsGraphic()
     {
-        List<string> DisplayList = [];
-        attachedCards = attachedCards.OrderBy(x => x.Owner).ToList();
-        int? currPlayer = null;
+        int numLines = attachedCards.Count + attachedCards.Select(x => x.Owner).Distinct().Count();
+        string[] displayList = new string[numLines];
 
+        int? currOwner = null;
         int cardIndex = 1;
+        int displayIndex = 0;
         foreach (PlayableCard card in attachedCards)
         {
-            if (currPlayer != card.Owner)
+            // Whenever the owner changes, add a new owner header line
+            if (currOwner != card.Owner)
             {
-                DisplayList.Add($"Player {card.Owner}'s cards:");
-                currPlayer = card.Owner;
+                displayList[displayIndex++] = $"Player {card.Owner}'s cards:";
+                currOwner = card.Owner;
             }
 
-            if(card.CurrentPower > 0)
+            string cardLine = $"{cardIndex}. {card.Title}";
+            if (card.CurrentPower != null)
             {
-                DisplayList.Add($"{cardIndex}. {card.Title} ({card.CurrentPower})");
-            } else
-            {
-                DisplayList.Add($"{cardIndex}. {card.Title}");
+                cardLine += $" ({card.CurrentPower})";
             }
+
+            displayList[displayIndex++] = cardLine;
+            cardIndex++;
         }
 
-        return DisplayList;
+        return displayList;
     }
 
     public string GetCardsByIndex(int num)
@@ -62,7 +65,7 @@ public class BaseCard(int factionId, string title, string[] graphic, int printed
 
     private void UpdateTotalPower()
     {
-        TotalPower = attachedCards.Sum(x => x.CurrentPower);
+        TotalPower = attachedCards.Sum(x => x.CurrentPower ?? 0);
     }
 
     protected override string BuildTitleLine(int width, bool useAltBorder)
