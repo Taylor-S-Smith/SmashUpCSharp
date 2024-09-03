@@ -12,7 +12,7 @@ namespace SmashUp
         {
             //Initialize Data
             KeyMapUtil.SetDefaultKeyMappings();
-            _databaseLoader.Load();
+            _databaseLoader.LoadData();
 
             //Start Game
             Presenter presenter = new(availablePageDictionary["BattlePage"].Invoke(), availablePageDictionary);

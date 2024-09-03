@@ -9,7 +9,7 @@ namespace SmashUp.The___Database__
         readonly IFactionRepository _factionRepo = factionRepo;
         readonly IPlayableCardRepository _playableCardRepo = playableCardRepo;
 
-        public void Load()
+        public void LoadData()
         {
             _factionRepo.Create(Aliens);
             _factionRepo.Create(Dinosaurs);

@@ -2,6 +2,6 @@
 {
     internal interface IDatabase
     {
-        void Load();
+        void LoadData();
     }
 }

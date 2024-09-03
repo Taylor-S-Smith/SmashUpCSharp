@@ -3,7 +3,7 @@ using Models.Cards;
 
 namespace SmashUp.Models.Games
 {
-    public class Battle
+    public class Game
     {
         // Fields
         private readonly Random randomGenerator = new();
@@ -15,7 +15,7 @@ namespace SmashUp.Models.Games
 
         public Turn CurrentTurn { get; set; }
 
-        public Battle(List<PrimitivePlayer> players, List<BaseCard> baseCards)
+        public Game(List<PrimitivePlayer> players, List<BaseCard> baseCards)
         {
             Players = players;
             BaseDeck = new(baseCards);

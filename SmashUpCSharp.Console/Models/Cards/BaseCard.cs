@@ -14,7 +14,7 @@ public class BaseCard(int factionId, string title, string[] graphic, int printed
     
 
     //GET
-    public string[] GetAttachedCardsGraphic(PrimitiveCard? selectedCard)
+    public string[] GetAttachedCardsGraphic(PlayableCard? targetedCard)
     {
         int numLines = AttachedCards.Count + AttachedCards.Select(x => x.Owner).Distinct().Count();
         string[] displayList = new string[numLines];
@@ -34,7 +34,7 @@ public class BaseCard(int factionId, string title, string[] graphic, int printed
 
             StringBuilder lineBuilder = new();
 
-            if(card == selectedCard)
+            if(card == targetedCard)
             {
                 lineBuilder.Append('>');
             }
@@ -45,7 +45,7 @@ public class BaseCard(int factionId, string title, string[] graphic, int printed
             {   
                 lineBuilder.Append($" ({card.CurrentPower})");
             }
-            if (card == selectedCard)
+            if (card == targetedCard)
             {
                 lineBuilder.Append('<');
             }

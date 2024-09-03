@@ -33,5 +33,10 @@ public class PrimitivePlayer : IIdentifiable
     {
         Hand.AddRange(DrawDeck.Draw(numCards));
     }
+    public void PlayCard(PlayableCard playedCard, BaseCard baseCard)
+    {
+        Hand.Remove(playedCard);
+        baseCard.AttachCard(playedCard);
+    }
 
 }

@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using SmashUp;
+using SmashUp.Backend.LogicServices;
 using SmashUp.Backend.Repositories;
 using SmashUp.Backend.Services;
 using SmashUp.Frontend.Pages;
@@ -21,11 +22,15 @@ namespace SmashUpCSharp.Program
             services.AddSingleton<IPlayableCardRepository, PlayableCardRepository>();
             services.AddSingleton<IPlayerRepository, PlayerRepository>();
 
-            //Service
+            //Data Services
             services.AddSingleton<IBaseService, BaseService>();
             services.AddSingleton<IFactionService, FactionService>();
             services.AddSingleton<IPlayableCardService, PlayableCardService>();
             services.AddSingleton<IPlayerService, PlayerService>();
+
+            //Logic Services
+            services.AddScoped<IBattlePageService, BattlePageService>();
+            services.AddScoped<IGameService, GameService>();
 
             //Pages
             services.AddSingleton<StartPage>();
