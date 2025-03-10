@@ -5,6 +5,8 @@ VisualStudioVersion = 17.9.34728.123
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SmashUp", "SmashUpCSharp.Console\SmashUp.csproj", "{3C6EDE81-0BBA-4CAC-A9D8-44157A1161D6}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SmashUpBackend", "SmashUpBackend\SmashUpBackend.csproj", "{8C3F166E-7E7B-42EC-A636-BA5B864D913E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +17,10 @@ Global
 		{3C6EDE81-0BBA-4CAC-A9D8-44157A1161D6}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3C6EDE81-0BBA-4CAC-A9D8-44157A1161D6}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3C6EDE81-0BBA-4CAC-A9D8-44157A1161D6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8C3F166E-7E7B-42EC-A636-BA5B864D913E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8C3F166E-7E7B-42EC-A636-BA5B864D913E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8C3F166E-7E7B-42EC-A636-BA5B864D913E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8C3F166E-7E7B-42EC-A636-BA5B864D913E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
