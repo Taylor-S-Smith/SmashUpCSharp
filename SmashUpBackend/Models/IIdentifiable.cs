@@ -1,6 +1,6 @@
 ﻿namespace SmashUpBackend.Models;
 
-public interface IIdentifiable
+public abstract class Identifiable
 {
-    int Id { get; set; }
+    public Guid Id { get; } = new Guid();
 }

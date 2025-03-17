@@ -1,15 +1,29 @@
-﻿namespace SmashUpBackend.Models.Cards;
+﻿namespace Backend.Models;
 
-internal class Deck<T>
+internal class Deck<T> where T : Card
 {
-    public List<T> _cards;
+    private List<T> _cards;
 
     public Deck(List<T> cards)
     {
         _cards = cards;
         Shuffle();
     }
+    public Deck()
+    {
+        _cards = [];
+    }
 
+
+    public List<string> GetCards()
+    {
+        return _cards.Select(c => c.Name).ToList();
+    }
+    public void AddCards(List<T> cards)
+    {
+        _cards.AddRange(cards);
+        Shuffle();
+    }
     public void Shuffle()
     {
         Random rng = new();
@@ -21,7 +35,6 @@ internal class Deck<T>
             (_cards[n], _cards[k]) = (_cards[k], _cards[n]);
         }
     }
-
     public List<T> Draw(int numCards = 1)
     {
         int drawCount = Math.Min(numCards, _cards.Count);

@@ -1,9 +1,9 @@
 I have essentially finished the basic data structures of the game. 
 
 The next steps are:
-- create the Game class
-- implement battle setup. (See "Setup" https://smashup.fandom.com/wiki/Rules)
-- implement basic get commands, everything a player could do in the physical world (e.g. show hand/discard, show active bases, etc) 
+- Go Through SetUp (See "Setup" https://smashup.fandom.com/wiki/Rules)
+- Implement way to sort through cards, but also create them dynamically
+- implement basic console commands, everything a player could do in the physical world (e.g. show hand/discard, show active bases, etc) 
   below is the list of commands your SmashUp shell could do. Some of them will be on this level, but most will be commands that will
   be implemented on further steps
 

@@ -1,4 +1,4 @@
-﻿namespace SmashUpBackend.Models.Cards;
+﻿namespace Backend.Models;
 
 internal enum Faction
 {

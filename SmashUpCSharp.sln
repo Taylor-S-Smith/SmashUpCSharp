@@ -3,9 +3,13 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.9.34728.123
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SmashUp", "SmashUpCSharp.Console\SmashUp.csproj", "{3C6EDE81-0BBA-4CAC-A9D8-44157A1161D6}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LegacySmashUp", "SmashUpCSharp.Console\LegacySmashUp.csproj", "{3C6EDE81-0BBA-4CAC-A9D8-44157A1161D6}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SmashUpBackend", "SmashUpBackend\SmashUpBackend.csproj", "{8C3F166E-7E7B-42EC-A636-BA5B864D913E}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Backend", "SmashUpBackend\Backend.csproj", "{8C3F166E-7E7B-42EC-A636-BA5B864D913E}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SmashUp", "SmashUp", "{21ECCA93-4F9B-417F-8B00-018E77B45FD8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AsciiGraphicFrontend", "AsciiGraphicFrontend\AsciiGraphicFrontend.csproj", "{C0C9CB32-A99B-4C8F-ABAE-810392E566D6}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,9 +25,17 @@ Global
 		{8C3F166E-7E7B-42EC-A636-BA5B864D913E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8C3F166E-7E7B-42EC-A636-BA5B864D913E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8C3F166E-7E7B-42EC-A636-BA5B864D913E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C0C9CB32-A99B-4C8F-ABAE-810392E566D6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C0C9CB32-A99B-4C8F-ABAE-810392E566D6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C0C9CB32-A99B-4C8F-ABAE-810392E566D6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C0C9CB32-A99B-4C8F-ABAE-810392E566D6}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{8C3F166E-7E7B-42EC-A636-BA5B864D913E} = {21ECCA93-4F9B-417F-8B00-018E77B45FD8}
+		{C0C9CB32-A99B-4C8F-ABAE-810392E566D6} = {21ECCA93-4F9B-417F-8B00-018E77B45FD8}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {AA8C8F33-601E-4AFB-9CB3-B051704109CE}

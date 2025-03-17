@@ -5,6 +5,6 @@ internal class Application()
 
     internal void Run()
     {
-        Console.WriteLine("Backend is running")
+        Console.WriteLine("Backend is running");
     }
 }

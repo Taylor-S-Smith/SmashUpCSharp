@@ -1,6 +1,6 @@
-﻿using SmashUpBackend.Models.Cards;
+﻿using Backend.Models;
 
-namespace SmashUpBackend.Models.Battle;
+namespace Backend.GameObjects;
 
 
 internal class PlayerTerritory
@@ -17,15 +17,22 @@ internal class BaseSlot
     {
         BaseCard = baseCard;
 
-        for(int i = 0; i < numTerritories; i++)
+        for (int i = 0; i < numTerritories; i++)
         {
             Territories.Add(new());
         }
     }
 }
 
+/// <summary>
+/// Handles the interactions between all non-player game objects. Recieves input from players
+/// </summary>
 internal class Board
 {
+    public enum GamePhase
+    {
+        
+    }
     public Deck<BaseCard> BaseDeck { get; set; }
     public Deck<BaseCard> BaseDiscard { get; set; }
     public List<BaseSlot> ActiveBases { get; set; }
