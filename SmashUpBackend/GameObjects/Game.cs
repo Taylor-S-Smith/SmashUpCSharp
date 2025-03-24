@@ -19,6 +19,6 @@ internal class Game(IUserInputHandler userInputHandler, Random random, BaseCardS
 
     public void BeginBattle() {
         _currentBattle = new(_userInputHandler, _random, _baseCardService, _playableCardService);
-        _currentBattle.Start();
+        _currentBattle.StartBattle();
     }
 }

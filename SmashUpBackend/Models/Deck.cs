@@ -1,4 +1,6 @@
-﻿namespace Backend.Models;
+﻿using System.Collections.Generic;
+
+namespace Backend.Models;
 
 internal class Deck<T> where T : Card
 {
@@ -19,10 +21,13 @@ internal class Deck<T> where T : Card
     {
         return _cards.Select(c => c.Name).ToList();
     }
-    public void AddCards(List<T> cards)
+    public void Add(List<T> cards)
     {
         _cards.AddRange(cards);
-        Shuffle();
+    }
+    public void Add(T card)
+    {
+        _cards.Add(card);
     }
     public void Shuffle()
     {

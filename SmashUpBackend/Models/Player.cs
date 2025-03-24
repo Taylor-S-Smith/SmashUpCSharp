@@ -44,6 +44,13 @@ internal class Player : Identifiable
         VictoryPoints += numVPGained;
     }
 
+    public void Discard(Guid cardId)
+    {
+        PlayableCard cardToDiscard = _hand.FirstOrDefault(card => card.Id == cardId) ?? throw new Exception($"No card exists with ID: {cardId}");
+        _hand.Remove(cardToDiscard);
+        DiscardPile.Add(cardToDiscard);
+    }
+
     public void Draw(int numToDraw)
     {
         _hand.AddRange(Deck.Draw(numToDraw));
@@ -55,7 +62,8 @@ internal class Player : Identifiable
     /// </summary>
     public void Recard()
     {
-        Deck.AddCards(_hand);
+        Deck.Add(_hand);
+        Deck.Shuffle();
         _hand.Clear();
     }
 

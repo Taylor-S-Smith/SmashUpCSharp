@@ -26,30 +26,52 @@ internal class Table(List<Player> players, CurrentPlayer currentPlayer, Board bo
     private readonly CurrentPlayer _currentPlayer = currentPlayer;
     private readonly Board _board = board;
 
+    public Guid GetCurrentPlayerId()
+    {
+        return _currentPlayer.PlayerId;
+    }
     public List<string[]> GetPlayerHandGraphics(Guid playerId)
     {
         return GetPlayer(playerId).Hand.Select(x => x.Graphic).ToList();
     }
-
     public List<string> GetPlayerDiscard(Guid playerId)
     {
         return GetPlayer(playerId).GetDiscard();
     }
-
     public List<string> GetPlayerDeck(Guid playerId)
     {
         return GetPlayer(playerId).GetDeck();
 
     }
-
     public List<string> GetPlayerDeck(Guid playerId, int numToGet)
     {
         var deck = GetPlayerDeck(playerId);
         numToGet = Math.Min(numToGet, deck.Count);
         return deck.Take(numToGet).ToList();
     }
+    public List<(Guid, int)> GetPlayerVP()
+    {
+        return _players.Select(x => (x.Id, x.VictoryPoints)).ToList();
+    }
 
-    public Player GetPlayer(Guid playerId)
+    public int Draw2Cards()
+    {
+        Player currentPlayer = GetCurrentPlayer();
+        currentPlayer.Draw(2);
+        return currentPlayer.Hand.Count;
+    }
+    public void DiscardCard(Guid playerId, Guid cardId)
+    {
+        Player player = GetPlayer(playerId);
+        player.Discard(cardId);
+    }
+
+
+    private Player GetCurrentPlayer()
+    {
+        return _players.FirstOrDefault(x => x.Id == _currentPlayer.PlayerId) ?? throw new Exception($"No player exists with the current player's ID: {_currentPlayer.PlayerId}");
+    }
+    private Player GetPlayer(Guid playerId)
     {
         return _players.Where(x => x.Id == playerId).FirstOrDefault() ?? throw new Exception($"No player exists with ID: {playerId}");
     }
