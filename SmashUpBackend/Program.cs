@@ -1,6 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 
-namespace SmashUpBackend;
+namespace SmashUp;
 
 internal class Program
 {

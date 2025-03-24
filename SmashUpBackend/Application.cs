@@ -1,10 +1,18 @@
-﻿namespace SmashUpBackend;
+﻿using SmashUp.Backend.GameObjects;
+using SmashUp.Backend.Services;
 
-internal class Application()
+namespace SmashUp;
+
+internal partial class Application()
 {
-
     internal void Run()
     {
-        Console.WriteLine("Backend is running");
+        IUserInputHandler userInputHandler = new DummyUserInputHandler();
+        Random random = new();
+        BaseCardService baseCardService = new(new());
+        PlayableCardService playableCardService = new(new());
+
+        Game game = new(userInputHandler, random, baseCardService, playableCardService);
+        game.BeginBattle();
     }
 }

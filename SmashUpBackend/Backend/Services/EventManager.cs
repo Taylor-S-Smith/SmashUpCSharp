@@ -1,4 +1,4 @@
-﻿namespace Backend.Services;
+﻿namespace SmashUp.Backend.Services;
 
 internal class EventManager
 {

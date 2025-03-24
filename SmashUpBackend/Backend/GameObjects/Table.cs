@@ -1,11 +1,11 @@
 ﻿using System.Collections.Generic;
 using System.Numerics;
 using System;
-using Backend.Models;
 using static System.Net.Mime.MediaTypeNames;
 using static System.Runtime.InteropServices.JavaScript.JSType;
+using SmashUp.Backend.Models;
 
-namespace Backend.GameObjects;
+namespace SmashUp.Backend.GameObjects;
 
 
 internal class CurrentPlayer(Guid id)

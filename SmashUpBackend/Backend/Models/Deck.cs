@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace Backend.Models;
+namespace SmashUp.Backend.Models;
 
 internal class Deck<T> where T : Card
 {

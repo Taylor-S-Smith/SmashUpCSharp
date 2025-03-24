@@ -1,6 +1,4 @@
-﻿using SmashUpBackend.Models;
-
-namespace Backend.Models;
+﻿namespace SmashUp.Backend.Models;
 
 internal abstract class Card(Faction faction, string name, string[] graphic, Action? onPlay = null) : Identifiable
 {

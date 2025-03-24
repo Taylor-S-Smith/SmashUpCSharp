@@ -1,4 +1,4 @@
-﻿namespace SmashUpBackend.Models;
+﻿namespace SmashUp.Backend.Models;
 
 public abstract class Identifiable
 {

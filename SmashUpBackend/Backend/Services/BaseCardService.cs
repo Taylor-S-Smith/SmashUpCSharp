@@ -1,7 +1,7 @@
-﻿using Backend.Models;
-using Backend.Repositories;
+﻿using SmashUp.Backend.Models;
+using SmashUp.Backend.Repositories;
 
-namespace Backend.Services;
+namespace SmashUp.Backend.Services;
 
 internal class BaseCardService(BaseCardRepository baseCardRepo)
 {

@@ -1,6 +1,6 @@
-﻿using Backend.Models;
+﻿using SmashUp.Backend.Models;
 
-namespace Backend.GameObjects;
+namespace SmashUp.Backend.GameObjects;
 
 
 internal class PlayerTerritory
@@ -31,7 +31,7 @@ internal class Board
 {
     public enum GamePhase
     {
-        
+
     }
     public Deck<BaseCard> BaseDeck { get; set; }
     public Deck<BaseCard> BaseDiscard { get; set; }

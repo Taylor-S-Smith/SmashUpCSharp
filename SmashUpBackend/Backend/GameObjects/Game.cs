@@ -1,8 +1,6 @@
-﻿using System;
-using Backend.Models;
-using Backend.Services;
+﻿using SmashUp.Backend.Services;
 
-namespace Backend.GameObjects;
+namespace SmashUp.Backend.GameObjects;
 
 /// <summary>
 /// Handles managing battles and holding data that persists between battle sessions
@@ -17,7 +15,8 @@ internal class Game(IUserInputHandler userInputHandler, Random random, BaseCardS
 
     private Battle? _currentBattle;
 
-    public void BeginBattle() {
+    public void BeginBattle()
+    {
         _currentBattle = new(_userInputHandler, _random, _baseCardService, _playableCardService);
         _currentBattle.StartBattle();
     }

@@ -1,6 +1,6 @@
-﻿using Backend.GameObjects;
+﻿using SmashUp.Backend.GameObjects;
 
-namespace Backend.Services;
+namespace SmashUp.Backend.Services;
 
 internal class EffectFactory(Battle battle)
 {

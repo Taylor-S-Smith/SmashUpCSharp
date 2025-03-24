@@ -1,7 +1,7 @@
-﻿using Backend.Services;
-using Backend.Models;
+﻿using SmashUp.Backend.Services;
+using SmashUp.Backend.Models;
 
-namespace Backend.GameObjects;
+namespace SmashUp.Backend.GameObjects;
 
 internal interface IUserInputHandler
 {
@@ -40,7 +40,7 @@ internal class Battle
 
         _table = SetUp();
     }
-        
+
     // TURN STRUCTURE & CONTROL FLOW 
 
 
@@ -102,7 +102,7 @@ internal class Battle
 
     public void StartBattle()
     {
-        while(!_battleEnd)
+        while (!_battleEnd)
         {
             TurnLoop();
         }
@@ -146,7 +146,7 @@ internal class Battle
     private void Draw2Cards()
     {
         int totalCards = _table.Draw2Cards();
-        if(totalCards > 10)
+        if (totalCards > 10)
         {
             Guid currentPlayerId = _table.GetCurrentPlayerId();
             var cardIdsToDiscard = _userInputHandler.DiscardTo10(currentPlayerId);

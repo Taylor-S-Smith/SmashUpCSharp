@@ -1,6 +1,4 @@
-﻿using SmashUpBackend.Models;
-
-namespace Backend.Models;
+﻿namespace SmashUp.Backend.Models;
 
 /// <summary>
 /// Draw: Deck -> Hand
