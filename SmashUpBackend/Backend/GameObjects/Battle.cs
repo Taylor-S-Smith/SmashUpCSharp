@@ -1,36 +1,27 @@
 ﻿using SmashUp.Backend.Services;
 using SmashUp.Backend.Models;
+using SmashUp.Backend.API;
 
 namespace SmashUp.Backend.GameObjects;
-
-internal interface IUserInputHandler
-{
-    public List<string> GetPlayers();
-    public List<(string, List<Faction>)> ChooseFactions();
-    public bool AskMulligan();
-    public void PlayCards();
-    public List<Guid> DiscardTo10(Guid playerId);
-    public void EndBattle(Guid winningPlayerId);
-}
 
 /// <summary>
 /// Handles turn structure (phases) and control flow between front and backend
 /// </summary>
 internal class Battle
 {
-    private readonly IUserInputHandler _userInputHandler;
+    private readonly IFrontendBattleAPI _userInputHandler;
     private readonly Random _random;
     private readonly EventManager _eventManager = new();
 
     private readonly BaseCardService _baseCardService;
     private readonly PlayableCardService _playableCardService;
 
-    private readonly Table _table = null!;
+    private readonly Table _table;
     private bool _battleEnd;
 
     private const int WINNING_VP = 15;
 
-    public Battle(IUserInputHandler userInputHandler, Random random, BaseCardService baseCardService, PlayableCardService playableCardService)
+    public Battle(IFrontendBattleAPI userInputHandler, Random random, BaseCardService baseCardService, PlayableCardService playableCardService)
     {
         _userInputHandler = userInputHandler;
         _random = random;
@@ -50,25 +41,25 @@ internal class Battle
     private Table SetUp()
     {
         //Invite Players
-        List<string> playerNames = _userInputHandler.GetPlayers();
+        List<string> playerNames = _userInputHandler.GetPlayerNames();
         List<Player> players = [];
 
         //Choose 2 Factions
-        List<(string, List<Faction>)> factionChoices = _userInputHandler.ChooseFactions();
+        List<(string, List<FactionModel>)> factionChoices = _userInputHandler.ChooseFactions(playerNames, FactionService.GetFactionModels());
 
         //Build Player Decks
         foreach (var choice in factionChoices)
         {
             string playerName = choice.Item1;
-            List<Faction> factions = choice.Item2;
+            List<Faction> factions = choice.Item2.Select(x => x.Faction).ToList();
             List<PlayableCard> cards = _playableCardService.GetCards(factions);
 
-            Player player = new(playerName, cards);
+            var player = new Player(playerName, cards);
             players.Add(player);
         }
 
         //Build the Base Deck
-        List<Faction> allFactions = factionChoices.SelectMany(x => x.Item2).ToList();
+        List<Faction> allFactions = factionChoices.SelectMany(x => x.Item2.Select(y => y.Faction)).ToList();
         Deck<BaseCard> baseDeck = new(_baseCardService.GetCards(allFactions));
 
         //Draw Bases
@@ -80,9 +71,9 @@ internal class Battle
         //Determine the First Player
         Player currentPlayer = players[_random.Next(0, players.Count)];
 
-        Board board = new(baseDeck, startingBases, players.Count);
+        Board board = new(baseDeck, startingBases, players);
 
-        return new(players, new(currentPlayer.Id), board);
+        return new(players, new(currentPlayer), board);
     }
     private void DrawInitialHand(Player player)
     {
@@ -102,6 +93,7 @@ internal class Battle
 
     public void StartBattle()
     {
+        _userInputHandler.StartBattle(_table);
         while (!_battleEnd)
         {
             TurnLoop();
@@ -115,6 +107,7 @@ internal class Battle
         ScoreBases();
         Draw2Cards();
         EndTurn();
+        SwitchActivePlayer();
     }
 
     /// <summary>
@@ -122,6 +115,8 @@ internal class Battle
     /// </summary>
     private void StartTurn()
     {
+        _table.GetActivePlayer().Player.MinionPlays = 1;
+        _table.GetActivePlayer().Player.ActionPlays = 1;
         _eventManager.TriggerStartOfTurn();
     }
     /// <summary>
@@ -179,5 +174,9 @@ internal class Battle
             Guid winningPlayerId = playerVpTotals.Single(x => x.Item2 == vpMax).Item1;
             _userInputHandler.EndBattle(winningPlayerId);
         }
+    }
+    private void SwitchActivePlayer()
+    {
+        throw new NotImplementedException();
     }
 }

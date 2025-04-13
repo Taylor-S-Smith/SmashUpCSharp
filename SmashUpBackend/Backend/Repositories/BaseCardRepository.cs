@@ -15,6 +15,24 @@ internal class BaseCardRepository
 
     public BaseCard GetBaseAlpha()
     {
-        return new(Faction.aliens, "Invader", [], 15, (3, 2, 1));
+        //Faction faction, string name, string[] graphic, int breakpoint, (int, int, int) pointSpread, int currentPower
+        return new BaseCard(
+            Faction.aliens, 
+            "Base Alpha", 
+            [
+
+
+                    "      4      2      1       ",
+                    "                            ",
+                    "After each time a minion is ",
+                    " played here, it's owner may",
+                    "  play an extra minion of   ",
+                    "      power 3 or less.      ",
+
+
+            ], 
+            15, 
+            (3, 2, 1)
+        );
     }
 }

@@ -1,10 +1,12 @@
-﻿using SmashUp.Backend.Models;
+﻿using SmashUp.Backend.API;
+using SmashUp.Backend.Models;
 
 namespace SmashUp.Backend.GameObjects;
 
 
-internal class PlayerTerritory
+internal class PlayerTerritory(Player player)
 {
+    public Player player = player;
     public List<PlayableCard> Cards { get; set; } = [];
 }
 
@@ -13,13 +15,13 @@ internal class BaseSlot
     public BaseCard BaseCard { get; }
     public List<PlayerTerritory> Territories { get; } = [];
 
-    public BaseSlot(BaseCard baseCard, int numTerritories)
+    public BaseSlot(BaseCard baseCard, List<Player> players)
     {
         BaseCard = baseCard;
 
-        for (int i = 0; i < numTerritories; i++)
+        foreach(var player in players)
         {
-            Territories.Add(new());
+            Territories.Add(new(player));
         }
     }
 }
@@ -37,7 +39,7 @@ internal class Board
     public Deck<BaseCard> BaseDiscard { get; set; }
     public List<BaseSlot> ActiveBases { get; set; }
 
-    public Board(Deck<BaseCard> baseDeck, List<BaseCard> startingBaseCards, int territoryNum)
+    public Board(Deck<BaseCard> baseDeck, List<BaseCard> startingBaseCards, List<Player> players)
     {
         BaseDeck = baseDeck;
         BaseDiscard = new([]);
@@ -45,7 +47,7 @@ internal class Board
 
         foreach (BaseCard baseCard in startingBaseCards)
         {
-            ActiveBases.Add(new(baseCard, territoryNum));
+            ActiveBases.Add(new(baseCard, players));
         }
     }
 }

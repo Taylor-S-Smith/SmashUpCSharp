@@ -1,0 +1,116 @@
+﻿using System.Text;
+using SmashUp.Backend.API;
+using SmashUp.Backend.GameObjects;
+using SmashUp.Backend.Models;
+
+namespace SmashUp.Frontend.Utilities;
+internal class CardGraphicUtil
+{
+    public static string[] GenerateBaseCardGraphic(string[] graphic, string title, int totalPower, int currentBreakpoint, bool useAltBorder = false)
+    {
+        return GenerateCardGraphic(graphic, useAltBorder, (width, useAltBorder) => BaseTitleLineBuilder(width, useAltBorder, title, totalPower, currentBreakpoint));
+    }
+    public static string[] GeneratePlayableCardGraphic(string[] graphic, bool useAltBorder = false)
+    {
+        return GenerateCardGraphic(graphic, useAltBorder);
+    }
+
+    private static string[] GenerateCardGraphic(string[] graphic, bool useAltBorder = false, Func<int, bool, string?>? titleLineBuilder = null)
+    {
+        int graphicWidth = graphic.Max(line => line.Length);
+        int graphicHeight = graphic.Length;
+        string? title = null;
+
+        if (titleLineBuilder != null) title = titleLineBuilder(graphicWidth, useAltBorder);
+
+        // We add 2 borders and sometimes a title
+        string[] returnGraphic = new string[graphicHeight + (title != null ? 3 : 2)];
+
+        int index = 0;
+
+        // Top Border
+        returnGraphic[index++] = BuildBorder(useAltBorder ? '╔' : ' ', useAltBorder ? '═' : '_', useAltBorder ? '╗' : ' ', graphicWidth);
+
+        // Title
+        if (title != null)
+        {
+            returnGraphic[index++] = title;
+        }
+
+        // Content
+        for (int i = 0; i < graphicHeight; i++)
+        {
+            returnGraphic[index++] = BuildContentLine(graphic[i], graphicWidth, useAltBorder);
+        }
+
+        // Bottom Border
+        returnGraphic[index] = BuildBorder(useAltBorder ? '╚' : '|', useAltBorder ? '═' : '_', useAltBorder ? '╝' : '|', graphicWidth);
+
+        return returnGraphic;
+    }
+
+    private static string BuildBorder(char leftChar, char middleChar, char rightChar, int width)
+    {
+        return $"{leftChar}{new string(middleChar, width)}{rightChar}";
+    }
+    private static string BuildContentLine(string content, int width, bool useAltBorder)
+    {
+        char borderChar = useAltBorder ? '║' : '|';
+        string centeredContent = RenderUtil.CenterString(content, width);
+
+        return $"{borderChar}{centeredContent}{borderChar}";
+    }
+    public static string BaseTitleLineBuilder(int width, bool useAltBorder, string title, int totalPower, int currentBreakpoint)
+    {
+        char borderChar = useAltBorder ? '║' : '|';
+        string power = totalPower.ToString().PadLeft(2, '0');
+        string breakpoint = currentBreakpoint.ToString().PadLeft(2, '0');
+        string centeredTitle = RenderUtil.CenterString(title, width - 4);
+
+        return $"{borderChar}{power}{centeredTitle}{breakpoint}{borderChar}";
+    }
+
+    public static string[] GetAttachedCardsGraphic(BaseSlot baseCardSlot, Guid? targetedCardId)
+    {
+        // Count number of filled territories (Each will have it's own heading), and number of cards
+        int numLines = baseCardSlot.Territories.Where(x => x.Cards.Count > 0).ToList().Count + baseCardSlot.Territories.SelectMany(x => x.Cards).Count();
+        string[] displayList = new string[numLines];
+
+        string? currOwner = null;
+        int cardIndex = 1;
+        int displayIndex = 0;
+
+        foreach (PlayableCard card in baseCardSlot.Territories.SelectMany(x => x.Cards))
+        {
+            // Whenever the owner changes, add a new owner header line
+            if (currOwner != card.Owner?.Name)
+            {
+                displayList[displayIndex++] = $"Player {card.Owner?.Name}'s cards:";
+                currOwner = card.Owner?.Name;
+            }
+
+            StringBuilder lineBuilder = new();
+
+            if (card.Id == targetedCardId)
+            {
+                lineBuilder.Append('>');
+            }
+
+            lineBuilder.Append($"{cardIndex}. {card.Name}");
+
+            if (card.CurrentPower.HasValue)
+            {
+                lineBuilder.Append($" ({card.CurrentPower})");
+            }
+            if (card.Id == targetedCardId)
+            {
+                lineBuilder.Append('<');
+            }
+
+            displayList[displayIndex++] = lineBuilder.ToString();
+            cardIndex++;
+        }
+
+        return displayList;
+    }
+}

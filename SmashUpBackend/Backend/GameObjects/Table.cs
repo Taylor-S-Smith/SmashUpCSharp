@@ -1,18 +1,12 @@
-﻿using System.Collections.Generic;
-using System.Numerics;
-using System;
-using static System.Net.Mime.MediaTypeNames;
-using static System.Runtime.InteropServices.JavaScript.JSType;
+﻿using System.Numerics;
 using SmashUp.Backend.Models;
 
 namespace SmashUp.Backend.GameObjects;
 
 
-internal class CurrentPlayer(Guid id)
+internal class ActivePlayer(Player player)
 {
-    public Guid PlayerId { get; set; } = id;
-    public int MinionPlays { get; set; } = 1;
-    public int ActionPlays { get; set; } = 1;
+    public Player Player { get; set; } = player;
 }
 
 /// <summary>
@@ -20,19 +14,19 @@ internal class CurrentPlayer(Guid id)
 /// If you were to recreate the old shell version of this code, this is what the user input would directly call
 /// If we implemented a developer console, it would directly interact with this.
 /// </summary>
-internal class Table(List<Player> players, CurrentPlayer currentPlayer, Board board)
+internal class Table(List<Player> players, ActivePlayer activePlayer, Board board)
 {
     private readonly List<Player> _players = players;
-    private readonly CurrentPlayer _currentPlayer = currentPlayer;
+    private readonly ActivePlayer _activePlayer = activePlayer;
     private readonly Board _board = board;
 
     public Guid GetCurrentPlayerId()
     {
-        return _currentPlayer.PlayerId;
+        return _activePlayer.Player.Id;
     }
-    public List<string[]> GetPlayerHandGraphics(Guid playerId)
+    public List<PlayableCard> GetPlayerHand(Guid playerId)
     {
-        return GetPlayer(playerId).Hand.Select(x => x.Graphic).ToList();
+        return GetPlayer(playerId).Hand.ToList();
     }
     public List<string> GetPlayerDiscard(Guid playerId)
     {
@@ -56,9 +50,9 @@ internal class Table(List<Player> players, CurrentPlayer currentPlayer, Board bo
 
     public int Draw2Cards()
     {
-        Player currentPlayer = GetCurrentPlayer();
-        currentPlayer.Draw(2);
-        return currentPlayer.Hand.Count;
+        Player activePlayer = _activePlayer.Player;
+        activePlayer.Draw(2);
+        return activePlayer.Hand.Count;
     }
     public void DiscardCard(Guid playerId, Guid cardId)
     {
@@ -66,14 +60,67 @@ internal class Table(List<Player> players, CurrentPlayer currentPlayer, Board bo
         player.Discard(cardId);
     }
 
-
-    private Player GetCurrentPlayer()
-    {
-        return _players.FirstOrDefault(x => x.Id == _currentPlayer.PlayerId) ?? throw new Exception($"No player exists with the current player's ID: {_currentPlayer.PlayerId}");
-    }
     private Player GetPlayer(Guid playerId)
     {
         return _players.Where(x => x.Id == playerId).FirstOrDefault() ?? throw new Exception($"No player exists with ID: {playerId}");
     }
 
+    internal List<BaseSlot> GetBaseSlots()
+    {
+        return _board.ActiveBases;
+    }
+    internal List<BaseCard> GetActiveBases()
+    {
+        return _board.ActiveBases.Select(x => x.BaseCard).ToList();
+    }
+
+    internal ActivePlayer GetActivePlayer()
+    {
+        return _activePlayer;
+    }
+
+    internal void PlayCard(Player player, PlayableCard cardToPlay, BaseCard targetedBaseCard)
+    {
+        // Validate Play
+        bool isValidPlay = ValidatePlay(player, cardToPlay);
+
+        if(isValidPlay)
+        {
+            //Remove resource from player
+            RemoveResource(player, cardToPlay);
+
+            // Remove Card from Previous Location
+            player.Play(cardToPlay);
+
+            // Add Card to territory
+            BaseSlot slot = _board.ActiveBases.Where(x => x.BaseCard == targetedBaseCard).Single();
+            PlayerTerritory territory = slot.Territories.Where(x => x.player == cardToPlay.Owner).Single();
+            territory.Cards.Add(cardToPlay);
+        }
+    }
+
+    private static bool ValidatePlay(Player player, PlayableCard cardToPlay)
+    {
+        if (cardToPlay.CardType == PlayableCardType.minion)
+        {
+            return player.MinionPlays > 0;
+        }
+        else if (cardToPlay.CardType == PlayableCardType.action)
+        {
+            return player.ActionPlays > 0;
+        }
+        return false;
+    }
+
+    private static void RemoveResource(Player player, PlayableCard cardToPlay)
+    {
+        if (cardToPlay.CardType == PlayableCardType.minion)
+        {
+            player.MinionPlays--;
+        }
+        else if (cardToPlay.CardType == PlayableCardType.action)
+        {
+            player.ActionPlays--;
+        }
+    }
 }

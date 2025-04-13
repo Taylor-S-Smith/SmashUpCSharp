@@ -2,5 +2,5 @@
 
 public abstract class Identifiable
 {
-    public Guid Id { get; } = new Guid();
+    public Guid Id { get; } = Guid.NewGuid();
 }

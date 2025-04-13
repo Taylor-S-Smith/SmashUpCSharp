@@ -8,11 +8,14 @@
 /// Tuck: Hand -> Deck
 /// Recure: Discard -> Deck
 /// Generate: Outside of Game -> Hand
+/// Play: Hand -> ~
 /// </summary>
 internal class Player : Identifiable
 {
     public string Name { get; }
     public int VictoryPoints { get; private set; }
+    public int MinionPlays { get; set; }
+    public int ActionPlays { get; set; }
 
     private readonly List<PlayableCard> _hand = [];
     public IReadOnlyList<PlayableCard> Hand => _hand.AsReadOnly();
@@ -22,7 +25,7 @@ internal class Player : Identifiable
     /// <param name="name"></param>
     public Player(string name, List<PlayableCard> cards)
     {
-        cards.ForEach(card => card.SetOwner(Id));
+        cards.ForEach(card => card.Owner = this);
 
         Name = name;
         Deck = new(cards);
@@ -54,7 +57,6 @@ internal class Player : Identifiable
         _hand.AddRange(Deck.Draw(numToDraw));
     }
 
-
     /// <summary>
     /// Shuffles cards from hand to deck.
     /// </summary>
@@ -63,6 +65,11 @@ internal class Player : Identifiable
         Deck.Add(_hand);
         Deck.Shuffle();
         _hand.Clear();
+    }
+
+    public void Play(PlayableCard cardToPlay)
+    {
+        _hand.Remove(cardToPlay);
     }
 
     /// <summary>

@@ -15,6 +15,22 @@ internal class PlayableCardRepository
 
     public PlayableCard GetTrooper()
     {
-        return new(Faction.aliens, PlayableCardType.minion, "Trooper", [], 2);
+        return new(
+            Faction.aliens, 
+            PlayableCardType.minion, 
+            "Trooper",
+            [
+                @"2        Trooper        2",
+                @"                         ",
+                @"              ___        ",
+                @"         (o) [___]       ",
+                @"         -|--|           ",
+                @"         / \ |           ",
+                @"                         ",
+                @"                         ",
+                @"                         ",
+            ],
+            2
+        );
     }
 }

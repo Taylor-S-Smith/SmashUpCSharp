@@ -1,13 +1,14 @@
-﻿using SmashUp.Backend.Services;
+﻿using SmashUp.Backend.API;
+using SmashUp.Backend.Services;
 
 namespace SmashUp.Backend.GameObjects;
 
 /// <summary>
 /// Handles managing battles and holding data that persists between battle sessions
 /// </summary>
-internal class Game(IUserInputHandler userInputHandler, Random random, BaseCardService baseCardService, PlayableCardService playableCardService)
+internal class Game(IFrontendBattleAPI userInputHandler, Random random, BaseCardService baseCardService, PlayableCardService playableCardService)
 {
-    private readonly IUserInputHandler _userInputHandler = userInputHandler;
+    private readonly IFrontendBattleAPI _userInputHandler = userInputHandler;
     private readonly Random _random = random;
 
     private readonly BaseCardService _baseCardService = baseCardService;
