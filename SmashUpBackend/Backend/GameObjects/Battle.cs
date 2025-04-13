@@ -7,11 +7,11 @@ namespace SmashUp.Backend.GameObjects;
 /// <summary>
 /// Handles turn structure (phases) and control flow between front and backend
 /// </summary>
-internal class Battle
+internal class Battle : IBackendBattleAPI
 {
     private readonly IFrontendBattleAPI _userInputHandler;
     private readonly Random _random;
-    private readonly EventManager _eventManager = new();
+    private readonly EventManager _eventManager;
 
     private readonly BaseCardService _baseCardService;
     private readonly PlayableCardService _playableCardService;
@@ -21,9 +21,10 @@ internal class Battle
 
     private const int WINNING_VP = 15;
 
-    public Battle(IFrontendBattleAPI userInputHandler, Random random, BaseCardService baseCardService, PlayableCardService playableCardService)
+    public Battle(IFrontendBattleAPI userInputHandler, EventManager eventManager, Random random, BaseCardService baseCardService, PlayableCardService playableCardService)
     {
         _userInputHandler = userInputHandler;
+        _eventManager = eventManager;
         _random = random;
 
         _baseCardService = baseCardService;
@@ -93,7 +94,6 @@ internal class Battle
 
     public void StartBattle()
     {
-        _userInputHandler.StartBattle(_table);
         while (!_battleEnd)
         {
             TurnLoop();
@@ -115,8 +115,8 @@ internal class Battle
     /// </summary>
     private void StartTurn()
     {
-        _table.GetActivePlayer().Player.MinionPlays = 1;
-        _table.GetActivePlayer().Player.ActionPlays = 1;
+        _table.ActivePlayer.Player.MinionPlays = 1;
+        _table.ActivePlayer.Player.ActionPlays = 1;
         _eventManager.TriggerStartOfTurn();
     }
     /// <summary>
@@ -125,8 +125,8 @@ internal class Battle
     private void PlayCards()
     {
         //Use plays
-        //Activate Talents (and "On Your Turn")
-        _userInputHandler.PlayCards();
+        //Activate Talents (and "On Your Turn") effects
+        _userInputHandler.PlayCards(_table, this);
     }
     /// <summary>
     /// Handles logic relating to the "Score Bases" phase of the Smash Up Rule Book
@@ -140,14 +140,13 @@ internal class Battle
     /// </summary>
     private void Draw2Cards()
     {
-        int totalCards = _table.Draw2Cards();
-        if (totalCards > 10)
+        _table.ActivePlayer.Player.Draw(2);
+        if (_table.ActivePlayer.Player.Hand.Count > 10)
         {
-            Guid currentPlayerId = _table.GetCurrentPlayerId();
-            var cardIdsToDiscard = _userInputHandler.DiscardTo10(currentPlayerId);
-            foreach (var cardId in cardIdsToDiscard)
+            var cardsToDiscard = _userInputHandler.DiscardTo10(_table.ActivePlayer.Player);
+            foreach (var card in cardsToDiscard)
             {
-                _table.DiscardCard(_table.GetCurrentPlayerId(), cardId);
+                _table.ActivePlayer.Player.Discard(card);
             }
         }
     }
@@ -162,7 +161,7 @@ internal class Battle
 
     private void CheckEndOfGame()
     {
-        List<(Guid, int)> playerVpTotals = _table.GetPlayerVP();
+        List<(Player, int)> playerVpTotals = _table.GetPlayerVP();
 
         List<int> vpTotals = playerVpTotals.Select(x => x.Item2).ToList();
         int vpMax = vpTotals.Max();
@@ -171,12 +170,63 @@ internal class Battle
         if (vpMax >= WINNING_VP && vpTotals.Where(x => x == vpMax).ToList().Count == 1)
         {
             _battleEnd = true;
-            Guid winningPlayerId = playerVpTotals.Single(x => x.Item2 == vpMax).Item1;
-            _userInputHandler.EndBattle(winningPlayerId);
+            var winningPlayer = playerVpTotals.Single(x => x.Item2 == vpMax).Item1;
+            _userInputHandler.EndBattle(winningPlayer);
         }
     }
     private void SwitchActivePlayer()
     {
-        throw new NotImplementedException();
+        int newActivePlayerIndex = _table.Players.IndexOf(_table.ActivePlayer.Player) + 1;
+        if (newActivePlayerIndex == _table.Players.Count) newActivePlayerIndex = 0;
+        _table.ActivePlayer.Player = _table.Players[newActivePlayerIndex];
     }
+
+    public void PlayCard(Player player, PlayableCard cardToPlay, BaseCard targetedBaseCard)
+    {
+        // Validate Play
+        bool isValidPlay = ValidatePlay(player, cardToPlay);
+
+        if (isValidPlay)
+        {
+            //Remove resource from player
+            RemoveResource(player, cardToPlay);
+
+            // Remove Card from Previous Location
+            player.Play(cardToPlay);
+
+            // Add Card to territory
+            BaseSlot slot = _table.GetBaseSlots().Where(x => x.BaseCard == targetedBaseCard).Single();
+            PlayerTerritory territory = slot.Territories.Where(x => x.player == cardToPlay.Owner).Single();
+            territory.Cards.Add(cardToPlay);
+        }
+    }
+
+    private static bool ValidatePlay(Player player, PlayableCard cardToPlay)
+    {
+        if (cardToPlay.CardType == PlayableCardType.minion)
+        {
+            return player.MinionPlays > 0;
+        }
+        else if (cardToPlay.CardType == PlayableCardType.action)
+        {
+            return player.ActionPlays > 0;
+        }
+        return false;
+    }
+    private static void RemoveResource(Player player, PlayableCard cardToPlay)
+    {
+        if (cardToPlay.CardType == PlayableCardType.minion)
+        {
+            player.MinionPlays--;
+        }
+        else if (cardToPlay.CardType == PlayableCardType.action)
+        {
+            player.ActionPlays--;
+        }
+    }
+}
+
+internal interface IBackendBattleAPI
+{
+    void PlayCard(Player player, PlayableCard cardToPlay, BaseCard targetedBaseCard);
 }

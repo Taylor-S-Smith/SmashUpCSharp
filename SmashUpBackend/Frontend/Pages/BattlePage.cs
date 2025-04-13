@@ -9,18 +9,15 @@ namespace SmashUp.Frontend.Pages
     /// <summary>
     /// Handles all rendering the Battle page
     /// </summary>
-    internal class BattlePage(BattlePageService service) : ValuePage<bool>
+    internal class BattlePage(BattlePageTargeter service) : ValuePage<bool>
     {
-        private readonly BattlePageService _service = service;
+        private readonly BattlePageTargeter _service = service;
 
         // STATIC VARIABLES
         readonly int CARD_FIELD_SIZE = 15;
-        readonly int END_BUTTON_HEIGHT = 1;
 
         // HAND
-        List<PlayableCard> _leftBuffer = [];
         List<PlayableCard> _handCardsDisplayed = [];
-        List<PlayableCard> _rightBuffer = [];
 
         protected override StringBuilder GenerateRender(int consoleWidth, int consoleHeight)
         {
@@ -226,7 +223,7 @@ namespace SmashUp.Frontend.Pages
             else
             {
                 // Hand Display
-                List<PlayableCard> hand = _service.GetCurrentPlayerHand();
+                var hand = _service.GetCurrentPlayerHand().ToList();
                 if (hand.Count > 0)
                 {
                     string[][] allGraphics = hand.Select(GeneratePlayableCardGraphic).ToArray();
@@ -235,7 +232,6 @@ namespace SmashUp.Frontend.Pages
                     int numCardsToDisplay = Math.Min(fieldLength / (cardLength + 1), hand.Count);
 
                     _handCardsDisplayed = hand[..numCardsToDisplay];
-                    _rightBuffer = hand[numCardsToDisplay..];
                     GraphicsToDisplay = allGraphics[..numCardsToDisplay];
                 }
             }

@@ -55,6 +55,7 @@ internal abstract class ValuePage<T> : Page<T> where T : struct
     public T Run()
     {
         var (consoleWidth, consoleHeight) = ConsoleUtil.GetWidthAndHeight();
+        _needToRender = true;
 
         //Main Rendering Loop
         while (true)

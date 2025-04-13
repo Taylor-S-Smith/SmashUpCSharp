@@ -5,14 +5,15 @@ using SmashUp.Backend.Models;
 namespace SmashUp.Backend.LogicServices
 {
     /// <summary>
-    /// Handles targeting/selecting for the battle page
+    /// Handles logic and state for the BattlePage including:
+    /// - targeting/selecting
+    /// - key presses
+    /// - interacting with backend
     /// </summary>
-    /// <summary>
-    /// Handles key presses for the battle page
-    /// </summary>
-    internal class BattlePageService
+    internal class BattlePageTargeter
     {
-        Table _table;
+        private readonly Table _table;
+        private readonly IBackendBattleAPI _battleAPI;
 
         // MODES
         bool InCardViewMode = false;
@@ -29,13 +30,13 @@ namespace SmashUp.Backend.LogicServices
         PlayableCard? _targetedPlayableCard;
         PlayableCard? _selectedPlayableCard;
 
-        public BattlePageService(Table table)
+        public BattlePageTargeter(Table table, IBackendBattleAPI battleAPI)
         {
             _table = table;
-            List<PlayableCard> hand = GetCurrentPlayerHand();
-            _targetedPlayableCard = hand.FirstOrDefault();
+            _targetedPlayableCard = GetCurrentPlayerHand().FirstOrDefault();
             _targetableFieldCards = GetTargetableFieldCards(AllCardsAreTargetable);
             _targetableBaseCards = GetTargetableBaseCards(AllCardsAreTargetable);
+            _battleAPI = battleAPI;
         }
 
 
@@ -253,12 +254,11 @@ namespace SmashUp.Backend.LogicServices
                 case UserKeyPress.Confirm:
                     if (_selectedPlayableCard == null) throw new Exception("No card selected");
                     if (_targetedBaseCard == null) throw new Exception("No base selected");
-                    _table.PlayCard(_table.GetActivePlayer().Player, _selectedPlayableCard, _targetedBaseCard);
+                    _battleAPI.PlayCard(_table.ActivePlayer.Player, _selectedPlayableCard, _targetedBaseCard);
                     _targetableFieldCards = GetTargetableFieldCards(AllCardsAreTargetable);
                     _targetedXIndex = 0;
                     _targetedYIndex = -1;
-                    List<PlayableCard> PlayerHand = GetCurrentPlayerHand();
-                    _targetedPlayableCard = PlayerHand.Count > 0 ? PlayerHand[_targetedXIndex] : null;
+                    SetHandTarget();
                     _targetedBaseCard = null;
                     _selectedPlayableCard = null;
                     InCardViewMode = false;
@@ -283,6 +283,12 @@ namespace SmashUp.Backend.LogicServices
             }
 
             return null;
+        }
+
+        private void SetHandTarget()
+        {
+            IReadOnlyList<PlayableCard> PlayerHand = GetCurrentPlayerHand();
+            _targetedPlayableCard = PlayerHand.Count > 0 ? PlayerHand[_targetedXIndex] : null;
         }
 
         // MODE
@@ -361,14 +367,14 @@ namespace SmashUp.Backend.LogicServices
             return (card) => card.CurrentPower <= power;
         }
 
-        internal List<PlayableCard> GetCurrentPlayerHand()
+        internal IReadOnlyList<PlayableCard> GetCurrentPlayerHand()
         {
-            return _table.GetPlayerHand(_table.GetCurrentPlayerId());
+            return _table.ActivePlayer.Player.Hand;
         }
 
         internal ActivePlayer GetActivePlayer()
         {
-            return _table.GetActivePlayer();
+            return _table.ActivePlayer;
         }
         internal List<BaseSlot> GetBaseSlots()
         {
@@ -378,6 +384,12 @@ namespace SmashUp.Backend.LogicServices
         internal bool EndTurnSelected()
         {
             return _targetedYIndex == -2;
+        }
+
+        private void ResetTargetIndexes()
+        {
+            _targetedXIndex = 0;
+            _targetedYIndex = -1;
         }
     }
 }

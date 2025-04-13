@@ -6,9 +6,10 @@ namespace SmashUp.Backend.GameObjects;
 /// <summary>
 /// Handles managing battles and holding data that persists between battle sessions
 /// </summary>
-internal class Game(IFrontendBattleAPI userInputHandler, Random random, BaseCardService baseCardService, PlayableCardService playableCardService)
+internal class RogueLikeGame(IFrontendBattleAPI userInputHandler, EventManager eventManager, Random random, BaseCardService baseCardService, PlayableCardService playableCardService)
 {
     private readonly IFrontendBattleAPI _userInputHandler = userInputHandler;
+    private readonly EventManager _eventManager = eventManager;
     private readonly Random _random = random;
 
     private readonly BaseCardService _baseCardService = baseCardService;
@@ -18,7 +19,7 @@ internal class Game(IFrontendBattleAPI userInputHandler, Random random, BaseCard
 
     public void BeginBattle()
     {
-        _currentBattle = new(_userInputHandler, _random, _baseCardService, _playableCardService);
+        _currentBattle = new(_userInputHandler, _eventManager, _random, _baseCardService, _playableCardService);
         _currentBattle.StartBattle();
     }
 }

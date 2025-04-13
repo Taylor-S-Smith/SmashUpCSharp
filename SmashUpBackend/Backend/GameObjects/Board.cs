@@ -31,10 +31,6 @@ internal class BaseSlot
 /// </summary>
 internal class Board
 {
-    public enum GamePhase
-    {
-
-    }
     public Deck<BaseCard> BaseDeck { get; set; }
     public Deck<BaseCard> BaseDiscard { get; set; }
     public List<BaseSlot> ActiveBases { get; set; }

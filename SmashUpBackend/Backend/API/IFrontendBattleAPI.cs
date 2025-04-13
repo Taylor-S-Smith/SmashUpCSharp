@@ -1,4 +1,5 @@
 ﻿using SmashUp.Backend.GameObjects;
+using SmashUp.Backend.Models;
 
 namespace SmashUp.Backend.API;
 
@@ -10,8 +11,7 @@ internal interface IFrontendBattleAPI
     public List<string> GetPlayerNames();
     public List<(string, List<FactionModel>)> ChooseFactions(List<string> playerNames, List<FactionModel> factionOptions);
     public bool AskMulligan();
-    void StartBattle(Table table);
-    public void PlayCards();
-    public List<Guid> DiscardTo10(Guid playerId);
-    public void EndBattle(Guid winningPlayerId);
+    public void PlayCards(Table table, IBackendBattleAPI backendBattleAPI);
+    public List<PlayableCard> DiscardTo10(Player player);
+    public void EndBattle(Player player);
 }

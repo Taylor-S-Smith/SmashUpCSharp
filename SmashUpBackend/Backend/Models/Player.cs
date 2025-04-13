@@ -45,10 +45,9 @@ internal class Player : Identifiable
         VictoryPoints += numVPGained;
     }
 
-    public void Discard(Guid cardId)
+    public void Discard(PlayableCard cardToDiscard)
     {
-        PlayableCard cardToDiscard = _hand.FirstOrDefault(card => card.Id == cardId) ?? throw new Exception($"No card exists with ID: {cardId}");
-        _hand.Remove(cardToDiscard);
+        if (_hand.Remove(cardToDiscard) != true) throw new Exception($"{Name}'s hand doesn't contain {cardToDiscard.ToString()}");
         DiscardPile.Add(cardToDiscard);
     }
 

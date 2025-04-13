@@ -16,53 +16,17 @@ internal class ActivePlayer(Player player)
 /// </summary>
 internal class Table(List<Player> players, ActivePlayer activePlayer, Board board)
 {
-    private readonly List<Player> _players = players;
-    private readonly ActivePlayer _activePlayer = activePlayer;
+    public readonly List<Player> Players = players;
+    public readonly ActivePlayer ActivePlayer = activePlayer;
     private readonly Board _board = board;
 
-    public Guid GetCurrentPlayerId()
+    public List<(Player, int)> GetPlayerVP()
     {
-        return _activePlayer.Player.Id;
+        return Players.Select(x => (x, x.VictoryPoints)).ToList();
     }
-    public List<PlayableCard> GetPlayerHand(Guid playerId)
+    public void DiscardCard(Player player, PlayableCard card)
     {
-        return GetPlayer(playerId).Hand.ToList();
-    }
-    public List<string> GetPlayerDiscard(Guid playerId)
-    {
-        return GetPlayer(playerId).GetDiscard();
-    }
-    public List<string> GetPlayerDeck(Guid playerId)
-    {
-        return GetPlayer(playerId).GetDeck();
-
-    }
-    public List<string> GetPlayerDeck(Guid playerId, int numToGet)
-    {
-        var deck = GetPlayerDeck(playerId);
-        numToGet = Math.Min(numToGet, deck.Count);
-        return deck.Take(numToGet).ToList();
-    }
-    public List<(Guid, int)> GetPlayerVP()
-    {
-        return _players.Select(x => (x.Id, x.VictoryPoints)).ToList();
-    }
-
-    public int Draw2Cards()
-    {
-        Player activePlayer = _activePlayer.Player;
-        activePlayer.Draw(2);
-        return activePlayer.Hand.Count;
-    }
-    public void DiscardCard(Guid playerId, Guid cardId)
-    {
-        Player player = GetPlayer(playerId);
-        player.Discard(cardId);
-    }
-
-    private Player GetPlayer(Guid playerId)
-    {
-        return _players.Where(x => x.Id == playerId).FirstOrDefault() ?? throw new Exception($"No player exists with ID: {playerId}");
+        player.Discard(card);
     }
 
     internal List<BaseSlot> GetBaseSlots()
@@ -72,55 +36,5 @@ internal class Table(List<Player> players, ActivePlayer activePlayer, Board boar
     internal List<BaseCard> GetActiveBases()
     {
         return _board.ActiveBases.Select(x => x.BaseCard).ToList();
-    }
-
-    internal ActivePlayer GetActivePlayer()
-    {
-        return _activePlayer;
-    }
-
-    internal void PlayCard(Player player, PlayableCard cardToPlay, BaseCard targetedBaseCard)
-    {
-        // Validate Play
-        bool isValidPlay = ValidatePlay(player, cardToPlay);
-
-        if(isValidPlay)
-        {
-            //Remove resource from player
-            RemoveResource(player, cardToPlay);
-
-            // Remove Card from Previous Location
-            player.Play(cardToPlay);
-
-            // Add Card to territory
-            BaseSlot slot = _board.ActiveBases.Where(x => x.BaseCard == targetedBaseCard).Single();
-            PlayerTerritory territory = slot.Territories.Where(x => x.player == cardToPlay.Owner).Single();
-            territory.Cards.Add(cardToPlay);
-        }
-    }
-
-    private static bool ValidatePlay(Player player, PlayableCard cardToPlay)
-    {
-        if (cardToPlay.CardType == PlayableCardType.minion)
-        {
-            return player.MinionPlays > 0;
-        }
-        else if (cardToPlay.CardType == PlayableCardType.action)
-        {
-            return player.ActionPlays > 0;
-        }
-        return false;
-    }
-
-    private static void RemoveResource(Player player, PlayableCard cardToPlay)
-    {
-        if (cardToPlay.CardType == PlayableCardType.minion)
-        {
-            player.MinionPlays--;
-        }
-        else if (cardToPlay.CardType == PlayableCardType.action)
-        {
-            player.ActionPlays--;
-        }
     }
 }
