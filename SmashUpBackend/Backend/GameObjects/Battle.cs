@@ -198,6 +198,12 @@ internal class Battle : IBackendBattleAPI
             BaseSlot slot = _table.GetBaseSlots().Where(x => x.BaseCard == targetedBaseCard).Single();
             PlayerTerritory territory = slot.Territories.Where(x => x.player == cardToPlay.Owner).Single();
             territory.Cards.Add(cardToPlay);
+
+            // Update Base Total
+            if(cardToPlay.CurrentPower != null)
+            {
+                slot.BaseCard.CurrentPower += (int)cardToPlay.CurrentPower;
+            }
         }
     }
 

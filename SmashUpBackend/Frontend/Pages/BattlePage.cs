@@ -27,6 +27,7 @@ namespace SmashUp.Frontend.Pages
 
             //Initalize vars and generate fields
             StringBuilder? renderBuffer = null;
+            var debugField = GenerateDebugField();
             var baseField = GenerateBaseField(consoleWidth);
             var statField = GenerateStatField();
             var consoleField = GenerateInputField(new[] { baseField.Max(line => line.Length), statField.Max(line => line.Length) }.Max());
@@ -34,13 +35,15 @@ namespace SmashUp.Frontend.Pages
 
             //Ensure the current console size will fit the header
             int renderWidth = new[] {
+                debugField.Max(line => line.Length),
                 baseField.Max(line => line.Length),
                 statField.Max(line => line.Length),
                 consoleField.Length > 0 ? consoleField.Max(line => line.Length) : 0,
                 endTurnField.Max(line => line.Length)
             }.Max();
 
-            int renderHeight = baseField.Length +
+            int renderHeight = debugField.Length +
+                               baseField.Length +
                                baseFieldPadding +
                                statField.Length +
                                statFieldPadding +
@@ -54,6 +57,10 @@ namespace SmashUp.Frontend.Pages
                 //Generate final combined render
                 string[] render = new string[renderHeight];
                 int i = 0;
+                foreach (string line in debugField)
+                {
+                    render[i++] = line;
+                }
                 foreach (string line in baseField)
                 {
                     render[i++] = line;
@@ -94,7 +101,31 @@ namespace SmashUp.Frontend.Pages
             return renderBuffer;
         }
 
-        
+        /// <summary>
+        /// Debug stats
+        /// </summary>
+        /// <returns></returns>
+        private string[] GenerateDebugField()
+        {
+            (var x_index, var y_index, var targetableCards) = _service.GetDebugVals();
+
+            StringBuilder targetableCardsString = new();
+            for(int i = 0; i < targetableCards.Length; i++)
+            {
+                var baseField = targetableCards[i];
+                targetableCardsString.Append("[");
+                for (int j = 0; j < baseField.Length; j++)
+                {
+                    var card = baseField[j];
+                    targetableCardsString.Append($"{card.Owner?.Name}'s {card.Name}, ");
+                }
+
+                targetableCardsString.Append("]");
+            }
+
+            return [$"(X: {x_index}, Y: {y_index}); TargetableFieldCards = {targetableCardsString.ToString()}"];
+        }
+
         /// <summary>
         /// Generates the base graphics
         /// </summary>

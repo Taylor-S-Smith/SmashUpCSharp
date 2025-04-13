@@ -1,11 +1,9 @@
 ﻿using SmashUp.Frontend.Utilities;
 using SmashUp.Frontend.Pages;
-using SmashUp.Network;
 using SmashUp.Backend.GameObjects;
 using SmashUp.Backend.API;
 using SmashUp.Backend.Services;
 using SmashUp.Backend.Repositories;
-using System.Runtime.CompilerServices;
 using SmashUp.Backend.Models;
 using SmashUp.Backend.LogicServices;
 

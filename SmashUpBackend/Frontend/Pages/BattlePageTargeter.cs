@@ -25,7 +25,7 @@ namespace SmashUp.Backend.LogicServices
         BaseCard[] _targetableBaseCards;
         //First array is bases, second is cards
         PlayableCard[][] _targetableFieldCards;
-
+       
         BaseCard? _targetedBaseCard;
         PlayableCard? _targetedPlayableCard;
         PlayableCard? _selectedPlayableCard;
@@ -37,6 +37,11 @@ namespace SmashUp.Backend.LogicServices
             _targetableFieldCards = GetTargetableFieldCards(AllCardsAreTargetable);
             _targetableBaseCards = GetTargetableBaseCards(AllCardsAreTargetable);
             _battleAPI = battleAPI;
+
+            if(_table.ActivePlayer.Player.Hand.Count == 0)
+            {
+                _targetedYIndex = -2;
+            }
         }
 
 
@@ -98,7 +103,7 @@ namespace SmashUp.Backend.LogicServices
 
 
         // KEYPRESS
-        private bool? HandlePlayableCardTargetMode(UserKeyPress keyPress, ref bool _needToRender, List<PlayableCard> interactableHandCards)
+        private bool? HandlePlayableCardTargetMode(UserKeyPress keyPress, ref bool needToRender, List<PlayableCard> interactableHandCards)
         {
             switch (keyPress)
             {
@@ -116,7 +121,7 @@ namespace SmashUp.Backend.LogicServices
                         SetIndexToNextAvailable(proposedXIndex, _targetedYIndex, -1);
                         _targetedPlayableCard = _targetableFieldCards[_targetedXIndex][_targetedYIndex];
                     }
-                    _needToRender = true;
+                    needToRender = true;
                     break;
 
                 case UserKeyPress.Right:
@@ -131,11 +136,45 @@ namespace SmashUp.Backend.LogicServices
                         SetIndexToNextAvailable(proposedXIndex, _targetedYIndex, 1);
                         _targetedPlayableCard = _targetableFieldCards[_targetedXIndex][_targetedYIndex];
                     }
-                    _needToRender = true;
+                    needToRender = true;
                     break;
 
                 case UserKeyPress.Up:
-                    if (CursorInHand())
+                    if (CurserInInputArea())
+                    {
+                        //Go into hand
+                        _targetedXIndex = GetClosestIndexConversion(_targetedXIndex, _targetableFieldCards.Length - 1, interactableHandCards.Count - 1);
+                        _targetedYIndex = -1;
+
+                        if (_table.ActivePlayer.Player.Hand.Count > 0)
+                        {
+                            _targetedPlayableCard = interactableHandCards[_targetedXIndex];
+                        } else
+                        {
+                            // Check if there are any targetable cards
+                            if (_targetableFieldCards.Sum(x => x.Length) == 0)
+                            {
+                                break;
+                            }
+                            //Go into base field
+
+                            //Try getting closest to the right
+                            SetIndexToNextAvailable(GetClosestIndexConversion(_targetedXIndex, interactableHandCards.Count, _targetableFieldCards.Length), 99, 1);
+
+                            //Did we get out?
+                            if (CursorInHand())
+                            {
+                                //Try getting closest to the left
+                                proposedXIndex = GetClosestIndexConversion(_targetedXIndex, interactableHandCards.Count - 1, _targetableFieldCards.Length - 1);
+                                SetIndexToNextAvailable(proposedXIndex, 99, 1);
+                            }
+
+                            _targetedPlayableCard = _targetableFieldCards[_targetedXIndex][_targetedYIndex];
+                        }
+
+                        needToRender = true;
+                    }
+                    else if (CursorInHand())
                     {
                         // Check if there are any targetable cards
                         if(_targetableFieldCards.Sum(x => x.Length) == 0)
@@ -156,22 +195,13 @@ namespace SmashUp.Backend.LogicServices
                         }
 
                         _targetedPlayableCard = _targetableFieldCards[_targetedXIndex][_targetedYIndex];
-                    }
-                    else if (CurserInInputArea())
-                    {
-                        //Go down to hand
-                        _targetedXIndex = GetClosestIndexConversion(_targetedXIndex, _targetableFieldCards.Length - 1, interactableHandCards.Count - 1);
-                        _targetedYIndex = -1;
-                        _targetedPlayableCard = interactableHandCards[_targetedXIndex];
-
-                        _needToRender = true;
-                    }
+                    } 
                     else 
                     {
                         _targetedYIndex = Math.Max(0, _targetedYIndex - 1);
                         _targetedPlayableCard = _targetableFieldCards[_targetedXIndex][_targetedYIndex];
                     }
-                    _needToRender = true;
+                    needToRender = true;
                     break;
 
                 case UserKeyPress.Down:
@@ -181,9 +211,15 @@ namespace SmashUp.Backend.LogicServices
                         if (_targetedYIndex == _targetableFieldCards[_targetedXIndex].Length - 1)
                         {
                             //Go down to hand
-                            _targetedXIndex = GetClosestIndexConversion(_targetedXIndex, _targetableFieldCards.Length - 1, interactableHandCards.Count - 1);
-                            _targetedYIndex = -1;
-                            _targetedPlayableCard = interactableHandCards[_targetedXIndex];
+                            if(interactableHandCards.Count > 0)
+                            {
+                                _targetedXIndex = GetClosestIndexConversion(_targetedXIndex, _targetableFieldCards.Length - 1, interactableHandCards.Count - 1);
+                                _targetedYIndex = -1;
+                                _targetedPlayableCard = interactableHandCards[_targetedXIndex];
+                            } else
+                            {
+                                TargetEndTurnButton(ref needToRender);
+                            }
                         }
                         else
                         {
@@ -191,11 +227,12 @@ namespace SmashUp.Backend.LogicServices
                             _targetedPlayableCard = _targetableFieldCards[_targetedXIndex][_targetedYIndex];
                         }
 
-                        _needToRender = true;
+                        needToRender = true;
                     }
-                    _targetedPlayableCard = null;
-                    _targetedYIndex = -2;
-                    _needToRender = true;
+                    if(CursorInHand())
+                    {
+                        TargetEndTurnButton(ref needToRender);
+                    }
 
                     break;
 
@@ -205,17 +242,21 @@ namespace SmashUp.Backend.LogicServices
                         return true;
                     }
                     EnterCardSelectMode();
-                    _needToRender = true;
+                    needToRender = true;
                     break;
-
-                case UserKeyPress.Escape:
-                    return new();
 
                 default:
                     return null;
             }
 
             return null;
+        }
+
+        private void TargetEndTurnButton(ref bool needToRender)
+        {
+            _targetedPlayableCard = null;
+            _targetedYIndex = -2;
+            needToRender = true;
         }
 
         private bool? HandleStaticViewMode(UserKeyPress keyPress, ref bool _needToRender, List<PlayableCard> interactableHandCards)
@@ -257,8 +298,17 @@ namespace SmashUp.Backend.LogicServices
                     _battleAPI.PlayCard(_table.ActivePlayer.Player, _selectedPlayableCard, _targetedBaseCard);
                     _targetableFieldCards = GetTargetableFieldCards(AllCardsAreTargetable);
                     _targetedXIndex = 0;
-                    _targetedYIndex = -1;
-                    SetHandTarget();
+                    IReadOnlyList<PlayableCard> PlayerHand = GetCurrentPlayerHand();
+                    if(PlayerHand.Count > 0)
+                    {
+                        _targetedYIndex = -1;
+                        _targetedPlayableCard =  PlayerHand[_targetedXIndex];
+                    }
+                    else
+                    {
+                        _targetedYIndex = -2;
+                        _targetedPlayableCard = null;
+                    }
                     _targetedBaseCard = null;
                     _selectedPlayableCard = null;
                     InCardViewMode = false;
@@ -283,12 +333,6 @@ namespace SmashUp.Backend.LogicServices
             }
 
             return null;
-        }
-
-        private void SetHandTarget()
-        {
-            IReadOnlyList<PlayableCard> PlayerHand = GetCurrentPlayerHand();
-            _targetedPlayableCard = PlayerHand.Count > 0 ? PlayerHand[_targetedXIndex] : null;
         }
 
         // MODE
@@ -386,10 +430,9 @@ namespace SmashUp.Backend.LogicServices
             return _targetedYIndex == -2;
         }
 
-        private void ResetTargetIndexes()
+        internal (int, int, PlayableCard[][]) GetDebugVals()
         {
-            _targetedXIndex = 0;
-            _targetedYIndex = -1;
+            return (_targetedXIndex, _targetedYIndex, _targetableFieldCards);
         }
     }
 }

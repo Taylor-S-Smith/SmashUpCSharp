@@ -33,3 +33,10 @@ events seem so much easier and faster.
 Rules Variance/TODO:
 - Choosing factions doesn't follow any rules standard
 - "Build the Base Deck" includes faction bases, not set bases
+
+
+
+Event Approach Rules:
+- Events should only be used for logic that:
+	- Applies to an unknown number of objects
+	- Will not be the same for each object
