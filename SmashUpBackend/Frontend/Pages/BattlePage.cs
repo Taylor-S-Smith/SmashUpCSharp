@@ -291,7 +291,7 @@ namespace SmashUp.Frontend.Pages
         private string[] GeneratePlayableCardGraphic(PlayableCard card)
         {
             bool isHighlighted = IsCardHighlighted(card);
-            return CardGraphicUtil.GeneratePlayableCardGraphic(card.Graphic, isHighlighted);
+            return CardGraphicUtil.GeneratePlayableCardGraphic(card.Graphic, card.Name, card.CurrentPower, isHighlighted);
         }
         private string[] GetPlayGraphic(PlayableCard card)
         {

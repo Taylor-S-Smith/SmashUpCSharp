@@ -8,11 +8,11 @@ internal class CardGraphicUtil
 {
     public static string[] GenerateBaseCardGraphic(string[] graphic, string title, int totalPower, int currentBreakpoint, bool useAltBorder = false)
     {
-        return GenerateCardGraphic(graphic, useAltBorder, (width, useAltBorder) => BaseTitleLineBuilder(width, useAltBorder, title, totalPower, currentBreakpoint));
+        return GenerateCardGraphic(graphic, useAltBorder, (width, useAltBorder) => TitleLineBuilder(width, useAltBorder, title, totalPower, currentBreakpoint));
     }
-    public static string[] GeneratePlayableCardGraphic(string[] graphic, bool useAltBorder = false)
+    public static string[] GeneratePlayableCardGraphic(string[] graphic, string title, int? power, bool useAltBorder = false)
     {
-        return GenerateCardGraphic(graphic, useAltBorder);
+        return GenerateCardGraphic(graphic, useAltBorder, (width, useAltBorder) => TitleLineBuilder(width, useAltBorder, title, power, power));
     }
 
     private static string[] GenerateCardGraphic(string[] graphic, bool useAltBorder = false, Func<int, bool, string?>? titleLineBuilder = null)
@@ -59,11 +59,11 @@ internal class CardGraphicUtil
 
         return $"{borderChar}{centeredContent}{borderChar}";
     }
-    private static string BaseTitleLineBuilder(int width, bool useAltBorder, string title, int totalPower, int currentBreakpoint)
+    private static string TitleLineBuilder(int width, bool useAltBorder, string title, int? totalPower, int? currentBreakpoint)
     {
         char borderChar = useAltBorder ? '║' : '|';
-        string power = totalPower.ToString().PadLeft(2, '0');
-        string breakpoint = currentBreakpoint.ToString().PadLeft(2, '0');
+        string power = totalPower.ToString()?.PadLeft(2, '0') ?? "  ";
+        string breakpoint = currentBreakpoint.ToString()?.PadLeft(2, '0') ?? "  ";
         string centeredTitle = RenderUtil.CenterString(title, width - 4);
 
         return $"{borderChar}{power}{centeredTitle}{breakpoint}{borderChar}";

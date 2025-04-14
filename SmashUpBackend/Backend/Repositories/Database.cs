@@ -15,7 +15,6 @@ internal static class Database
             PlayableCardType.minion,
             WAR_RAPTOR_NAME,
             [
-                @"2      War Raptor       2",
                 @"     _oVo--.__           ",
                 @"    '^^`)._  `\'_'_'     ",
                 @"     """"' //(( ,_.-'      ",
@@ -72,7 +71,6 @@ internal static class Database
             PlayableCardType.minion,
             "Armored Stego",
             [
-                @"3     Armored Stego     3",
                 @"                  __     ",
                 @"        _/\/\/\/\/ _)    ",
                 @"      _|          /      ",
@@ -125,7 +123,6 @@ internal static class Database
             PlayableCardType.minion,
             "King Rex",
             [
-                @"7       King Rex        7",
                 @"          ____           ",
                 @"       .-~    '.         ",
                 @"      / /  ~@\   )       ",
