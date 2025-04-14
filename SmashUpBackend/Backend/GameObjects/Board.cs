@@ -14,6 +14,7 @@ internal class BaseSlot
 {
     public BaseCard BaseCard { get; }
     public List<PlayerTerritory> Territories { get; } = [];
+    public List<PlayableCard> Cards => Territories.SelectMany(x => x.Cards).ToList();
 
     public BaseSlot(BaseCard baseCard, List<Player> players)
     {

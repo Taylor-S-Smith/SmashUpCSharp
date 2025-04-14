@@ -73,7 +73,7 @@ internal partial class Application()
         }
         else if (result == StartPageResult.StartGame)
         {
-            Battle battle = new(new ConsoleAppTestUI(), new EventManager(), new Random(), new BaseCardService(new BaseCardRepository()), new PlayableCardService(new PlayableCardRepository()));
+            Battle battle = new(new ConsoleAppTestUI(), new GlobalEventManager(), new Random(), new BaseCardService(new BaseCardRepository()), new PlayableCardService(new PlayableCardRepository()));
             battle.StartBattle();
         }
         else if (result == StartPageResult.ShowCollection)

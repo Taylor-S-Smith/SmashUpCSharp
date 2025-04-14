@@ -7,8 +7,6 @@
 /// Recover: Discard -> Hand
 /// Tuck: Hand -> Deck
 /// Recure: Discard -> Deck
-/// Generate: Outside of Game -> Hand
-/// Play: Hand -> ~
 /// </summary>
 internal class Player : Identifiable
 {
@@ -56,6 +54,11 @@ internal class Player : Identifiable
         _hand.AddRange(Deck.Draw(numToDraw));
     }
 
+    public void AddToHand(PlayableCard card)
+    {
+        _hand.Add(card);
+    }
+
     /// <summary>
     /// Shuffles cards from hand to deck.
     /// </summary>
@@ -66,7 +69,7 @@ internal class Player : Identifiable
         _hand.Clear();
     }
 
-    public void Play(PlayableCard cardToPlay)
+    public void RemoveFromHand(PlayableCard cardToPlay)
     {
         _hand.Remove(cardToPlay);
     }

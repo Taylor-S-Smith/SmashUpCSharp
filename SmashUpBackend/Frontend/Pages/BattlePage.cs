@@ -15,7 +15,6 @@ namespace SmashUp.Frontend.Pages
 
         // STATIC VARIABLES
         readonly int CARD_FIELD_SIZE = 15;
-        readonly bool DEBUG_MODE = false;
 
         // HAND
         List<PlayableCard> _handCardsDisplayed = [];
@@ -108,7 +107,7 @@ namespace SmashUp.Frontend.Pages
         /// <returns></returns>
         private string[] GenerateDebugField()
         {
-            if (DEBUG_MODE == true) {
+            if (_service.DEBUG_MODE == true) {
                 (var x_index, var y_index, var targetableCards) = _service.GetDebugVals();
 
                 StringBuilder targetableCardsString = new();

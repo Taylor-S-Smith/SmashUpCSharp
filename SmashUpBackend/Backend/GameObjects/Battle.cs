@@ -11,7 +11,7 @@ internal class Battle : IBackendBattleAPI
 {
     private readonly IFrontendBattleAPI _userInputHandler;
     private readonly Random _random;
-    private readonly EventManager _eventManager;
+    private readonly GlobalEventManager _eventManager;
 
     private readonly BaseCardService _baseCardService;
     private readonly PlayableCardService _playableCardService;
@@ -21,7 +21,7 @@ internal class Battle : IBackendBattleAPI
 
     private const int WINNING_VP = 15;
 
-    public Battle(IFrontendBattleAPI userInputHandler, EventManager eventManager, Random random, BaseCardService baseCardService, PlayableCardService playableCardService)
+    public Battle(IFrontendBattleAPI userInputHandler, GlobalEventManager eventManager, Random random, BaseCardService baseCardService, PlayableCardService playableCardService)
     {
         _userInputHandler = userInputHandler;
         _eventManager = eventManager;
@@ -63,7 +63,7 @@ internal class Battle : IBackendBattleAPI
         List<Faction> allFactions = factionChoices.SelectMany(x => x.Item2.Select(y => y.Faction)).ToList();
         Deck<BaseCard> baseDeck = new(_baseCardService.GetCards(allFactions));
 
-        //Draw Bases
+        //Draw And Play Bases
         List<BaseCard> startingBases = baseDeck.Draw(players.Count + 1);
 
         //Draw Hands
@@ -181,7 +181,7 @@ internal class Battle : IBackendBattleAPI
         _table.ActivePlayer.Player = _table.Players[newActivePlayerIndex];
     }
 
-    public void PlayCard(Player player, PlayableCard cardToPlay, BaseCard targetedBaseCard)
+    public void PlayCard(Player player, PlayableCard cardToPlay, BaseCard baseCard)
     {
         // Validate Play
         bool isValidPlay = ValidatePlay(player, cardToPlay);
@@ -192,18 +192,19 @@ internal class Battle : IBackendBattleAPI
             RemoveResource(player, cardToPlay);
 
             // Remove Card from Previous Location
-            player.Play(cardToPlay);
+            player.RemoveFromHand(cardToPlay);
 
             // Add Card to territory
-            BaseSlot slot = _table.GetBaseSlots().Where(x => x.BaseCard == targetedBaseCard).Single();
+            BaseSlot slot = _table.GetBaseSlots().Where(x => x.BaseCard == baseCard).Single();
             PlayerTerritory territory = slot.Territories.Where(x => x.player == cardToPlay.Owner).Single();
             territory.Cards.Add(cardToPlay);
 
-            // Update Base Total
-            if(cardToPlay.CurrentPower != null)
-            {
-                slot.BaseCard.CurrentPower += (int)cardToPlay.CurrentPower;
-            }
+            // Activate Card Ability
+            cardToPlay.TriggerOnPlay(slot);
+            cardToPlay.TriggerOnAddToBase(baseCard);
+
+            // Trigger Card Effects (Including Update Base Total)
+            baseCard.TriggerOnAddCard(cardToPlay);
         }
     }
 
@@ -230,9 +231,33 @@ internal class Battle : IBackendBattleAPI
             player.ActionPlays--;
         }
     }
+
+
+    public void ReturnCard(PlayableCard cardToReturn)
+    {
+        foreach(BaseSlot slot in _table.GetBaseSlots())
+        {
+            foreach(PlayerTerritory territory in slot.Territories)
+            {
+                if(territory.Cards.Remove(cardToReturn))
+                {
+                    // Put card in owners hand
+                    cardToReturn.Owner.AddToHand(cardToReturn);
+
+                    // Trigger leave of base
+                    cardToReturn.TriggerOnRemoveFromBase(slot.BaseCard);
+                    slot.BaseCard.TriggerOnRemoveCard(cardToReturn);
+
+                    // Trigger leave of battlefield
+                    return;
+                }
+            }
+        }
+    }
 }
 
 internal interface IBackendBattleAPI
 {
     void PlayCard(Player player, PlayableCard cardToPlay, BaseCard targetedBaseCard);
+    void ReturnCard(PlayableCard cardToReturn);
 }

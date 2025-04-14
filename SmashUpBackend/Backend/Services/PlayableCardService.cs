@@ -12,6 +12,6 @@ internal class PlayableCardService(PlayableCardRepository playableCardRepo)
     /// </summary>
     public List<PlayableCard> GetCards(List<Faction> factions)
     {
-        return _playableCardRepo.GetCards(factions);
+        return PlayableCardRepository.GetCards(factions);
     }
 }
