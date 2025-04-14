@@ -7,6 +7,8 @@ internal abstract class Card(Faction faction, string name, string[] graphic, Act
     public string[] Graphic { get; set; } = graphic;
     public Action OnPlay { get; } = onPlay ?? (() => { });
 
+    public abstract Card Clone();
+
     //This is what is injected into the event manager's events. Ex. Ongoing: This gains +1 power each time a minion is played 
     //Action internalAction = () => { };
 

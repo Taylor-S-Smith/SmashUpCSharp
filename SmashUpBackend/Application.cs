@@ -50,7 +50,7 @@ internal partial class Application()
     {
         public override List<(string, List<FactionModel>)> ChooseFactions(List<string> playerNames, List<FactionModel> factionOptions)
         {
-            return new([(playerNames[0], [factionOptions[0]]), (playerNames[1], [factionOptions[0]])]);
+            return new([(playerNames[0], [factionOptions[1]]), (playerNames[1], [factionOptions[1]])]);
         }
 
         public override List<string> GetPlayerNames()

@@ -140,10 +140,9 @@ namespace SmashUp.Backend.LogicServices
                     break;
 
                 case UserKeyPress.Up:
-                    if (CurserInInputArea())
+                    if (CursorOnEndTurnButton())
                     {
                         //Go into hand
-                        _targetedXIndex = GetClosestIndexConversion(_targetedXIndex, _targetableFieldCards.Length - 1, interactableHandCards.Count - 1);
                         _targetedYIndex = -1;
 
                         if (_table.ActivePlayer.Player.Hand.Count > 0)
@@ -191,7 +190,7 @@ namespace SmashUp.Backend.LogicServices
                         {
                             //Try getting closest to the left
                             proposedXIndex = GetClosestIndexConversion(_targetedXIndex, interactableHandCards.Count - 1, _targetableFieldCards.Length - 1);
-                            SetIndexToNextAvailable(proposedXIndex, 99, 1);
+                            SetIndexToNextAvailable(proposedXIndex, 99, -1);
                         }
 
                         _targetedPlayableCard = _targetableFieldCards[_targetedXIndex][_targetedYIndex];
@@ -229,7 +228,7 @@ namespace SmashUp.Backend.LogicServices
 
                         needToRender = true;
                     }
-                    if(CursorInHand())
+                    else if(CursorInHand())
                     {
                         TargetEndTurnButton(ref needToRender);
                     }
@@ -385,7 +384,7 @@ namespace SmashUp.Backend.LogicServices
                 else
                 {
                     //Do we still have bases to our side?
-                    if (proposedXIndex > 0)
+                    if (proposedXIndex + iterNum < _targetableFieldCards.Length && proposedXIndex + iterNum > -1)
                     {
                         //Try again one base to the side
                         SetIndexToNextAvailable(proposedXIndex + iterNum, proposedYIndex, iterNum);

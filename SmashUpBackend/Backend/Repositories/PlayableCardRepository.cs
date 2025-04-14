@@ -10,27 +10,11 @@ internal class PlayableCardRepository
     /// </summary>
     public List<PlayableCard> GetCards(List<Faction> factions)
     {
-        return [GetTrooper()];
-    }
-
-    public PlayableCard GetTrooper()
-    {
-        return new(
-            Faction.aliens, 
-            PlayableCardType.minion, 
-            "Trooper",
-            [
-                @"2        Trooper        2",
-                @"                         ",
-                @"              ___        ",
-                @"         (o) [___]       ",
-                @"         -|--|           ",
-                @"         / \ |           ",
-                @"                         ",
-                @"                         ",
-                @"                         ",
-            ],
-            2
-        );
+        List<PlayableCard> cardInstances = [];
+        foreach (var faction in factions)
+        {
+            cardInstances.AddRange(Database.CardsByFaction[faction].Select(x => x.Clone()).ToList());
+        }
+        return cardInstances;
     }
 }

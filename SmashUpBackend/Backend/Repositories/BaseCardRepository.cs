@@ -10,7 +10,7 @@ internal class BaseCardRepository
     /// </summary>
     public List<BaseCard> GetCards(List<Faction> factions)
     {
-        return [GetBaseAlpha()];
+        return [GetBaseAlpha(), GetBaseAlpha(), GetBaseAlpha()];
     }
 
     public BaseCard GetBaseAlpha()
@@ -24,15 +24,15 @@ internal class BaseCardRepository
 
                     "      4      2      1       ",
                     "                            ",
-                    "After each time a minion is ",
-                    " played here, it's owner may",
-                    "  play an extra minion of   ",
-                    "      power 3 or less.      ",
+                    "                            ",
+                    "                            ",
+                    "                            ",
+                    "                            ",
 
 
             ], 
             15, 
-            (3, 2, 1)
+            (4, 2, 1)
         );
     }
 }

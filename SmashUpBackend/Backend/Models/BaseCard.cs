@@ -1,4 +1,6 @@
-﻿namespace SmashUp.Backend.Models;
+﻿using Microsoft.VisualBasic;
+
+namespace SmashUp.Backend.Models;
 
 internal class BaseCard(Faction faction, string name, string[] graphic, int breakpoint, (int, int, int) pointSpread) : Card(faction, name, graphic)
 {
@@ -8,5 +10,9 @@ internal class BaseCard(Faction faction, string name, string[] graphic, int brea
     public (int, int, int) PointSpread { get; } = pointSpread;
 
     public int CurrentPower { get; set; } = 0;
-    
+
+    public override BaseCard Clone()
+    {
+        return new BaseCard(Faction, Name, Graphic, PrintedBreakpoint, PointSpread);
+    }
 }

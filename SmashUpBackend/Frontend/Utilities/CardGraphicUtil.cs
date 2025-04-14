@@ -29,7 +29,7 @@ internal class CardGraphicUtil
         int index = 0;
 
         // Top Border
-        returnGraphic[index++] = BuildBorder(useAltBorder ? '╔' : ' ', useAltBorder ? '═' : '_', useAltBorder ? '╗' : ' ', graphicWidth);
+        returnGraphic[index++] = BuildBorder(useAltBorder ? '╔' : '┌', useAltBorder ? '═' : '─', useAltBorder ? '╗' : '┐', graphicWidth);
 
         // Title
         if (title != null)
@@ -44,23 +44,22 @@ internal class CardGraphicUtil
         }
 
         // Bottom Border
-        returnGraphic[index] = BuildBorder(useAltBorder ? '╚' : '|', useAltBorder ? '═' : '_', useAltBorder ? '╝' : '|', graphicWidth);
+        returnGraphic[index] = BuildBorder(useAltBorder ? '╚' : '└', useAltBorder ? '═' : '─', useAltBorder ? '╝' : '┘', graphicWidth);
 
         return returnGraphic;
     }
-
     private static string BuildBorder(char leftChar, char middleChar, char rightChar, int width)
     {
         return $"{leftChar}{new string(middleChar, width)}{rightChar}";
     }
     private static string BuildContentLine(string content, int width, bool useAltBorder)
     {
-        char borderChar = useAltBorder ? '║' : '|';
+        char borderChar = useAltBorder ? '║' : '│';
         string centeredContent = RenderUtil.CenterString(content, width);
 
         return $"{borderChar}{centeredContent}{borderChar}";
     }
-    public static string BaseTitleLineBuilder(int width, bool useAltBorder, string title, int totalPower, int currentBreakpoint)
+    private static string BaseTitleLineBuilder(int width, bool useAltBorder, string title, int totalPower, int currentBreakpoint)
     {
         char borderChar = useAltBorder ? '║' : '|';
         string power = totalPower.ToString().PadLeft(2, '0');
@@ -76,40 +75,41 @@ internal class CardGraphicUtil
         int numLines = baseCardSlot.Territories.Where(x => x.Cards.Count > 0).ToList().Count + baseCardSlot.Territories.SelectMany(x => x.Cards).Count();
         string[] displayList = new string[numLines];
 
-        string? currOwner = null;
         int cardIndex = 1;
         int displayIndex = 0;
 
-        foreach (PlayableCard card in baseCardSlot.Territories.SelectMany(x => x.Cards))
+        foreach (PlayerTerritory territory in baseCardSlot.Territories)
         {
-            // Whenever the owner changes, add a new owner header line
-            if (currOwner != card.Owner?.Name)
+            if(territory.Cards.Count > 0)
             {
-                displayList[displayIndex++] = $"Player {card.Owner?.Name}'s cards:";
-                currOwner = card.Owner?.Name;
-            }
+                displayList[displayIndex++] = $"{territory.player.Name}'s cards ({territory.Cards.Sum(x => x.CurrentPower)}):";
+                foreach (PlayableCard card in territory.Cards)
+                {
+                    StringBuilder lineBuilder = new();
 
-            StringBuilder lineBuilder = new();
+                    if (card.Id == targetedCardId)
+                    {
+                        lineBuilder.Append('>');
+                    }
 
-            if (card.Id == targetedCardId)
-            {
-                lineBuilder.Append('>');
-            }
+                    lineBuilder.Append($"{cardIndex}. {card.Name}");
 
-            lineBuilder.Append($"{cardIndex}. {card.Name}");
+                    if (card.CurrentPower.HasValue)
+                    {
+                        lineBuilder.Append($" ({card.CurrentPower})");
+                    }
+                    if (card.Id == targetedCardId)
+                    {
+                        lineBuilder.Append('<');
+                    }
 
-            if (card.CurrentPower.HasValue)
-            {
-                lineBuilder.Append($" ({card.CurrentPower})");
-            }
-            if (card.Id == targetedCardId)
-            {
-                lineBuilder.Append('<');
-            }
-
-            displayList[displayIndex++] = lineBuilder.ToString();
-            cardIndex++;
+                    displayList[displayIndex++] = lineBuilder.ToString();
+                    cardIndex++;
+                }
+            }            
         }
+
+        
 
         return displayList;
     }

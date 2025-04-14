@@ -15,6 +15,7 @@ namespace SmashUp.Frontend.Pages
 
         // STATIC VARIABLES
         readonly int CARD_FIELD_SIZE = 15;
+        readonly bool DEBUG_MODE = false;
 
         // HAND
         List<PlayableCard> _handCardsDisplayed = [];
@@ -35,7 +36,7 @@ namespace SmashUp.Frontend.Pages
 
             //Ensure the current console size will fit the header
             int renderWidth = new[] {
-                debugField.Max(line => line.Length),
+                debugField.Length > 0 ? debugField.Max(line => line.Length) : 0,
                 baseField.Max(line => line.Length),
                 statField.Max(line => line.Length),
                 consoleField.Length > 0 ? consoleField.Max(line => line.Length) : 0,
@@ -69,7 +70,7 @@ namespace SmashUp.Frontend.Pages
 
                 //Separation Graphic
                 StringBuilder lineBuilder = new();
-                lineBuilder.Append('-', renderWidth);
+                lineBuilder.Append('─', renderWidth);
                 render[i++] = lineBuilder.ToString();
 
                 foreach (string line in statField)
@@ -107,23 +108,26 @@ namespace SmashUp.Frontend.Pages
         /// <returns></returns>
         private string[] GenerateDebugField()
         {
-            (var x_index, var y_index, var targetableCards) = _service.GetDebugVals();
+            if (DEBUG_MODE == true) {
+                (var x_index, var y_index, var targetableCards) = _service.GetDebugVals();
 
-            StringBuilder targetableCardsString = new();
-            for(int i = 0; i < targetableCards.Length; i++)
-            {
-                var baseField = targetableCards[i];
-                targetableCardsString.Append("[");
-                for (int j = 0; j < baseField.Length; j++)
+                StringBuilder targetableCardsString = new();
+                for (int i = 0; i < targetableCards.Length; i++)
                 {
-                    var card = baseField[j];
-                    targetableCardsString.Append($"{card.Owner?.Name}'s {card.Name}, ");
+                    var baseField = targetableCards[i];
+                    targetableCardsString.Append("[");
+                    for (int j = 0; j < baseField.Length; j++)
+                    {
+                        var card = baseField[j];
+                        targetableCardsString.Append($"{card.Owner?.Name}'s {card.Name}, ");
+                    }
+
+                    targetableCardsString.Append("]");
                 }
 
-                targetableCardsString.Append("]");
+                return [$"(X: {x_index}, Y: {y_index}); TargetableFieldCards = {targetableCardsString.ToString()}"];
             }
-
-            return [$"(X: {x_index}, Y: {y_index}); TargetableFieldCards = {targetableCardsString.ToString()}"];
+            return [];
         }
 
         /// <summary>
@@ -308,16 +312,16 @@ namespace SmashUp.Frontend.Pages
         private string[] GenerateEndTurnField(int lineWidth)
         {
             // Add End Button
-            string button;
+            List<string> button;
             if (_service.EndTurnSelected())
             {
-                button = ">END TURN<";
+                button = ["╔════════╗", "║END TURN║", "╚════════╝"];
             }
             else
             {
-                button = "END TURN";
+                button = ["┌────────┐", "│END TURN│", "└────────┘"];
             }
-            return [RenderUtil.CenterString(button, lineWidth)];
+            return button.Select(x => RenderUtil.CenterString(x, lineWidth)).ToArray();
         }
 
         private bool IsCardHighlighted(object card)
