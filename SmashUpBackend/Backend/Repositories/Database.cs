@@ -1,5 +1,5 @@
-﻿using static SmashUp.Backend.Services.GlobalEventManager;
-using SmashUp.Backend.Models;
+﻿using SmashUp.Backend.Models;
+using SmashUp.Backend.GameObjects;
 
 namespace SmashUp.Backend.Repositories;
 
@@ -28,20 +28,20 @@ internal static class Database
             2
         );
 
-        Action<PlayableCard> addCardHandler = (card) =>
+        void addCardHandler(PlayableCard card)
         {
             // It already gains power for itself OnPlay, we don't want to double count it
             if (card.Name == WAR_RAPTOR_NAME && card.Id != warRaptor.Id)
                 warRaptor.ChangeCurrentPower(1);
-        };
+        }
 
-        Action<PlayableCard> removeCardHandler = (card) =>
+        void removeCardHandler(PlayableCard card)
         {
             if (card.Name == WAR_RAPTOR_NAME)
                 warRaptor.ChangeCurrentPower(-1);
-        };
+        }
 
-        warRaptor.OnPlay += (baseSlot) =>
+        warRaptor.OnPlay += (eventManager, baseSlot) =>
         {
             // Gain Power for current War Raptors
             int currRaptorCount = baseSlot.Territories.SelectMany(x => x.Cards).Where(x => x.Name == WAR_RAPTOR_NAME).ToList().Count;
@@ -63,6 +63,59 @@ internal static class Database
         };
 
         return warRaptor;
+    };
+    public static Func<PlayableCard> ArmorStego = () =>
+    {
+        PlayableCard armoredStego = new
+        (
+            Faction.dinosuars,
+            PlayableCardType.minion,
+            "Armored Stego",
+            [
+                @"3     Armored Stego     3",
+                @"                  __     ",
+                @"        _/\/\/\/\/ _)    ",
+                @"      _|          /      ",
+                @"    _|  (  | (   /       ",
+                @"   /__.-'|_|--|_|        ",
+                @"  Ongoing: Has +2 power  ",
+                @"      during other       ",
+                @"     players' turns.     ",
+            ],
+            3
+
+        );
+
+        void turnStartHandler(ActivePlayer activePlayer)
+        {
+            if (activePlayer.Player != armoredStego.Owner)
+            {
+                armoredStego.ChangeCurrentPower(2);
+            }
+        }
+
+        void endTurnHandler(ActivePlayer activePlayer)
+        {
+            if (activePlayer.Player != armoredStego.Owner)
+            {
+                armoredStego.ChangeCurrentPower(-2);
+            }
+        }
+
+        armoredStego.OnPlay += (eventManager, baseSlot) =>
+        {
+            eventManager.StartOfTurn += turnStartHandler;
+            eventManager.EndOfTurn += endTurnHandler;
+        };
+
+        armoredStego.OnRemoveFromBattlefield += (eventManager) =>
+        {
+            eventManager.StartOfTurn -= turnStartHandler;
+            eventManager.EndOfTurn -= endTurnHandler;
+        };
+
+
+        return armoredStego;
     };
     public static Func<PlayableCard> KingRex = () =>
     {
@@ -93,6 +146,6 @@ internal static class Database
 
     private static readonly Dictionary<Faction, List<Func<PlayableCard>>> CardsByFactionDict = new()
     {
-        { Faction.dinosuars, [WarRaptor, WarRaptor, WarRaptor, WarRaptor, KingRex] }
+        { Faction.dinosuars, [WarRaptor, WarRaptor, WarRaptor, WarRaptor, ArmorStego, ArmorStego, ArmorStego, KingRex] }
     };
 }

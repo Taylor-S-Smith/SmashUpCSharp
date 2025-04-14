@@ -117,7 +117,7 @@ internal class Battle : IBackendBattleAPI
     {
         _table.ActivePlayer.Player.MinionPlays = 1;
         _table.ActivePlayer.Player.ActionPlays = 1;
-        _eventManager.TriggerStartOfTurn();
+        _eventManager.TriggerStartOfTurn(_table.ActivePlayer);
     }
     /// <summary>
     /// Handles logic relating to the "Play Cards" phase of the Smash Up Rule Book
@@ -155,7 +155,7 @@ internal class Battle : IBackendBattleAPI
     /// </summary>
     private void EndTurn()
     {
-        _eventManager.TriggerEndOfTurn();
+        _eventManager.TriggerEndOfTurn(_table.ActivePlayer);
         CheckEndOfGame();
     }
 
@@ -200,7 +200,7 @@ internal class Battle : IBackendBattleAPI
             territory.Cards.Add(cardToPlay);
 
             // Activate Card Ability
-            cardToPlay.TriggerOnPlay(slot);
+            cardToPlay.TriggerOnPlay(_eventManager, slot);
             cardToPlay.TriggerOnAddToBase(baseCard);
 
             // Trigger Card Effects (Including Update Base Total)
@@ -249,7 +249,7 @@ internal class Battle : IBackendBattleAPI
                     slot.BaseCard.TriggerOnRemoveCard(cardToReturn);
 
                     // Trigger leave of battlefield
-                    cardToReturn.TriggerOnRemoveFromBattleField();
+                    cardToReturn.TriggerOnRemoveFromBattleField(_eventManager);
                     return;
                 }
             }

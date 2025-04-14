@@ -21,5 +21,5 @@ Event Approach Rules:
   It is the responsability of the more general class events to call all dependent events.
 - When Listening, listen to the most specific one. If you only need to know when a card is added to a specific base, don't listen to the event manager
 - Create as specific event as you can. No need to track global deaths if per base works just as well
-- Hook together chains of similar events so you only ever call one invoke/trigger at a time. If you need to track global deaths and base deaths have global death even trigger base death event
+- When performing any operation, check the events of all effected objects, and global events
   
