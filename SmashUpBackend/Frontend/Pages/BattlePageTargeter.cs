@@ -247,6 +247,21 @@ namespace SmashUp.Backend.LogicServices
                     needToRender = true;
                     break;
 
+                case UserKeyPress.Escape:
+                    if (DEBUG_MODE == true)
+                    {
+                        Console.WriteLine("Enter Command: ");
+                        var input = Console.ReadLine();
+                        if (input == "add plays")
+                        {
+                            _table.ActivePlayer.Player.MinionPlays = 100;
+                            _table.ActivePlayer.Player.ActionPlays = 100;
+                        }
+
+                        ResetToDefault(ref needToRender);
+                    }
+                    break;
+
                 default:
                     return null;
             }
@@ -261,7 +276,7 @@ namespace SmashUp.Backend.LogicServices
             needToRender = true;
         }
 
-        private bool? HandleStaticViewMode(UserKeyPress keyPress, ref bool _needToRender, List<PlayableCard> interactableHandCards)
+        private bool? HandleStaticViewMode(UserKeyPress keyPress, ref bool needToRender, List<PlayableCard> interactableHandCards)
         {
             switch (keyPress)
             {
@@ -275,14 +290,14 @@ namespace SmashUp.Backend.LogicServices
                             _battleAPI.ReturnCard(_selectedPlayableCard);
                         }
 
-                        ResetToDefault(ref _needToRender);
+                        ResetToDefault(ref needToRender);
                     }
                     break;
                 case UserKeyPress.Escape:
                     _targetedPlayableCard = _selectedPlayableCard;
                     _selectedPlayableCard = null;
                     InCardViewMode = false;
-                    _needToRender = true;
+                    needToRender = true;
                     break;
 
                 default:
@@ -291,27 +306,27 @@ namespace SmashUp.Backend.LogicServices
 
             return null;
         }
-        private bool? HandleBaseTargetMode(UserKeyPress keyPress, ref bool _needToRender, List<PlayableCard> interactableHandCards)
+        private bool? HandleBaseTargetMode(UserKeyPress keyPress, ref bool needToRender, List<PlayableCard> interactableHandCards)
         {
             switch (keyPress)
             {
                 case UserKeyPress.Left:
                     _targetedXIndex = Math.Max(0, _targetedXIndex - 1);
                     _targetedBaseCard = _targetableBaseCards[_targetedXIndex];
-                    _needToRender = true;
+                    needToRender = true;
                     break;
 
                 case UserKeyPress.Right:
                     _targetedXIndex = Math.Min(_targetableBaseCards.Length - 1, _targetedXIndex + 1);
                     _targetedBaseCard = _targetableBaseCards[_targetedXIndex];
-                    _needToRender = true;
+                    needToRender = true;
                     break;
 
                 case UserKeyPress.Confirm:
                     if (_selectedPlayableCard == null) throw new Exception("No card selected");
                     if (_targetedBaseCard == null) throw new Exception("No base selected");
                     _battleAPI.PlayCard(_table.ActivePlayer.Player, _selectedPlayableCard, _targetedBaseCard);
-                    ResetToDefault(ref _needToRender);
+                    ResetToDefault(ref needToRender);
                     break;
 
                 case UserKeyPress.Escape:
@@ -324,7 +339,7 @@ namespace SmashUp.Backend.LogicServices
                     _targetedPlayableCard = _selectedPlayableCard;
                     _selectedPlayableCard = null;
                     InCardViewMode = false;
-                    _needToRender = true;
+                    needToRender = true;
                     break;
 
                 default:
@@ -334,7 +349,7 @@ namespace SmashUp.Backend.LogicServices
             return null;
         }
 
-        private void ResetToDefault(ref bool _needToRender)
+        private void ResetToDefault(ref bool needToRender)
         {
             _targetableFieldCards = GetTargetableFieldCards(AllCardsAreTargetable);
             _targetedXIndex = 0;
@@ -352,7 +367,7 @@ namespace SmashUp.Backend.LogicServices
             _targetedBaseCard = null;
             _selectedPlayableCard = null;
             InCardViewMode = false;
-            _needToRender = true;
+            needToRender = true;
         }
 
         // MODE

@@ -20,12 +20,13 @@ internal class PlayableCard : Card
     public int? CurrentPower { get; private set; }
 
     public event Action<int> OnPowerChange = delegate { };
-    public event Action<BaseSlot> OnPlay = delegate { };
     public void TriggerOnPlay(BaseSlot baseSlot) => OnPlay(baseSlot);
-    public event Action<BaseCard> OnAddToBase = delegate { };
+    public event Action<BaseSlot> OnPlay = delegate { };
     public void TriggerOnAddToBase(BaseCard baseCard) => OnAddToBase(baseCard);
-    public event Action<BaseCard> OnRemoveFromBase = delegate { };
+    public event Action<BaseCard> OnAddToBase = delegate { };
     public void TriggerOnRemoveFromBase(BaseCard baseCard) => OnRemoveFromBase(baseCard);
+    public event Action<BaseCard> OnRemoveFromBase = delegate { };
+    public void TriggerOnRemoveFromBattleField() => OnRemoveFromBattlefield();
     public event Action OnRemoveFromBattlefield;
 
     public void ChangeCurrentPower(int amountToChange)

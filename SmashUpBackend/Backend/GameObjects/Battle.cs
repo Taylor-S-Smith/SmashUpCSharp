@@ -249,6 +249,7 @@ internal class Battle : IBackendBattleAPI
                     slot.BaseCard.TriggerOnRemoveCard(cardToReturn);
 
                     // Trigger leave of battlefield
+                    cardToReturn.TriggerOnRemoveFromBattleField();
                     return;
                 }
             }
