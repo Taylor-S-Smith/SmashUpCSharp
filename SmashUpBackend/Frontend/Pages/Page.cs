@@ -75,6 +75,7 @@ internal abstract class ValuePage<T> : Page<T> where T : struct
                 {
                     return (T)pageOutput;
                 }
+                _needToRender = true;
             }
             _needToRender = _needToRender || ConsoleUtil.CheckAndHandleConsoleResize(ref consoleWidth, ref consoleHeight);
 
@@ -123,19 +124,5 @@ internal abstract class ReferencePage<T> : Page<T> where T : class
             // Apparently prevents CPU spiking
             Thread.Sleep(TimeSpan.FromMilliseconds(1));
         }
-    }
-}
-
-
-internal class TestPage : ValuePage<int>
-{
-    protected override StringBuilder GenerateRender(int consoleWidth, int consoleHeight)
-    {
-        return new();
-    }
-
-    public override int? HandleKeyPress(UserKeyPress keyPress)
-    {
-        return null;
     }
 }

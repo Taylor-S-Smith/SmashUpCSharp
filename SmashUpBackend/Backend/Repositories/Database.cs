@@ -27,6 +27,13 @@ internal static class Database
             2
         );
 
+        warRaptor.OnPlay += (eventManager, baseSlot) =>
+        {
+            // Gain Power for current War Raptors on base
+            int currRaptorCount = baseSlot.Territories.SelectMany(x => x.Cards).Where(x => x.Name == WAR_RAPTOR_NAME).ToList().Count;
+            warRaptor.ChangeCurrentPower(currRaptorCount);
+        };
+
         void addCardHandler(PlayableCard card)
         {
             // It already gains power for itself OnPlay, we don't want to double count it
@@ -39,13 +46,6 @@ internal static class Database
             if (card.Name == WAR_RAPTOR_NAME)
                 warRaptor.ChangeCurrentPower(-1);
         }
-
-        warRaptor.OnPlay += (eventManager, baseSlot) =>
-        {
-            // Gain Power for current War Raptors
-            int currRaptorCount = baseSlot.Territories.SelectMany(x => x.Cards).Where(x => x.Name == WAR_RAPTOR_NAME).ToList().Count;
-            warRaptor.ChangeCurrentPower(currRaptorCount);
-        };
 
         warRaptor.OnAddToBase += (baseCard) =>
         {
@@ -100,10 +100,10 @@ internal static class Database
             }
         }
 
-        armoredStego.OnPlay += (eventManager, baseSlot) =>
+        armoredStego.OnPlay += (battle, baseSlot) =>
         {
-            eventManager.StartOfTurn += turnStartHandler;
-            eventManager.EndOfTurn += endTurnHandler;
+            battle.EventManager.StartOfTurn += turnStartHandler;
+            battle.EventManager.EndOfTurn += endTurnHandler;
         };
 
         armoredStego.OnRemoveFromBattlefield += (eventManager) =>
@@ -114,6 +114,34 @@ internal static class Database
 
 
         return armoredStego;
+    };
+    public static Func<PlayableCard> Laseratops = () =>
+    {
+        PlayableCard laseratops = new
+        (
+            Faction.dinosuars,
+            PlayableCardType.minion,
+            "Laseratops",
+            [
+                @"     ====<[]             ",
+                @"     /| __||___          ",
+                @"  \\| |/       \         ",
+                @"  (___   ) |  )  \_      ",
+                @"      |_|--|_|'-.__\     ",
+                @" ----------------------  ",
+                @"Destroy a minion of power",
+                @" 2 or less on this base. ",
+            ],
+            4
+        );
+
+        laseratops.OnPlay += (battle, baseSlot) =>
+        {
+            PlayableCard cardToDestroy = battle.SelectFieldCard(PlayableCardType.minion, 2);
+            battle.Destroy(cardToDestroy);
+        };
+
+        return laseratops;
     };
     public static Func<PlayableCard> KingRex = () =>
     {
@@ -136,13 +164,39 @@ internal static class Database
         );
     };
 
-    public static List<PlayableCard> CardsByFaction(Faction faction)
+    public static Func<PlayableCard> Minion = () =>
+    {
+
+        PlayableCard minion = new
+        (
+            Faction.dinosuars,
+            PlayableCardType.minion,
+            "minion",
+            [
+                @"     _oVo--.__           ",
+                @"    '^^`)._  `\'_'_'     ",
+                @"     """"' //(( ,_.-'      ",
+                @"           / /           ",
+                @"         `~`~            ",
+                @"                         ",
+                @"                         ",
+                @"                         ",
+            ],
+            2
+        );
+
+
+        return minion;
+    };
+
+    public static List<PlayableCard> GetCardsByFaction(Faction faction)
     {
         return CardsByFactionDict[faction].Select(x => x()).ToList();
     } 
 
     private static readonly Dictionary<Faction, List<Func<PlayableCard>>> CardsByFactionDict = new()
     {
-        { Faction.dinosuars, [WarRaptor, WarRaptor, WarRaptor, WarRaptor, ArmorStego, ArmorStego, ArmorStego, KingRex] }
+        //{ Faction.dinosuars, [WarRaptor, WarRaptor, WarRaptor, WarRaptor, ArmorStego, ArmorStego, ArmorStego, Laseratops, Laseratops, KingRex] }
+        { Faction.dinosuars, [Minion, Minion, Laseratops, Laseratops] }
     };
 }

@@ -13,7 +13,7 @@ internal class PlayableCardRepository
         List<PlayableCard> cardInstances = [];
         foreach (var faction in factions)
         {
-            cardInstances.AddRange(Database.CardsByFaction(faction).ToList());
+            cardInstances.AddRange(Database.GetCardsByFaction(faction));
         }
         return cardInstances;
     }

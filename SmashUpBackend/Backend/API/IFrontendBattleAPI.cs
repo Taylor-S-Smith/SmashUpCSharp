@@ -8,10 +8,13 @@ namespace SmashUp.Backend.API;
 /// </summary>
 internal interface IFrontendBattleAPI
 {
-    public List<string> GetPlayerNames();
-    public List<(string, List<FactionModel>)> ChooseFactions(List<string> playerNames, List<FactionModel> factionOptions);
-    public bool AskMulligan();
-    public void PlayCards(Table table, IBackendBattleAPI backendBattleAPI);
-    public List<PlayableCard> DiscardTo10(Player player);
-    public void EndBattle(Player player);
+    List<(string, List<FactionModel>)> ChooseFactions(List<string> playerNames, List<FactionModel> factionOptions);
+    List<string> ChoosePlayerNames();
+    bool AskMulligan();
+    List<PlayableCard> DiscardTo10(Player player);
+    void InitializeData(Table table, IBackendBattleAPI backendBattleAPI);
+    Guid SelectCardFromList(List<PlayableCard> cards);
+    Guid SelectBaseCard(List<Guid> validBaseIds);
+    Guid SelectFieldCard(List<List<Guid>> validCardIds);
+    void EndBattle(Player winningPlayer);
 }

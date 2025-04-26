@@ -1,11 +1,12 @@
-﻿using SmashUp.Frontend.Utilities;
-using SmashUp.Frontend.Pages;
-using SmashUp.Backend.GameObjects;
-using SmashUp.Backend.API;
-using SmashUp.Backend.Services;
+﻿using SmashUp.Frontend.Pages.Battle.LogicModules;
+using SmashUp.Frontend.Pages.Battle;
 using SmashUp.Backend.Repositories;
+using SmashUp.Backend.GameObjects;
+using SmashUp.Frontend.Utilities;
+using SmashUp.Backend.Services;
 using SmashUp.Backend.Models;
-using SmashUp.Backend.LogicServices;
+using SmashUp.Frontend.Pages;
+using SmashUp.Backend.API;
 
 namespace SmashUp;
 
@@ -13,6 +14,8 @@ internal partial class Application()
 {
     private class ConsoleAppBattleUI() : IFrontendBattleAPI
     {
+        private Table _table = null!;
+        private IBackendBattleAPI _backendBattleAPI = null!;
         public bool AskMulligan()
         {
             throw new NotImplementedException();
@@ -23,16 +26,34 @@ internal partial class Application()
             return new DeckSelectionPage(playerNames, factionOptions).Run();
         }
 
-        public virtual List<string> GetPlayerNames()
+        public virtual List<string> ChoosePlayerNames()
         {
             int numPlayers = new PlayerNumPage().Run();
             List<string> names = new PlayerNamePage(numPlayers).Run();
             return names;
         }
 
-        public void PlayCards(Table table, IBackendBattleAPI backendBattleAPI)
+        public void InitializeData(Table table, IBackendBattleAPI backendBattleAPI)
         {
-            new BattlePage(new BattlePageTargeter(table, backendBattleAPI)).Run();
+            _table = table;
+            _backendBattleAPI = backendBattleAPI;
+        }
+
+        public Guid SelectCardFromList(List<PlayableCard> cards)
+        {
+            //Use SelectHandCardTargeter class
+            //SelectHandCardTargeter class will construct it's master targeter using the base targeters we have constructed
+            return new BattlePage(_table.GetBaseSlots(), _table.ActivePlayer.Player, new SelectOption(cards.Select(x => x.Id).ToList())).Run();
+        }
+
+        public Guid SelectFieldCard(List<List<Guid>> validCardIds)
+        {
+            return new BattlePage(_table.GetBaseSlots(), _table.ActivePlayer.Player, new Select2DOption(validCardIds)).Run();
+        }
+
+        public Guid SelectBaseCard(List<Guid> validBaseIds)
+        {
+            return new BattlePage(_table.GetBaseSlots(), _table.ActivePlayer.Player, new SelectOption(validBaseIds)).Run();
         }
 
         public List<PlayableCard> DiscardTo10(Player player)
@@ -53,7 +74,7 @@ internal partial class Application()
             return new([(playerNames[0], [factionOptions[1]]), (playerNames[1], [factionOptions[1]]), (playerNames[2], [factionOptions[1]])]);
         }
 
-        public override List<string> GetPlayerNames()
+        public override List<string> ChoosePlayerNames()
         {
             return ["Taylor", "Andrew", "Caden"];
         }

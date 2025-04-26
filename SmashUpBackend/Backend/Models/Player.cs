@@ -59,6 +59,11 @@ internal class Player : Identifiable
         _hand.Add(card);
     }
 
+    public void AddToDiscard(PlayableCard cardToDiscard)
+    {
+        DiscardPile.Add(cardToDiscard);
+    }
+
     /// <summary>
     /// Shuffles cards from hand to deck.
     /// </summary>

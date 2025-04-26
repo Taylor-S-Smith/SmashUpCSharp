@@ -11,7 +11,7 @@ internal class Battle : IBackendBattleAPI
 {
     private readonly IFrontendBattleAPI _userInputHandler;
     private readonly Random _random;
-    private readonly GlobalEventManager _eventManager;
+    public readonly GlobalEventManager EventManager;
 
     private readonly BaseCardService _baseCardService;
     private readonly PlayableCardService _playableCardService;
@@ -24,17 +24,19 @@ internal class Battle : IBackendBattleAPI
     public Battle(IFrontendBattleAPI userInputHandler, GlobalEventManager eventManager, Random random, BaseCardService baseCardService, PlayableCardService playableCardService)
     {
         _userInputHandler = userInputHandler;
-        _eventManager = eventManager;
+
+        EventManager = eventManager;
         _random = random;
 
         _baseCardService = baseCardService;
         _playableCardService = playableCardService;
 
         _table = SetUp();
+
+        _userInputHandler.InitializeData(_table, this);
     }
 
     // TURN STRUCTURE & CONTROL FLOW 
-
 
     /// <summary>
     /// Handles logic relating to the "Set Up" phase of the Smash Up Rule Book
@@ -42,7 +44,7 @@ internal class Battle : IBackendBattleAPI
     private Table SetUp()
     {
         //Invite Players
-        List<string> playerNames = _userInputHandler.GetPlayerNames();
+        List<string> playerNames = _userInputHandler.ChoosePlayerNames();
         List<Player> players = [];
 
         //Choose 2 Factions
@@ -117,16 +119,33 @@ internal class Battle : IBackendBattleAPI
     {
         _table.ActivePlayer.Player.MinionPlays = 1;
         _table.ActivePlayer.Player.ActionPlays = 1;
-        _eventManager.TriggerStartOfTurn(_table.ActivePlayer);
+        EventManager.TriggerStartOfTurn(_table.ActivePlayer);
     }
     /// <summary>
     /// Handles logic relating to the "Play Cards" phase of the Smash Up Rule Book
     /// </summary>
     private void PlayCards()
     {
-        //Use plays
-        //Activate Talents (and "On Your Turn") effects
-        _userInputHandler.PlayCards(_table, this);
+        while (true)
+        {
+            //Activate Talents (and "On Your Turn") effects
+            //Use plays
+
+            // Select Card From Hand
+            Guid chosenCardId = _userInputHandler.SelectCardFromList(_table.ActivePlayer.Player.Hand.ToList());
+            PlayableCard? cardToPlay = GetHandCardById(chosenCardId);
+
+            if (cardToPlay != null && ValidatePlay(_table.ActivePlayer.Player, cardToPlay))
+            {
+                if (cardToPlay.CardType == PlayableCardType.minion)
+                {
+                    List<Guid> validBaseIds = _table.GetActiveBases().Select(x => x.Id).ToList();
+                    Guid chosenBaseId = _userInputHandler.SelectBaseCard(validBaseIds);
+                    BaseCard chosenBase = _table.GetActiveBases().Where(x => x.Id == chosenBaseId).FirstOrDefault() ?? throw new Exception($"No active base exists with ID {chosenBaseId}");
+                    PlayMinion(_table.ActivePlayer.Player, cardToPlay, chosenBase);
+                }
+            }
+        }
     }
     /// <summary>
     /// Handles logic relating to the "Score Bases" phase of the Smash Up Rule Book
@@ -155,7 +174,7 @@ internal class Battle : IBackendBattleAPI
     /// </summary>
     private void EndTurn()
     {
-        _eventManager.TriggerEndOfTurn(_table.ActivePlayer);
+        EventManager.TriggerEndOfTurn(_table.ActivePlayer);
         CheckEndOfGame();
     }
 
@@ -181,33 +200,26 @@ internal class Battle : IBackendBattleAPI
         _table.ActivePlayer.Player = _table.Players[newActivePlayerIndex];
     }
 
-    public void PlayCard(Player player, PlayableCard cardToPlay, BaseCard baseCard)
+    private void PlayMinion(Player player, PlayableCard cardToPlay, BaseCard baseCard)
     {
-        // Validate Play
-        bool isValidPlay = ValidatePlay(player, cardToPlay);
+        //Remove resource from player
+        RemoveResource(player, cardToPlay);
 
-        if (isValidPlay)
-        {
-            //Remove resource from player
-            RemoveResource(player, cardToPlay);
+        // Remove Card from Previous Location
+        player.RemoveFromHand(cardToPlay);
 
-            // Remove Card from Previous Location
-            player.RemoveFromHand(cardToPlay);
+        // Add Card to territory
+        BaseSlot slot = _table.GetBaseSlots().Where(x => x.BaseCard == baseCard).Single();
+        PlayerTerritory territory = slot.Territories.Where(x => x.player == cardToPlay.Owner).Single();
+        territory.Cards.Add(cardToPlay);
 
-            // Add Card to territory
-            BaseSlot slot = _table.GetBaseSlots().Where(x => x.BaseCard == baseCard).Single();
-            PlayerTerritory territory = slot.Territories.Where(x => x.player == cardToPlay.Owner).Single();
-            territory.Cards.Add(cardToPlay);
+        // Activate Card Ability
+        cardToPlay.TriggerOnPlay(this, slot);
+        cardToPlay.TriggerOnAddToBase(baseCard);
 
-            // Activate Card Ability
-            cardToPlay.TriggerOnPlay(_eventManager, slot);
-            cardToPlay.TriggerOnAddToBase(baseCard);
-
-            // Trigger Card Effects (Including Update Base Total)
-            baseCard.TriggerOnAddCard(cardToPlay);
-        }
+        // Trigger Card Effects (Including Update Base Total)
+        baseCard.TriggerOnAddCard(cardToPlay);
     }
-
     private static bool ValidatePlay(Player player, PlayableCard cardToPlay)
     {
         if (cardToPlay.CardType == PlayableCardType.minion)
@@ -232,33 +244,67 @@ internal class Battle : IBackendBattleAPI
         }
     }
 
-
     public void ReturnCard(PlayableCard cardToReturn)
     {
-        foreach(BaseSlot slot in _table.GetBaseSlots())
+        RemoveCardFromBattleField(cardToReturn, cardToReturn.Owner.AddToHand);
+    }
+
+    public void Destroy(PlayableCard cardToDestroy)
+    {
+        RemoveCardFromBattleField(cardToDestroy, cardToDestroy.Owner.AddToDiscard);
+    }
+
+    private void RemoveCardFromBattleField(PlayableCard cardToRemove, Action<PlayableCard> AddFunction)
+    {
+        foreach (BaseSlot slot in _table.GetBaseSlots())
         {
-            foreach(PlayerTerritory territory in slot.Territories)
+            foreach (PlayerTerritory territory in slot.Territories)
             {
-                if(territory.Cards.Remove(cardToReturn))
+                if (territory.Cards.Remove(cardToRemove))
                 {
-                    // Put card in owners hand
-                    cardToReturn.Owner.AddToHand(cardToReturn);
+                    // Add card to other location
+                    AddFunction(cardToRemove);
 
                     // Trigger leave of base
-                    cardToReturn.TriggerOnRemoveFromBase(slot.BaseCard);
-                    slot.BaseCard.TriggerOnRemoveCard(cardToReturn);
+                    cardToRemove.TriggerOnRemoveFromBase(slot.BaseCard);
+                    slot.BaseCard.TriggerOnRemoveCard(cardToRemove);
 
                     // Trigger leave of battlefield
-                    cardToReturn.TriggerOnRemoveFromBattleField(_eventManager);
+                    cardToRemove.TriggerOnRemoveFromBattleField(EventManager);
                     return;
                 }
             }
         }
     }
+
+    public PlayableCard SelectFieldCard(PlayableCardType cardType, int maxPower)
+    {
+        Func<PlayableCard, bool> pred = (PlayableCard card) => card.CardType == cardType && card.CurrentPower <= maxPower;
+        Guid chosenCardId = _userInputHandler.SelectFieldCard(GetValidFieldCardIds(pred));
+        return GetFieldCardById(chosenCardId);
+    }
+
+    private PlayableCard GetFieldCardById(Guid Id)
+    {
+        return _table.GetBaseSlots().SelectMany(x => x.Cards).Where(x => x.Id == Id).SingleOrDefault() ?? throw new Exception($"No field card exists with ID {Id}");
+    }
+    private List<List<Guid>> GetValidFieldCardIds(Func<PlayableCard, bool> pred)
+    {
+        return _table.GetBaseSlots()
+            .Select(x => x.Cards.Where(pred).Select(x => x.Id).ToList())
+            .ToList();
+    }
+
+    private PlayableCard GetHandCardById(Guid Id)
+    {
+        return _table.ActivePlayer.Player.Hand.Where(x => x.Id == Id).SingleOrDefault() ?? throw new Exception($"No hand card exists with ID {Id}");
+    }
 }
 
+/// <summary>
+/// This is ONLY for debug/admin operations. This dependency should not exist for normal game operations
+/// </summary>
 internal interface IBackendBattleAPI
 {
-    void PlayCard(Player player, PlayableCard cardToPlay, BaseCard targetedBaseCard);
     void ReturnCard(PlayableCard cardToReturn);
 }

@@ -20,8 +20,8 @@ internal class PlayableCard : Card
     public int? CurrentPower { get; private set; }
 
     public event Action<int> OnPowerChange = delegate { };
-    public void TriggerOnPlay(GlobalEventManager eventManager, BaseSlot baseSlot) => OnPlay(eventManager, baseSlot);
-    public event Action<GlobalEventManager, BaseSlot> OnPlay = delegate { };
+    public void TriggerOnPlay(Battle battle, BaseSlot baseSlot) => OnPlay(battle, baseSlot);
+    public event Action<Battle, BaseSlot> OnPlay = delegate { };
     public void TriggerOnAddToBase(BaseCard baseCard) => OnAddToBase(baseCard);
     public event Action<BaseCard> OnAddToBase = delegate { };
     public void TriggerOnRemoveFromBase(BaseCard baseCard) => OnRemoveFromBase(baseCard);

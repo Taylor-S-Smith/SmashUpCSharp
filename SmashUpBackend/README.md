@@ -1,11 +1,17 @@
-I have finished the frondend<->backend connnection. 
-
+I have finished the minions for dinosaurs.
+I am now taking a break to fix the UI to make it more extendable/easier to use.
+Now, the logic services are targeters and only deal with targeting, nothing else, 
+but the page may need more logic somewhere else. We target using Guids and will ultimatly return Guids to backend.
+Now, we need the ConsoleUI to construct the desired BattlePage, with whichever targeters should be allowed,
+based on the request. Assembly will require getring data from frontend, and I am a little torn on
+how stateless I want the UI implementation to be. Should it be able to constantly request from backend?
 
 The next steps are:
-- Implement Prototype pattern for cards
-- Implement repos/data storage
-- Create one full faction
-- Test entire game, fill in cracks
+- Remove Errors to finish restructor of Back<->Front communication
+- Have ConsoleUI construct BattlePage, including add system to "Stack" the different keypress handling modes
+- Have render happen automatically each tick
+- Finish dinosaur faction.
+- When selecting a card, how do you communicate that there are no valid targets and we should immediatly continue? You can't return in a constructor, but that is when the logics determine of there are any valid targets
 
 Other TODOs:
 - Remove duplication in Page.Run() logic
