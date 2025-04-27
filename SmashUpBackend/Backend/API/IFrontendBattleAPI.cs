@@ -13,7 +13,7 @@ internal interface IFrontendBattleAPI
     bool AskMulligan();
     List<PlayableCard> DiscardTo10(Player player);
     void InitializeData(Table table);
-    Guid? SelectCardFromList(List<PlayableCard> cards);
+    Guid? SelectHandCard(List<PlayableCard> cards, List<List<PlayableCard>> selectableFieldCards);
     Guid SelectBaseCard(List<Guid> validBaseIds);
     Guid SelectFieldCard(List<List<Guid>> validCardIds);
     void EndBattle(Player winningPlayer);

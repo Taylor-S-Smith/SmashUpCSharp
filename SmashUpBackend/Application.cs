@@ -6,6 +6,7 @@ using SmashUp.Backend.Models;
 using SmashUp.Frontend.Pages;
 using SmashUp.Backend.API;
 using SmashUp.Frontend.Pages.Target;
+using System.Linq;
 
 namespace SmashUp;
 
@@ -38,17 +39,40 @@ internal partial class Application()
             _table = table;
         }
 
-        public Guid? SelectCardFromList(List<PlayableCard> cards)
+        public Guid? SelectHandCard(List<PlayableCard> handCards, List<List<PlayableCard>> selectableFieldCards)
         {
-            //Use SelectHandCardTargeter class
-            //SelectHandCardTargeter class will construct it's master targeter using the base targeters we have constructed
+            // Create Targeter
+            List<TargetLogic> targetLogics = [];
+            if(selectableFieldCards.Sum(x => x.Count) != 0)
+            {
+                var PlayFieldTargeter = new Select2DOption(selectableFieldCards.Select(x => x.Select(y => y.Id).ToList()).ToList());
+                targetLogics.Add(PlayFieldTargeter);
+            }
+            var handTargeter = new SelectOption(handCards.Select(x => x.Id).ToList());
+            targetLogics.Add(handTargeter);
+            var endButtonTargeter = new SelectOption([_endTurnButtonId]);
+            targetLogics.Add(endButtonTargeter);
 
-            var handTargeter = new SelectOption(cards.Select(x => x.Id).ToList());
-            var endButtonTargeter = new SelectOption([_endTurnButtonId]);       
+            //Don't forget to handle card displaying
+            PlayableCard? cardToDisplay = null;
+            while (true)
+            {
+                var chosenId = new BattlePage(_table.GetBaseSlots(), _table.ActivePlayer.Player, _endTurnButtonId, new Targeter(targetLogics, handTargeter), cardToDisplay).Run();
+
+                if(chosenId == _endTurnButtonId)
+                {
+                    return null;
+                } 
+                else if (handCards.Select(x => x.Id).Contains(chosenId)) 
+                { 
+                    return chosenId; 
+                }
+                else
+                {
+                    cardToDisplay = selectableFieldCards.SelectMany(x => x).Where(x => x.Id == chosenId).Single();
+                }
+            }
             
-            var chosenId = new BattlePage(_table.GetBaseSlots(), _table.ActivePlayer.Player, _endTurnButtonId, new Targeter([handTargeter, endButtonTargeter])).Run();
-
-            return chosenId == _endTurnButtonId ? null : chosenId;
         }
 
         public Guid SelectFieldCard(List<List<Guid>> validCardIds)

@@ -18,17 +18,7 @@ internal class Targeter
         return _logicInControl.GetTargetId();
     }
 
-    internal (int, int) GetDebugVals()
-    {
-        return _logicInControl.GetDebugVals();
-    }
-
-    internal bool IsInDebugMode()
-    {
-        return _logicInControl.IsInDebugMode();
-    }
-
-    public Targeter(List<TargetLogic> targetLogics)
+    public Targeter(List<TargetLogic> targetLogics, TargetLogic? startingLogic = null)
     {
         if (targetLogics.Count == 0) throw new Exception("Targeter must have at least one target logic");
 
@@ -48,6 +38,6 @@ internal class Targeter
             }
         }
 
-        _logicInControl = targetLogics[0];
+        _logicInControl = startingLogic ?? targetLogics[0];
     }
 }

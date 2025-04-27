@@ -33,8 +33,16 @@ internal class Select2DOption : TargetLogic
                 break;
 
             case UserKeyPress.Up:
-                _cursorYIndex = Math.Max(0, _cursorYIndex - 1);
-                _targetedOption = _options[_cursorXIndex][_cursorYIndex];
+                if(_cursorYIndex == 0)
+                {
+                    TransferControlUp();
+                } 
+                else
+                {
+                    _cursorYIndex = _cursorYIndex - 1;
+                    _targetedOption = _options[_cursorXIndex][_cursorYIndex];
+                }
+                
                 break;
 
             case UserKeyPress.Down:
@@ -43,6 +51,10 @@ internal class Select2DOption : TargetLogic
                 {
                     _cursorYIndex++;
                     _targetedOption = _options[_cursorXIndex][_cursorYIndex];
+                } 
+                else
+                {
+                    TransferControlDown();
                 }
                 break;
 

@@ -15,8 +15,6 @@ internal abstract class TargetLogic
 
     protected Guid? _targetedOption;
 
-    readonly public bool DEBUG_MODE = true;
-
     // CURSOR INDEXES
     protected int _cursorXIndex = 0;
     protected int _cursorYIndex = 0;
@@ -50,15 +48,4 @@ internal abstract class TargetLogic
         return null;
     }
     public Guid? GetTargetId() => _targetedOption;
-
-
-    // Just to serve Battle Page
-    public (int, int) GetDebugVals()
-    {
-        return (_cursorXIndex, _cursorYIndex);
-    }
-    public bool IsInDebugMode()
-    {
-        return DEBUG_MODE;
-    }
 }

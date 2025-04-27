@@ -132,7 +132,7 @@ internal class Battle : IBackendBattleAPI
             //Use plays
 
             // Select Card From Hand
-            Guid? chosenCardId = _userInputHandler.SelectCardFromList(_table.ActivePlayer.Player.Hand.ToList());
+            Guid? chosenCardId = _userInputHandler.SelectHandCard(_table.ActivePlayer.Player.Hand.ToList(), _table.GetFieldCards());
             if (chosenCardId == null) break;
 
             PlayableCard? cardToPlay = GetHandCardById((Guid)chosenCardId);

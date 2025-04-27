@@ -29,12 +29,17 @@ internal class Table(List<Player> players, ActivePlayer activePlayer, Board boar
         player.Discard(card);
     }
 
-    internal List<BaseSlot> GetBaseSlots()
+    public List<BaseSlot> GetBaseSlots()
     {
         return _board.ActiveBases;
     }
-    internal List<BaseCard> GetActiveBases()
+    public List<BaseCard> GetActiveBases()
     {
         return _board.ActiveBases.Select(x => x.BaseCard).ToList();
+    }
+
+    public List<List<PlayableCard>> GetFieldCards()
+    {
+        return _board.ActiveBases.Select(x => x.Territories.SelectMany(x => x.Cards).ToList()).Where(x => x.Count > 0).ToList();
     }
 }

@@ -26,11 +26,11 @@ internal class SelectOption : TargetLogic
                 break;
 
             case UserKeyPress.Down:
-                TransferControlDown.Invoke();
+                TransferControlDown();
                 break;
 
             case UserKeyPress.Up:
-                TransferControlUp.Invoke();
+                TransferControlUp();
                 break;
 
             case UserKeyPress.Confirm:
