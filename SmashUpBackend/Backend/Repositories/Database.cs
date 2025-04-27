@@ -203,6 +203,52 @@ internal static class Database
 
         return augmentation;
     };
+    public static Func<PlayableCard> Howl = () =>
+    {
+        PlayableCard howl = new
+        (
+            Faction.dinosuars,
+            PlayableCardType.action,
+            "Howl",
+            [
+                @"      ____        \      ",
+                @"     /    \     \  \     ",
+                @"    |   ===O  )  |  |    ",
+                @"     \____/     /  /     ",
+                @"       ||         /      ",
+                @"  Each of your minions   ",
+                @"gains +1 power until the ",
+                @"    end of your turn     ",
+            ]
+        );
+
+        howl.OnPlay += (battle, baseSlot) =>
+        {
+            List<PlayableCard> cardsToChange = battle.GetValidFieldCards((card) => card.Owner == howl.Owner);
+
+            if (cardsToChange.Count > 0)
+            {
+                foreach (var card in cardsToChange)
+                {
+                    card.ChangeCurrentPower(1);
+                }
+
+                void endTurnHandler(ActivePlayer activePlayer)
+                {
+                    foreach (var card in cardsToChange)
+                    {
+                        card.ChangeCurrentPower(-1);
+                    }
+
+                    battle.EventManager.EndOfTurn -= endTurnHandler;
+                }
+
+                battle.EventManager.EndOfTurn += endTurnHandler;
+            }
+        };
+
+        return howl;
+    };
 
     public static Func<PlayableCard> Minion = () =>
     {
@@ -236,7 +282,7 @@ internal static class Database
 
     private static readonly Dictionary<Faction, List<Func<PlayableCard>>> CardsByFactionDict = new()
     {
-        //{ Faction.dinosuars, [WarRaptor, WarRaptor, WarRaptor, WarRaptor, ArmoredStego, ArmoredStego, ArmoredStego, Laseratops, Laseratops, KingRex, Augmentation, Augmentation] }
-        { Faction.dinosuars, [Minion, Minion, Minion, Minion, Minion, Augmentation, Augmentation, Augmentation, Augmentation, Augmentation, Augmentation] }
+        //{ Faction.dinosuars, [WarRaptor, WarRaptor, WarRaptor, WarRaptor, ArmoredStego, ArmoredStego, ArmoredStego, Laseratops, Laseratops, KingRex, Augmentation, Augmentation, Howl, Howl] }
+        { Faction.dinosuars, [Minion, Minion, Minion, Minion, Minion, Howl, Howl, Howl, Howl, Howl, Howl] }
     };
 }

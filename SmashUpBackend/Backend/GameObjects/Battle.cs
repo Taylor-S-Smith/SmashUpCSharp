@@ -317,9 +317,17 @@ internal class Battle : IBackendBattleAPI
         return GetFieldCardById(chosenCardId);
     }
 
-    private PlayableCard GetFieldCardById(Guid Id)
+    public List<PlayableCard> GetValidFieldCards(Func<PlayableCard, bool> pred, BaseCard? baseCard = null)
     {
-        return _table.GetBaseSlots().SelectMany(x => x.Cards).Where(x => x.Id == Id).SingleOrDefault() ?? throw new Exception($"No field card exists with ID {Id}");
+        IEnumerable<BaseSlot> validBaseSlots = _table.GetBaseSlots();
+
+        if (baseCard != null)
+        {
+            validBaseSlots = [validBaseSlots.Where(x => x.BaseCard == baseCard).Single()];
+        }
+        return validBaseSlots
+            .SelectMany(x => x.Cards.Where(pred))
+            .ToList();
     }
     private List<List<Guid>> GetValidFieldCardIds(Func<PlayableCard, bool> pred, BaseCard? baseCard = null)
     {
@@ -333,6 +341,11 @@ internal class Battle : IBackendBattleAPI
             .Select(x => x.Cards.Where(pred).Select(x => x.Id).ToList())
             .Where(x => x.Count > 0)
             .ToList();
+    }
+
+    private PlayableCard GetFieldCardById(Guid Id)
+    {
+        return _table.GetBaseSlots().SelectMany(x => x.Cards).Where(x => x.Id == Id).SingleOrDefault() ?? throw new Exception($"No field card exists with ID {Id}");
     }
 
     private PlayableCard GetHandCardById(Guid Id)

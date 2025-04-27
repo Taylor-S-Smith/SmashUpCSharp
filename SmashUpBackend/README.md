@@ -1,11 +1,3 @@
-I have finished the minions for dinosaurs.
-I am now taking a break to fix the UI to make it more extendable/easier to use.
-Now, the logic services are targeters and only deal with targeting, nothing else, 
-but the page may need more logic somewhere else. We target using Guids and will ultimatly return Guids to backend.
-Now, we need the ConsoleUI to construct the desired BattlePage, with whichever targeters should be allowed,
-based on the request. Assembly will require getring data from frontend, and I am a little torn on
-how stateless I want the UI implementation to be. Should it be able to constantly request from backend?
-
 The next steps are:
 - Finish dinosaur faction.
 
