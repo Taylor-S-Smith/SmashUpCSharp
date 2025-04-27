@@ -1,5 +1,7 @@
 The next steps are:
 - Finish dinosaur faction.
+- Update display when navigating hand
+- Add ability to cancel a play action
 
 Other TODOs:
 - Remove duplication in Page.Run() logic

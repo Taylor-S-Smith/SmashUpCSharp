@@ -1,5 +1,7 @@
 ﻿using SmashUp.Backend.Models;
 using SmashUp.Backend.GameObjects;
+using static SmashUp.Backend.GameObjects.Battle;
+using System.Reflection;
 
 namespace SmashUp.Backend.Repositories;
 
@@ -139,7 +141,14 @@ internal static class Database
         laseratops.OnPlay += (battle, baseSlot) =>
         {
             if (baseSlot == null) throw new Exception("No base passed in for Laseratops");
-            PlayableCard? cardToDestroy = battle.SelectFieldCard(PlayableCardType.minion, laseratops, "Select a card for lasertops to destroy", 2, baseSlot.BaseCard);
+
+            SelectFieldCardQuery query = new()
+            {
+                CardType = PlayableCardType.minion,
+                MaxPower = 2,
+                BaseCard = baseSlot.BaseCard
+            };
+            PlayableCard? cardToDestroy = battle.SelectFieldCard(laseratops, "Select a card for lasertops to destroy", query)?.SelectedCard;
             if (cardToDestroy != null) battle.Destroy(cardToDestroy);
         };
 
@@ -186,7 +195,11 @@ internal static class Database
 
         augmentation.OnPlay += (battle, baseSlot) =>
         {
-            PlayableCard? cardToGainPower = battle.SelectFieldCard(PlayableCardType.minion, augmentation, "Select a card to gain +4 power until the end of the turn");
+            SelectFieldCardQuery query = new()
+            {
+                CardType = PlayableCardType.minion
+            };
+            PlayableCard? cardToGainPower = battle.SelectFieldCard(augmentation, "Select a card to gain +4 power until the end of the turn", query)?.SelectedCard;
             if (cardToGainPower != null)
             {
                 cardToGainPower.ChangeCurrentPower(4);
@@ -250,6 +263,55 @@ internal static class Database
         return howl;
     };
 
+    public static Func<PlayableCard> NaturalSelection = () =>
+    {
+        PlayableCard naturalSelection = new
+        (
+            Faction.dinosuars,
+            PlayableCardType.action,
+            "Natural Selection",
+            [
+                @"        O                ",
+                @"      --|--    o         ",
+                @"        |     /|\        ",
+                @"       / \    / \        ",
+                @"   Choose one of your    ",
+                @"   minions on a base.    ",
+                @" Destroy a minion there  ",
+                @"with less power than it. ",
+            ],
+            4
+        );
+
+        naturalSelection.OnPlay += (battle, baseSlot) =>
+        {
+            SelectFieldCardQuery query1 = new()
+            {
+                CardType = PlayableCardType.minion,
+                Owner = naturalSelection.Owner
+            };
+            var result = battle.SelectFieldCard(naturalSelection, "Choose one of your minions on a base", query1);
+            PlayableCard? ownMinion = result?.SelectedCard;
+            BaseCard? baseCard = result?.SelectedCardBase;
+
+            if (ownMinion != null)
+            {
+                SelectFieldCardQuery query2 = new()
+                {
+                    CardType = PlayableCardType.minion,
+                    MaxPower = ownMinion.CurrentPower - 1,
+                    BaseCard = baseCard
+                };
+                PlayableCard? minionToDestroy = battle.SelectFieldCard(naturalSelection, $"Choose a minion with power less than {ownMinion?.CurrentPower} to destroy", query2)?.SelectedCard;
+                if (minionToDestroy != null) battle.Destroy(minionToDestroy);
+            }
+            
+        };
+
+        return naturalSelection;
+    };
+
+
     public static Func<PlayableCard> Minion = () =>
     {
 
@@ -268,7 +330,7 @@ internal static class Database
                 @"                         ",
                 @"                         ",
             ],
-            2
+            new Random().Next(0, 10)
         );
 
 
@@ -283,6 +345,6 @@ internal static class Database
     private static readonly Dictionary<Faction, List<Func<PlayableCard>>> CardsByFactionDict = new()
     {
         //{ Faction.dinosuars, [WarRaptor, WarRaptor, WarRaptor, WarRaptor, ArmoredStego, ArmoredStego, ArmoredStego, Laseratops, Laseratops, KingRex, Augmentation, Augmentation, Howl, Howl] }
-        { Faction.dinosuars, [Minion, Minion, Minion, Minion, Minion, Howl, Howl, Howl, Howl, Howl, Howl] }
+        { Faction.dinosuars, [Minion, Minion, Minion, Minion, Minion, NaturalSelection, NaturalSelection, NaturalSelection, NaturalSelection, NaturalSelection, NaturalSelection] }
     };
 }

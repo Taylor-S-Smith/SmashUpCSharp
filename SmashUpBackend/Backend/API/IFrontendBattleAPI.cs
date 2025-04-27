@@ -6,6 +6,7 @@ namespace SmashUp.Backend.API;
 /// <summary>
 /// This is how the backend communicates to the frontend
 /// </summary>
+public record SelectFieldCardUIResult(Guid? SelectedCardId, bool ActionCanceled);
 internal interface IFrontendBattleAPI
 {
     List<(string, List<FactionModel>)> ChooseFactions(List<string> playerNames, List<FactionModel> factionOptions);
@@ -15,6 +16,6 @@ internal interface IFrontendBattleAPI
     void InitializeData(Table table);
     Guid? SelectHandCard(List<PlayableCard> cards, List<List<PlayableCard>> selectableFieldCards);
     Guid SelectBaseCard(List<Guid> validBaseIds);
-    Guid SelectFieldCard(List<List<Guid>> validCardIds, PlayableCard? cardToDisplay, string? displayText);
+    SelectFieldCardUIResult SelectFieldCard(List<List<Guid>> validCardIds, PlayableCard? cardToDisplay, string? displayText);
     void EndBattle(Player winningPlayer);
 }

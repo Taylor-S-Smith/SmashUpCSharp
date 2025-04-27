@@ -1,6 +1,7 @@
 ﻿using SmashUp.Backend.Services;
 using SmashUp.Backend.Models;
 using SmashUp.Backend.API;
+using LinqKit;
 
 namespace SmashUp.Backend.GameObjects;
 
@@ -297,24 +298,30 @@ internal class Battle : IBackendBattleAPI
     }
 
 
-    /// <returns>Selected Field Card, or null if there are no available targets</returns>
-    public PlayableCard? SelectFieldCard(PlayableCardType cardType, PlayableCard cardToDisplay, string displaytext, int? maxPower = null, BaseCard? baseCard = null)
+    public class SelectFieldCardQuery
     {
-        Func<PlayableCard, bool> pred;
-        if(maxPower != null)
-        {
-            pred = (PlayableCard card) => card.CardType == cardType && card.CurrentPower <= maxPower;
-        } 
-        else
-        {
-            pred = (PlayableCard card) => card.CardType == cardType;
-        }
-        List<List<Guid>> validFieldCardIds = [];
-        validFieldCardIds = GetValidFieldCardIds(pred, baseCard);
+        public PlayableCardType? CardType { get; set; } 
+        public BaseCard? BaseCard { get; set; }
+        public int? MaxPower { get; set; }
+        public Player? Owner { get; set; }
+    }
+    public record SelectFieldCardResult(PlayableCard? SelectedCard, BaseCard? SelectedCardBase, bool ActionCanceled);
+    /// <returns>Selected Field Card Result, or null if there are no available targets</returns>
+    public SelectFieldCardResult? SelectFieldCard(PlayableCard cardToDisplay, string displaytext, SelectFieldCardQuery query)
+    {
+        var cardPred = PredicateBuilder.New<PlayableCard>();
+        if(query.CardType != null) cardPred.And((PlayableCard card) => card.CardType == query.CardType);
+        if (query.MaxPower != null) cardPred.And((PlayableCard card) => card.CurrentPower <= query.MaxPower);
+        if (query.Owner != null) cardPred.And((PlayableCard card) => card.Owner == query.Owner);
+
+        List<List<Guid>> validFieldCardIds = GetValidFieldCardIds(cardPred, query.BaseCard);
         if (validFieldCardIds.Count == 0) return null;
 
-        Guid chosenCardId = _userInputHandler.SelectFieldCard(validFieldCardIds, cardToDisplay, displaytext);
-        return GetFieldCardById(chosenCardId);
+        var result = _userInputHandler.SelectFieldCard(validFieldCardIds, cardToDisplay, displaytext);
+        return new(
+            result.SelectedCardId != null ? GetFieldCardById((Guid)result.SelectedCardId) : null,
+            result.SelectedCardId != null ? GetBaseCardByFieldCardId((Guid)result.SelectedCardId) : null, 
+            result.ActionCanceled);
     }
 
     public List<PlayableCard> GetValidFieldCards(Func<PlayableCard, bool> pred, BaseCard? baseCard = null)
@@ -347,7 +354,10 @@ internal class Battle : IBackendBattleAPI
     {
         return _table.GetBaseSlots().SelectMany(x => x.Cards).Where(x => x.Id == Id).SingleOrDefault() ?? throw new Exception($"No field card exists with ID {Id}");
     }
-
+    private BaseCard GetBaseCardByFieldCardId(Guid selectedCardId)
+    {
+        return _table.GetBaseSlots().SingleOrDefault(slot => slot.Territories.SelectMany(t => t.Cards).SingleOrDefault(card => card.Id == selectedCardId) != null)?.BaseCard ?? throw new Exception($"No base exists that contains a card with ID {selectedCardId}");
+    }
     private PlayableCard GetHandCardById(Guid Id)
     {
         return _table.ActivePlayer.Player.Hand.Where(x => x.Id == Id).SingleOrDefault() ?? throw new Exception($"No hand card exists with ID {Id}");

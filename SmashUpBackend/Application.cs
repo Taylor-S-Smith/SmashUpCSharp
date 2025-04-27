@@ -75,11 +75,13 @@ internal partial class Application()
             
         }
 
-        public Guid SelectFieldCard(List<List<Guid>> validCardIds, PlayableCard? cardToDisplay, string? displayText)
+        public SelectFieldCardUIResult SelectFieldCard(List<List<Guid>> validCardIds, PlayableCard? cardToDisplay, string? displayText)
         {
             var fieldCardTargeter = new Select2DOption(validCardIds);
 
-            return new BattlePage(_table.GetBaseSlots(), _table.ActivePlayer.Player, _endTurnButtonId, new Targeter([fieldCardTargeter]), cardToDisplay, displayText ?? "").Run();
+            Guid? selectedCardId = new BattlePage(_table.GetBaseSlots(), _table.ActivePlayer.Player, _endTurnButtonId, new Targeter([fieldCardTargeter]), cardToDisplay, displayText ?? "").Run();
+
+            return new(selectedCardId, selectedCardId == null);
         }
 
         public Guid SelectBaseCard(List<Guid> validBaseIds)
