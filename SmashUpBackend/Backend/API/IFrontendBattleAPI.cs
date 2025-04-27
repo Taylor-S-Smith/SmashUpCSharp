@@ -15,6 +15,6 @@ internal interface IFrontendBattleAPI
     void InitializeData(Table table);
     Guid? SelectHandCard(List<PlayableCard> cards, List<List<PlayableCard>> selectableFieldCards);
     Guid SelectBaseCard(List<Guid> validBaseIds);
-    Guid SelectFieldCard(List<List<Guid>> validCardIds);
+    Guid SelectFieldCard(List<List<Guid>> validCardIds, PlayableCard? cardToDisplay, string? displayText);
     void EndBattle(Player winningPlayer);
 }

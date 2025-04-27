@@ -45,7 +45,7 @@ internal abstract class TargetLogic
     }
     protected virtual Guid? ExtendHandleKeyPress(UserKeyPress keyPress)
     {
-        return null;
+        return Guid.NewGuid();
     }
     public Guid? GetTargetId() => _targetedOption;
 }

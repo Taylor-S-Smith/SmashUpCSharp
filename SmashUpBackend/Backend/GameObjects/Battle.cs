@@ -281,14 +281,14 @@ internal class Battle : IBackendBattleAPI
 
 
     /// <returns>Selected Field Card, or null if there are no available targets</returns>
-    public PlayableCard? SelectFieldCard(PlayableCardType cardType, int maxPower, BaseCard? baseCard = null)
+    public PlayableCard? SelectFieldCard(PlayableCardType cardType, int maxPower, PlayableCard? cardToDisplay=null, string? displaytext=null, BaseCard? baseCard = null)
     {
         Func<PlayableCard, bool> pred = (PlayableCard card) => card.CardType == cardType && card.CurrentPower <= maxPower;
         List<List<Guid>> validFieldCardIds = [];
         validFieldCardIds = GetValidFieldCardIds(pred, baseCard);
         if (validFieldCardIds.Count == 0) return null;
 
-        Guid chosenCardId = _userInputHandler.SelectFieldCard(validFieldCardIds);
+        Guid chosenCardId = _userInputHandler.SelectFieldCard(validFieldCardIds, cardToDisplay, displaytext);
         return GetFieldCardById(chosenCardId);
     }
 

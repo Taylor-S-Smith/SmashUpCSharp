@@ -279,17 +279,7 @@ namespace SmashUp.Frontend.Pages
 
         public override Guid? HandleKeyPress(UserKeyPress keyPress)
         {
-            // If we are in Card Display mode, any key press cancels it, and is not processed
-            if (_cardToDisplay != null)
-            {
-                _cardToDisplay = null;
-                _displayText = "";
-                return null;
-            }
-            else
-            { 
-                return _targeter.HandleKeyPress(keyPress);
-            }
+            return _targeter.HandleKeyPress(keyPress);
         }
     }
 }

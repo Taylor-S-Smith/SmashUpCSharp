@@ -54,10 +54,9 @@ internal partial class Application()
             targetLogics.Add(endButtonTargeter);
 
             //Don't forget to handle card displaying
-            PlayableCard? cardToDisplay = null;
             while (true)
             {
-                var chosenId = new BattlePage(_table.GetBaseSlots(), _table.ActivePlayer.Player, _endTurnButtonId, new Targeter(targetLogics, handTargeter), cardToDisplay).Run();
+                var chosenId = new BattlePage(_table.GetBaseSlots(), _table.ActivePlayer.Player, _endTurnButtonId, new Targeter(targetLogics, handTargeter)).Run();
 
                 if(chosenId == _endTurnButtonId)
                 {
@@ -69,17 +68,18 @@ internal partial class Application()
                 }
                 else
                 {
-                    cardToDisplay = selectableFieldCards.SelectMany(x => x).Where(x => x.Id == chosenId).Single();
+                    var cardToDisplay = selectableFieldCards.SelectMany(x => x).Where(x => x.Id == chosenId).Single();
+                    new BattlePage(_table.GetBaseSlots(), _table.ActivePlayer.Player, _endTurnButtonId, new Targeter([]), cardToDisplay).Run();
                 }
             }
             
         }
 
-        public Guid SelectFieldCard(List<List<Guid>> validCardIds)
+        public Guid SelectFieldCard(List<List<Guid>> validCardIds, PlayableCard? cardToDisplay, string? displayText)
         {
             var fieldCardTargeter = new Select2DOption(validCardIds);
 
-            return new BattlePage(_table.GetBaseSlots(), _table.ActivePlayer.Player, _endTurnButtonId, new Targeter([fieldCardTargeter])).Run();
+            return new BattlePage(_table.GetBaseSlots(), _table.ActivePlayer.Player, _endTurnButtonId, new Targeter([fieldCardTargeter]), cardToDisplay, displayText ?? "").Run();
         }
 
         public Guid SelectBaseCard(List<Guid> validBaseIds)
