@@ -1,8 +1,8 @@
 ﻿using SmashUp.Frontend.Utilities;
 
-namespace SmashUp.Frontend.Pages.Battle.LogicModules;
+namespace SmashUp.Frontend.Pages.Target;
 
-internal class Select2DOption : BattlePageTargeter
+internal class Select2DOption : TargetLogic
 {
     //Each list represents a different base
     protected List<List<Guid>> _options;

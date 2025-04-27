@@ -7,7 +7,6 @@ based on the request. Assembly will require getring data from frontend, and I am
 how stateless I want the UI implementation to be. Should it be able to constantly request from backend?
 
 The next steps are:
-- Remove Errors to finish restructor of Back<->Front communication
 - Have ConsoleUI construct BattlePage, including add system to "Stack" the different keypress handling modes
 - Have render happen automatically each tick
 - Finish dinosaur faction.

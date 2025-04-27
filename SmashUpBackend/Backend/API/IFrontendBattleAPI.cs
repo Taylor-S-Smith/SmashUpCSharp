@@ -12,8 +12,8 @@ internal interface IFrontendBattleAPI
     List<string> ChoosePlayerNames();
     bool AskMulligan();
     List<PlayableCard> DiscardTo10(Player player);
-    void InitializeData(Table table, IBackendBattleAPI backendBattleAPI);
-    Guid SelectCardFromList(List<PlayableCard> cards);
+    void InitializeData(Table table);
+    Guid? SelectCardFromList(List<PlayableCard> cards);
     Guid SelectBaseCard(List<Guid> validBaseIds);
     Guid SelectFieldCard(List<List<Guid>> validCardIds);
     void EndBattle(Player winningPlayer);

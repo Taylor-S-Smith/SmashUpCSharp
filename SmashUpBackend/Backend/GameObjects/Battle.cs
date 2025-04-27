@@ -33,7 +33,7 @@ internal class Battle : IBackendBattleAPI
 
         _table = SetUp();
 
-        _userInputHandler.InitializeData(_table, this);
+        _userInputHandler.InitializeData(_table);
     }
 
     // TURN STRUCTURE & CONTROL FLOW 
@@ -132,8 +132,10 @@ internal class Battle : IBackendBattleAPI
             //Use plays
 
             // Select Card From Hand
-            Guid chosenCardId = _userInputHandler.SelectCardFromList(_table.ActivePlayer.Player.Hand.ToList());
-            PlayableCard? cardToPlay = GetHandCardById(chosenCardId);
+            Guid? chosenCardId = _userInputHandler.SelectCardFromList(_table.ActivePlayer.Player.Hand.ToList());
+            if (chosenCardId == null) break;
+
+            PlayableCard? cardToPlay = GetHandCardById((Guid)chosenCardId);
 
             if (cardToPlay != null && ValidatePlay(_table.ActivePlayer.Player, cardToPlay))
             {

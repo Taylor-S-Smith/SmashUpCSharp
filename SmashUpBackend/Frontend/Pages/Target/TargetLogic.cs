@@ -1,14 +1,18 @@
 ﻿using SmashUp.Frontend.Utilities;
 
-namespace SmashUp.Frontend.Pages.Battle.LogicModules;
+namespace SmashUp.Frontend.Pages.Target;
 
 /// <summary>
 /// Handles logic and state for the BattlePage including:
 /// - targeting/selecting
 /// - key presses
 /// </summary>
-internal abstract class BattlePageTargeter
+internal abstract class TargetLogic
 {
+    //These allow us to dynamically transfer control to other targeters
+    public Action TransferControlUp = delegate { };
+    public Action TransferControlDown = delegate { };
+
     protected Guid? _targetedOption;
 
     readonly public bool DEBUG_MODE = true;
@@ -16,7 +20,7 @@ internal abstract class BattlePageTargeter
     // CURSOR INDEXES
     protected int _cursorXIndex = 0;
     protected int _cursorYIndex = 0;
-    
+
     public Guid? HandleKeyPress(UserKeyPress keyPress)
     {
         Guid? result = ExtendHandleKeyPress(keyPress);
@@ -47,9 +51,6 @@ internal abstract class BattlePageTargeter
     }
     public Guid? GetTargetId() => _targetedOption;
 
-
-    // CARD FILTER FUNCS
-    protected readonly Func<object, bool> AllCardsAreTargetable = card => true;
 
     // Just to serve Battle Page
     public (int, int) GetDebugVals()

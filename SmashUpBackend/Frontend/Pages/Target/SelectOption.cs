@@ -1,7 +1,7 @@
 ﻿using SmashUp.Frontend.Utilities;
-namespace SmashUp.Frontend.Pages.Battle.LogicModules;
+namespace SmashUp.Frontend.Pages.Target;
 
-internal class SelectOption : BattlePageTargeter
+internal class SelectOption : TargetLogic
 {
     protected readonly List<Guid> _options;
 
@@ -23,6 +23,14 @@ internal class SelectOption : BattlePageTargeter
             case UserKeyPress.Right:
                 _cursorXIndex = Math.Min(_options.Count - 1, _cursorXIndex + 1);
                 _targetedOption = _options[_cursorXIndex];
+                break;
+
+            case UserKeyPress.Down:
+                TransferControlDown.Invoke();
+                break;
+
+            case UserKeyPress.Up:
+                TransferControlUp.Invoke();
                 break;
 
             case UserKeyPress.Confirm:
