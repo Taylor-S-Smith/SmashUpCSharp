@@ -2,6 +2,7 @@
 using SmashUp.Backend.Models;
 using SmashUp.Backend.API;
 using LinqKit;
+using FluentResults;
 
 namespace SmashUp.Backend.GameObjects;
 
@@ -127,29 +128,39 @@ internal class Battle : IBackendBattleAPI
     /// </summary>
     private void PlayCards()
     {
+        string displayMessage = "";
         while (true)
         {
             //Activate Talents (and "On Your Turn") effects
             //Use plays
 
             // Select Card From Hand
-            Guid? chosenCardId = _userInputHandler.SelectHandCard(_table.ActivePlayer.Player.Hand.ToList(), _table.GetFieldCards());
+            Guid? chosenCardId = _userInputHandler.SelectHandCard(_table.ActivePlayer.Player.Hand.ToList(), _table.GetFieldCards(), displayMessage);
+            displayMessage = "";
             if (chosenCardId == null) break;
 
             PlayableCard? cardToPlay = GetHandCardById((Guid)chosenCardId);
 
-            if (cardToPlay != null && ValidatePlay(_table.ActivePlayer.Player, cardToPlay))
+            if (cardToPlay != null)
             {
-                if (cardToPlay.CardType == PlayableCardType.minion)
+                Result result = ValidatePlay(_table.ActivePlayer.Player, cardToPlay);
+                if (result.IsSuccess)
                 {
-                    List<Guid> validBaseIds = _table.GetActiveBases().Select(x => x.Id).ToList();
-                    Guid chosenBaseId = _userInputHandler.SelectBaseCard(validBaseIds, cardToPlay, $"Choose a base to play {cardToPlay.Name} on");
-                    BaseCard chosenBase = GetBaseCardById(chosenBaseId);
-                    PlayMinion(_table.ActivePlayer.Player, cardToPlay, chosenBase);
+                    if (cardToPlay.CardType == PlayableCardType.minion)
+                    {
+                        List<Guid> validBaseIds = _table.GetActiveBases().Select(x => x.Id).ToList();
+                        Guid chosenBaseId = _userInputHandler.SelectBaseCard(validBaseIds, cardToPlay, $"Choose a base to play {cardToPlay.Name} on");
+                        BaseCard chosenBase = GetBaseCardById(chosenBaseId);
+                        PlayMinion(_table.ActivePlayer.Player, cardToPlay, chosenBase);
+                    }
+                    else
+                    {
+                        PlayAction(_table.ActivePlayer.Player, cardToPlay);
+                    }
                 }
                 else
                 {
-                    PlayAction(_table.ActivePlayer.Player, cardToPlay);
+                    displayMessage = string.Join(" ", result.Errors.Select(x => x.Message));
                 }
             }
         }
@@ -245,17 +256,17 @@ internal class Battle : IBackendBattleAPI
         // Put card in discard
         player.AddToDiscard(cardToPlay);
     }
-    private static bool ValidatePlay(Player player, PlayableCard cardToPlay)
+    private static Result ValidatePlay(Player player, PlayableCard cardToPlay)
     {
         if (cardToPlay.CardType == PlayableCardType.minion)
         {
-            return player.MinionPlays > 0;
+            if (player.MinionPlays == 0) return Result.Fail("You don't have any more minion plays");
         }
         else if (cardToPlay.CardType == PlayableCardType.action)
         {
-            return player.ActionPlays > 0;
+            if (player.ActionPlays == 0) return Result.Fail("You don't have any more action plays");
         }
-        return false;
+        return Result.Ok();
     }
     private static void RemoveResource(Player player, PlayableCard cardToPlay)
     {

@@ -14,7 +14,7 @@ internal interface IFrontendBattleAPI
     bool AskMulligan();
     List<PlayableCard> DiscardTo10(Player player);
     void InitializeData(Table table);
-    Guid? SelectHandCard(List<PlayableCard> handCards, List<List<PlayableCard>> selectableFieldCards);
+    Guid? SelectHandCard(List<PlayableCard> handCards, List<List<PlayableCard>> selectableFieldCards, string displayText);
     Guid SelectBaseCard(List<Guid> validBaseIds, PlayableCard? cardToDisplay = null, string displayText = "");
     SelectFieldCardUIResult SelectFieldCard(List<List<Guid>> validCardIds, PlayableCard? cardToDisplay, string? displayText);
     Guid SelectPlayableCard(List<PlayableCard> options, string displayText);

@@ -39,7 +39,7 @@ internal partial class Application()
             _table = table;
         }
 
-        public Guid? SelectHandCard(List<PlayableCard> handCards, List<List<PlayableCard>> selectableFieldCards)
+        public Guid? SelectHandCard(List<PlayableCard> handCards, List<List<PlayableCard>> selectableFieldCards, string displayText = "")
         {
             // Create Targeter
             List<TargetLogic> targetLogics = [];
@@ -56,9 +56,10 @@ internal partial class Application()
             //Don't forget to handle card displaying
             while (true)
             {
-                var chosenId = new BattlePage(_table.GetBaseSlots(), _table.ActivePlayer.Player, _table.ActivePlayer.Player.Hand.ToList(), _endTurnButtonId, new Targeter(targetLogics, handTargeter)).Run();
+                var chosenId = new BattlePage(_table.GetBaseSlots(), _table.ActivePlayer.Player, _table.ActivePlayer.Player.Hand.ToList(), _endTurnButtonId, new Targeter(targetLogics, handTargeter), displayText).Run();
+                displayText = "";
 
-                if(chosenId == _endTurnButtonId)
+                if (chosenId == _endTurnButtonId)
                 {
                     return null;
                 } 
