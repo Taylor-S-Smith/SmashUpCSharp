@@ -144,15 +144,18 @@ internal class Battle : IBackendBattleAPI
                 {
                     List<Guid> validBaseIds = _table.GetActiveBases().Select(x => x.Id).ToList();
                     Guid chosenBaseId = _userInputHandler.SelectBaseCard(validBaseIds);
-                    BaseCard chosenBase = _table.GetActiveBases().Where(x => x.Id == chosenBaseId).FirstOrDefault() ?? throw new Exception($"No active base exists with ID {chosenBaseId}");
+                    BaseCard chosenBase = GetBaseCardById(chosenBaseId);
                     PlayMinion(_table.ActivePlayer.Player, cardToPlay, chosenBase);
-                } else
+                }
+                else
                 {
                     PlayAction(_table.ActivePlayer.Player, cardToPlay);
                 }
             }
         }
     }
+
+    
     /// <summary>
     /// Handles logic relating to the "Score Bases" phase of the Smash Up Rule Book
     /// </summary>
@@ -206,6 +209,8 @@ internal class Battle : IBackendBattleAPI
         _table.ActivePlayer.Player = _table.Players[newActivePlayerIndex];
     }
 
+
+    // Auxilery
     private void PlayMinion(Player player, PlayableCard cardToPlay, BaseCard baseCard)
     {
         //Remove resource from player
@@ -268,12 +273,11 @@ internal class Battle : IBackendBattleAPI
     {
         RemoveCardFromBattleField(cardToReturn, cardToReturn.Owner.AddToHand);
     }
-
     public void Destroy(PlayableCard cardToDestroy)
     {
         RemoveCardFromBattleField(cardToDestroy, cardToDestroy.Owner.AddToDiscard);
     }
-
+    
     private void RemoveCardFromBattleField(PlayableCard cardToRemove, Action<PlayableCard> AddFunction)
     {
         foreach (BaseSlot slot in _table.GetBaseSlots())
@@ -324,6 +328,16 @@ internal class Battle : IBackendBattleAPI
             result.ActionCanceled);
     }
 
+    public record SelectBaseCardResult(BaseCard? SelectedBase, bool ActionCanceled);
+    /// <returns>Selected Base Card Result, or null if there are no available targets</returns>
+    public SelectBaseCardResult? SelectbaseCard()
+    {
+        List<Guid> validBaseIds = _table.GetActiveBases().Select(x => x.Id).ToList();
+        Guid chosenBaseId = _userInputHandler.SelectBaseCard(validBaseIds);
+        return new(GetBaseCardById(chosenBaseId), false);
+    }
+
+
     public List<PlayableCard> GetValidFieldCards(Func<PlayableCard, bool> pred, BaseCard? baseCard = null)
     {
         IEnumerable<BaseSlot> validBaseSlots = _table.GetBaseSlots();
@@ -361,6 +375,10 @@ internal class Battle : IBackendBattleAPI
     private PlayableCard GetHandCardById(Guid Id)
     {
         return _table.ActivePlayer.Player.Hand.Where(x => x.Id == Id).SingleOrDefault() ?? throw new Exception($"No hand card exists with ID {Id}");
+    }
+    private BaseCard GetBaseCardById(Guid chosenBaseId)
+    {
+        return _table.GetActiveBases().Where(x => x.Id == chosenBaseId).FirstOrDefault() ?? throw new Exception($"No active base exists with ID {chosenBaseId}");
     }
 }
 

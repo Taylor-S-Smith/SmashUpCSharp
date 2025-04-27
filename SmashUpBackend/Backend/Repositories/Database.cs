@@ -2,6 +2,7 @@
 using SmashUp.Backend.GameObjects;
 using static SmashUp.Backend.GameObjects.Battle;
 using System.Reflection;
+using System.Data.Entity.Core.Mapping;
 
 namespace SmashUp.Backend.Repositories;
 
@@ -262,7 +263,6 @@ internal static class Database
 
         return howl;
     };
-
     public static Func<PlayableCard> NaturalSelection = () =>
     {
         PlayableCard naturalSelection = new
@@ -310,6 +310,53 @@ internal static class Database
 
         return naturalSelection;
     };
+    public static Func<PlayableCard> Rampage = () =>
+    {
+        PlayableCard rampage = new
+        (
+            Faction.dinosuars,
+            PlayableCardType.action,
+            "Rampage",
+            [
+                @"    __      O    |  |    ",
+                @"   | {__   /|\    } |    ",
+                @"   |    |  / \   |  |    ",
+                @"Reduce the breakpoint of ",
+                @" a base by the power of  ",
+                @" one of your minions on  ",
+                @" that base until the end ",
+                @"      of the turn.       ",
+            ]
+        );
+
+        rampage.OnPlay += (battle, baseSlot) =>
+        {
+            SelectFieldCardQuery query1 = new()
+            {
+                CardType = PlayableCardType.minion,
+                Owner = rampage.Owner
+            };
+            var result = battle.SelectFieldCard(rampage, "Choose one of your minions on a base", query1);
+            PlayableCard? ownMinion = result?.SelectedCard;
+            BaseCard? baseCard = result?.SelectedCardBase;
+
+            if (ownMinion != null && baseCard != null)
+            {
+                int powerToReduce = ownMinion.CurrentPower ?? 0;
+                baseCard.CurrentBreakpoint -= powerToReduce;
+
+                void endTurnHandler(ActivePlayer activePlayer)
+                {
+                    baseCard.CurrentBreakpoint += powerToReduce;
+                    battle.EventManager.EndOfTurn -= endTurnHandler;
+                }
+
+                battle.EventManager.EndOfTurn += endTurnHandler;
+            }
+        };
+
+        return rampage;
+    };
 
 
     public static Func<PlayableCard> Minion = () =>
@@ -345,6 +392,6 @@ internal static class Database
     private static readonly Dictionary<Faction, List<Func<PlayableCard>>> CardsByFactionDict = new()
     {
         //{ Faction.dinosuars, [WarRaptor, WarRaptor, WarRaptor, WarRaptor, ArmoredStego, ArmoredStego, ArmoredStego, Laseratops, Laseratops, KingRex, Augmentation, Augmentation, Howl, Howl] }
-        { Faction.dinosuars, [Minion, Minion, Minion, Minion, Minion, NaturalSelection, NaturalSelection, NaturalSelection, NaturalSelection, NaturalSelection, NaturalSelection] }
+        { Faction.dinosuars, [Minion, Minion, Minion, Minion, Minion, Rampage, Rampage, Rampage, Rampage, Rampage, Rampage] }
     };
 }
