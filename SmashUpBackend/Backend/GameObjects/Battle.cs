@@ -145,6 +145,9 @@ internal class Battle : IBackendBattleAPI
                     Guid chosenBaseId = _userInputHandler.SelectBaseCard(validBaseIds);
                     BaseCard chosenBase = _table.GetActiveBases().Where(x => x.Id == chosenBaseId).FirstOrDefault() ?? throw new Exception($"No active base exists with ID {chosenBaseId}");
                     PlayMinion(_table.ActivePlayer.Player, cardToPlay, chosenBase);
+                } else
+                {
+                    PlayAction(_table.ActivePlayer.Player, cardToPlay);
                 }
             }
         }
@@ -222,6 +225,20 @@ internal class Battle : IBackendBattleAPI
         // Trigger Card Effects (Including Update Base Total)
         baseCard.TriggerOnAddCard(cardToPlay);
     }
+    private void PlayAction(Player player, PlayableCard cardToPlay)
+    {
+        // Remove resource from player
+        RemoveResource(player, cardToPlay);
+
+        // Remove Card from Hand
+        player.RemoveFromHand(cardToPlay);
+
+        // Activate Card Ability
+        cardToPlay.TriggerOnPlay(this);
+
+        // Put card in discard
+        player.AddToDiscard(cardToPlay);
+    }
     private static bool ValidatePlay(Player player, PlayableCard cardToPlay)
     {
         if (cardToPlay.CardType == PlayableCardType.minion)
@@ -281,9 +298,17 @@ internal class Battle : IBackendBattleAPI
 
 
     /// <returns>Selected Field Card, or null if there are no available targets</returns>
-    public PlayableCard? SelectFieldCard(PlayableCardType cardType, int maxPower, PlayableCard? cardToDisplay=null, string? displaytext=null, BaseCard? baseCard = null)
+    public PlayableCard? SelectFieldCard(PlayableCardType cardType, PlayableCard cardToDisplay, string displaytext, int? maxPower = null, BaseCard? baseCard = null)
     {
-        Func<PlayableCard, bool> pred = (PlayableCard card) => card.CardType == cardType && card.CurrentPower <= maxPower;
+        Func<PlayableCard, bool> pred;
+        if(maxPower != null)
+        {
+            pred = (PlayableCard card) => card.CardType == cardType && card.CurrentPower <= maxPower;
+        } 
+        else
+        {
+            pred = (PlayableCard card) => card.CardType == cardType;
+        }
         List<List<Guid>> validFieldCardIds = [];
         validFieldCardIds = GetValidFieldCardIds(pred, baseCard);
         if (validFieldCardIds.Count == 0) return null;
@@ -298,11 +323,11 @@ internal class Battle : IBackendBattleAPI
     }
     private List<List<Guid>> GetValidFieldCardIds(Func<PlayableCard, bool> pred, BaseCard? baseCard = null)
     {
-        IEnumerable<BaseSlot> validBaseSlots = [];
+        IEnumerable<BaseSlot> validBaseSlots = _table.GetBaseSlots();
 
-        if(baseCard != null)
+        if (baseCard != null)
         {
-            validBaseSlots = [_table.GetBaseSlots().Where(x => x.BaseCard == baseCard).Single()];
+            validBaseSlots = [validBaseSlots.Where(x => x.BaseCard == baseCard).Single()];
         }
         return validBaseSlots
             .Select(x => x.Cards.Where(pred).Select(x => x.Id).ToList())

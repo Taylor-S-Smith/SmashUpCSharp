@@ -29,6 +29,7 @@ internal static class Database
 
         warRaptor.OnPlay += (eventManager, baseSlot) =>
         {
+            if (baseSlot == null) throw new Exception("No base passed in for War Raptor");
             // Gain Power for current War Raptors on base
             int currRaptorCount = baseSlot.Territories.SelectMany(x => x.Cards).Where(x => x.Name == WAR_RAPTOR_NAME).ToList().Count;
             warRaptor.ChangeCurrentPower(currRaptorCount);
@@ -63,7 +64,7 @@ internal static class Database
 
         return warRaptor;
     };
-    public static Func<PlayableCard> ArmorStego = () =>
+    public static Func<PlayableCard> ArmoredStego = () =>
     {
         PlayableCard armoredStego = new
         (
@@ -137,7 +138,8 @@ internal static class Database
 
         laseratops.OnPlay += (battle, baseSlot) =>
         {
-            PlayableCard? cardToDestroy = battle.SelectFieldCard(PlayableCardType.minion, 2, laseratops, "Select a card for lasertops to destroy", baseSlot.BaseCard);
+            if (baseSlot == null) throw new Exception("No base passed in for Laseratops");
+            PlayableCard? cardToDestroy = battle.SelectFieldCard(PlayableCardType.minion, laseratops, "Select a card for lasertops to destroy", 2, baseSlot.BaseCard);
             if (cardToDestroy != null) battle.Destroy(cardToDestroy);
         };
 
@@ -162,6 +164,44 @@ internal static class Database
             ],
             7
         );
+    };
+    public static Func<PlayableCard> Augmentation = () =>
+    {
+        PlayableCard augmentation = new
+        (
+            Faction.dinosuars,
+            PlayableCardType.action,
+            "Augmentation",
+            [
+                @"         ________/\      ",
+                @"      _ / |_O_|   0|     ",
+                @"     /_|       ____|     ",
+                @"     /_|      _____|     ",
+                @"     /_|     |           ",
+                @"   One minion gains +4   ",
+                @" power until the end of  ",
+                @"       your turn.        ",
+            ]
+        );
+
+        augmentation.OnPlay += (battle, baseSlot) =>
+        {
+            PlayableCard? cardToGainPower = battle.SelectFieldCard(PlayableCardType.minion, augmentation, "Select a card to gain +4 power until the end of the turn");
+            if (cardToGainPower != null)
+            {
+                cardToGainPower.ChangeCurrentPower(4);
+
+                void endTurnHandler(ActivePlayer activePlayer)
+                {
+                    cardToGainPower.ChangeCurrentPower(-4);
+                    battle.EventManager.EndOfTurn -= endTurnHandler;
+                }
+
+                battle.EventManager.EndOfTurn += endTurnHandler;
+            }
+        };
+
+        return augmentation;
     };
 
     public static Func<PlayableCard> Minion = () =>
@@ -196,7 +236,7 @@ internal static class Database
 
     private static readonly Dictionary<Faction, List<Func<PlayableCard>>> CardsByFactionDict = new()
     {
-        //{ Faction.dinosuars, [WarRaptor, WarRaptor, WarRaptor, WarRaptor, ArmorStego, ArmorStego, ArmorStego, Laseratops, Laseratops, KingRex] }
-        { Faction.dinosuars, [Minion, Minion, Laseratops, Laseratops] }
+        //{ Faction.dinosuars, [WarRaptor, WarRaptor, WarRaptor, WarRaptor, ArmoredStego, ArmoredStego, ArmoredStego, Laseratops, Laseratops, KingRex, Augmentation, Augmentation] }
+        { Faction.dinosuars, [Minion, Minion, Minion, Minion, Minion, Augmentation, Augmentation, Augmentation, Augmentation, Augmentation, Augmentation] }
     };
 }
