@@ -56,7 +56,7 @@ internal partial class Application()
             //Don't forget to handle card displaying
             while (true)
             {
-                var chosenId = new BattlePage(_table.GetBaseSlots(), _table.ActivePlayer.Player, _endTurnButtonId, new Targeter(targetLogics, handTargeter)).Run();
+                var chosenId = new BattlePage(_table.GetBaseSlots(), _table.ActivePlayer.Player, _table.ActivePlayer.Player.Hand.ToList(), _endTurnButtonId, new Targeter(targetLogics, handTargeter)).Run();
 
                 if(chosenId == _endTurnButtonId)
                 {
@@ -68,8 +68,10 @@ internal partial class Application()
                 }
                 else
                 {
+                    //Switch to "Display Single Card Info" mode
+
                     var cardToDisplay = selectableFieldCards.SelectMany(x => x).Where(x => x.Id == chosenId).Single();
-                    new BattlePage(_table.GetBaseSlots(), _table.ActivePlayer.Player, _endTurnButtonId, new Targeter([]), cardToDisplay).Run();
+                    new BattlePage(_table.GetBaseSlots(), _table.ActivePlayer.Player, [cardToDisplay], _endTurnButtonId, new Targeter([])).Run();
                 }
             }
             
@@ -79,14 +81,21 @@ internal partial class Application()
         {
             var fieldCardTargeter = new Select2DOption(validCardIds);
 
-            Guid? selectedCardId = new BattlePage(_table.GetBaseSlots(), _table.ActivePlayer.Player, _endTurnButtonId, new Targeter([fieldCardTargeter]), cardToDisplay, displayText ?? "").Run();
+            Guid? selectedCardId = new BattlePage(_table.GetBaseSlots(), _table.ActivePlayer.Player, [cardToDisplay], _endTurnButtonId, new Targeter([fieldCardTargeter]), displayText ?? "").Run();
 
             return new(selectedCardId, selectedCardId == null);
         }
 
-        public Guid SelectBaseCard(List<Guid> validBaseIds)
+        public Guid SelectBaseCard(List<Guid> validBaseIds, PlayableCard? cardToDisplay=null, string displayText="")
         {
-            return new BattlePage(_table.GetBaseSlots(), _table.ActivePlayer.Player, _endTurnButtonId, new Targeter([new SelectOption(validBaseIds)])).Run();
+            List<PlayableCard> cardsToDisplay = [];
+            if (cardToDisplay != null) cardsToDisplay.Add(cardToDisplay);
+            return new BattlePage(_table.GetBaseSlots(), _table.ActivePlayer.Player, cardsToDisplay, _endTurnButtonId, new Targeter([new SelectOption(validBaseIds)]), displayText).Run();
+        }
+
+        public Guid SelectPlayableCard(List<PlayableCard> options, string displayText)
+        {
+            return new BattlePage(_table.GetBaseSlots(), _table.ActivePlayer.Player, options, _endTurnButtonId, new Targeter([new SelectOption(options.Select(x => x.Id).ToList())]), displayText).Run();
         }
 
         public List<PlayableCard> DiscardTo10(Player player)
@@ -98,6 +107,7 @@ internal partial class Application()
         {
             throw new NotImplementedException();
         }
+
     }
 
     private class ConsoleAppTestUI: ConsoleAppBattleUI

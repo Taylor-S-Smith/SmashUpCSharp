@@ -33,7 +33,8 @@ internal class CardGraphicUtil
         int graphicHeight = graphic.Length;
         string? title = null;
 
-        if (titleLineBuilder != null) title = titleLineBuilder(graphicWidth, useAltBorder);
+        //If the graphic already has all the lines, we shouldn't add a title line
+        if (titleLineBuilder != null && graphic.Length != 9) title = titleLineBuilder(graphicWidth, useAltBorder);
 
         // We add 2 borders and sometimes a title
         string[] returnGraphic = new string[graphicHeight + (title != null ? 3 : 2)];

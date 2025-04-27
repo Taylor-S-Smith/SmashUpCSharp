@@ -143,7 +143,7 @@ internal class Battle : IBackendBattleAPI
                 if (cardToPlay.CardType == PlayableCardType.minion)
                 {
                     List<Guid> validBaseIds = _table.GetActiveBases().Select(x => x.Id).ToList();
-                    Guid chosenBaseId = _userInputHandler.SelectBaseCard(validBaseIds);
+                    Guid chosenBaseId = _userInputHandler.SelectBaseCard(validBaseIds, cardToPlay, $"Choose a base to play {cardToPlay.Name} on");
                     BaseCard chosenBase = GetBaseCardById(chosenBaseId);
                     PlayMinion(_table.ActivePlayer.Player, cardToPlay, chosenBase);
                 }
@@ -210,7 +210,7 @@ internal class Battle : IBackendBattleAPI
     }
 
 
-    // Auxilery
+    // Card Actions
     private void PlayMinion(Player player, PlayableCard cardToPlay, BaseCard baseCard)
     {
         //Remove resource from player
@@ -301,6 +301,11 @@ internal class Battle : IBackendBattleAPI
         }
     }
 
+    // Exposing table functions
+    public List<BaseSlot> GetBaseSlots()
+    {
+        return _table.GetBaseSlots();
+    }
 
     public class SelectFieldCardQuery
     {
@@ -330,11 +335,17 @@ internal class Battle : IBackendBattleAPI
 
     public record SelectBaseCardResult(BaseCard? SelectedBase, bool ActionCanceled);
     /// <returns>Selected Base Card Result, or null if there are no available targets</returns>
-    public SelectBaseCardResult? SelectbaseCard()
+    public SelectBaseCardResult? SelectBaseCard()
     {
         List<Guid> validBaseIds = _table.GetActiveBases().Select(x => x.Id).ToList();
         Guid chosenBaseId = _userInputHandler.SelectBaseCard(validBaseIds);
         return new(GetBaseCardById(chosenBaseId), false);
+    }
+
+    public PlayableCard SelectCard(List<PlayableCard> options, string displayText)
+    {
+        Guid chosenId = _userInputHandler.SelectPlayableCard(options, displayText);
+        return options.Where(x => x.Id == chosenId).SingleOrDefault() ?? throw new Exception($"No option with ID: {chosenId}");
     }
 
 

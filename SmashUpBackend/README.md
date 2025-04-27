@@ -19,3 +19,13 @@ Event Approach Rules:
 - Create as specific event as you can. No need to track global deaths if per base works just as well
 - When performing any operation, check the events of all effected objects, and global events
   
+
+
+Faction(s) with computer specific Mechanics:
+- Generate random cards (Conjurers+)
+- Transform cards (Alchemists+)
+- Generate tokens ((Necomancer/Cultists)+Alchemists)
+- Add effects (power, onplay) to cards in hand (Enchanters+)
+
+- Keyword: Animate
+- Cultists

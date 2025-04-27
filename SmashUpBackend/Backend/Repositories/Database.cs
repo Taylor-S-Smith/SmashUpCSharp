@@ -357,6 +357,51 @@ internal static class Database
 
         return rampage;
     };
+    public static Func<PlayableCard> SurvivalOfTheFittest = () =>
+    {
+        PlayableCard survivalOfTheFittest = new
+        (
+            Faction.dinosuars,
+            PlayableCardType.action,
+            "Survival Of The Fittest",
+            [
+                @"A    Survival Of The    A",
+                @"         Fittest         ",
+                @"         |_____|         ",
+                @"        |/     \|        ",
+                @"         \_____/         ",
+                @"           >->o          ",
+                @"Destroy the lowest-power ",
+                @"minion on each base with ",
+                @" a higher-power minion.  ",
+            ]
+        );
+
+        survivalOfTheFittest.OnPlay += (battle, baseSlot) =>
+        {
+            List<BaseSlot> baseSlots = battle.GetBaseSlots();
+
+            foreach(var slot in baseSlots)
+            {
+                var allCards = slot.Territories.SelectMany(x => x.Cards);
+                int? lowestPower = allCards.Min(card => card.CurrentPower);
+                var lowestPowerCards = allCards.Where(card => card.CurrentPower == lowestPower).ToList();
+                if(lowestPowerCards.Count > 0 && allCards.Any(card => card.CurrentPower > lowestPower))
+                {
+                    if (lowestPowerCards.Count == 1) battle.Destroy(lowestPowerCards.Single());
+                    else if (lowestPowerCards.Count > 1)
+                    {
+                        PlayableCard cardToDestroy = battle.SelectCard(lowestPowerCards, "These minions are tied. Select one to destroy");
+                        battle.Destroy(cardToDestroy);
+                    }
+                }
+            }
+
+            
+        };
+
+        return survivalOfTheFittest;
+    };
 
 
     public static Func<PlayableCard> Minion = () =>
@@ -392,6 +437,6 @@ internal static class Database
     private static readonly Dictionary<Faction, List<Func<PlayableCard>>> CardsByFactionDict = new()
     {
         //{ Faction.dinosuars, [WarRaptor, WarRaptor, WarRaptor, WarRaptor, ArmoredStego, ArmoredStego, ArmoredStego, Laseratops, Laseratops, KingRex, Augmentation, Augmentation, Howl, Howl] }
-        { Faction.dinosuars, [Minion, Minion, Minion, Minion, Minion, Rampage, Rampage, Rampage, Rampage, Rampage, Rampage] }
+        { Faction.dinosuars, [Minion, Minion, Minion, Minion, Minion, SurvivalOfTheFittest, SurvivalOfTheFittest, SurvivalOfTheFittest, SurvivalOfTheFittest, SurvivalOfTheFittest, SurvivalOfTheFittest] }
     };
 }
