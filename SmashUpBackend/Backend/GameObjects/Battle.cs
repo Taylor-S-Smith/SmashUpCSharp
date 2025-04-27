@@ -279,10 +279,15 @@ internal class Battle : IBackendBattleAPI
         }
     }
 
-    public PlayableCard SelectFieldCard(PlayableCardType cardType, int maxPower)
+
+    /// <returns>Selected Field Card, or null if there are no available targets</returns>
+    public PlayableCard? SelectFieldCard(PlayableCardType cardType, int maxPower)
     {
         Func<PlayableCard, bool> pred = (PlayableCard card) => card.CardType == cardType && card.CurrentPower <= maxPower;
-        Guid chosenCardId = _userInputHandler.SelectFieldCard(GetValidFieldCardIds(pred));
+        List<List<Guid>> validFieldCardIds = GetValidFieldCardIds(pred);
+        if (validFieldCardIds.Count == 0) return null;
+
+        Guid chosenCardId = _userInputHandler.SelectFieldCard(validFieldCardIds);
         return GetFieldCardById(chosenCardId);
     }
 
@@ -294,6 +299,7 @@ internal class Battle : IBackendBattleAPI
     {
         return _table.GetBaseSlots()
             .Select(x => x.Cards.Where(pred).Select(x => x.Id).ToList())
+            .Where(x => x.Count > 0)
             .ToList();
     }
 
