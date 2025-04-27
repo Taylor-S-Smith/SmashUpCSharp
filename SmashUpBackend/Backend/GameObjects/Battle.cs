@@ -281,10 +281,11 @@ internal class Battle : IBackendBattleAPI
 
 
     /// <returns>Selected Field Card, or null if there are no available targets</returns>
-    public PlayableCard? SelectFieldCard(PlayableCardType cardType, int maxPower)
+    public PlayableCard? SelectFieldCard(PlayableCardType cardType, int maxPower, BaseCard? baseCard = null)
     {
         Func<PlayableCard, bool> pred = (PlayableCard card) => card.CardType == cardType && card.CurrentPower <= maxPower;
-        List<List<Guid>> validFieldCardIds = GetValidFieldCardIds(pred);
+        List<List<Guid>> validFieldCardIds = [];
+        validFieldCardIds = GetValidFieldCardIds(pred, baseCard);
         if (validFieldCardIds.Count == 0) return null;
 
         Guid chosenCardId = _userInputHandler.SelectFieldCard(validFieldCardIds);
@@ -295,9 +296,15 @@ internal class Battle : IBackendBattleAPI
     {
         return _table.GetBaseSlots().SelectMany(x => x.Cards).Where(x => x.Id == Id).SingleOrDefault() ?? throw new Exception($"No field card exists with ID {Id}");
     }
-    private List<List<Guid>> GetValidFieldCardIds(Func<PlayableCard, bool> pred)
+    private List<List<Guid>> GetValidFieldCardIds(Func<PlayableCard, bool> pred, BaseCard? baseCard = null)
     {
-        return _table.GetBaseSlots()
+        IEnumerable<BaseSlot> validBaseSlots = [];
+
+        if(baseCard != null)
+        {
+            validBaseSlots = [_table.GetBaseSlots().Where(x => x.BaseCard == baseCard).Single()];
+        }
+        return validBaseSlots
             .Select(x => x.Cards.Where(pred).Select(x => x.Id).ToList())
             .Where(x => x.Count > 0)
             .ToList();

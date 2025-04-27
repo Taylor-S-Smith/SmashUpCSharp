@@ -137,7 +137,7 @@ internal static class Database
 
         laseratops.OnPlay += (battle, baseSlot) =>
         {
-            PlayableCard? cardToDestroy = battle.SelectFieldCard(PlayableCardType.minion, 2);
+            PlayableCard? cardToDestroy = battle.SelectFieldCard(PlayableCardType.minion, 2, baseSlot.BaseCard);
             if (cardToDestroy != null) battle.Destroy(cardToDestroy);
         };
 
