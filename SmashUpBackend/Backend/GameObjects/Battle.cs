@@ -86,7 +86,7 @@ internal class Battle
         player.Draw(5);
 
         //Mulligan
-        if (!player.Hand.Any(x => x.CardType == PlayableCardType.minion))
+        if (!player.Hand.Any(x => x.CardType == PlayableCardType.Minion))
         {
             bool wantsToMulligan = _userInputHandler.AskMulligan();
 
@@ -147,7 +147,7 @@ internal class Battle
                 Result result = ValidatePlay(_table.ActivePlayer.Player, cardToPlay);
                 if (result.IsSuccess)
                 {
-                    if (cardToPlay.CardType == PlayableCardType.minion)
+                    if (cardToPlay.CardType == PlayableCardType.Minion)
                     {
                         List<Guid> validBaseIds = _table.GetActiveBases().Select(x => x.Id).ToList();
                         Guid chosenBaseId = _userInputHandler.SelectBaseCard(validBaseIds, cardToPlay, $"Choose a base to play {cardToPlay.Name} on");
@@ -251,19 +251,43 @@ internal class Battle
         // Remove Card from Hand
         player.RemoveFromHand(cardToPlay);
 
-        // Activate Card Ability
-        cardToPlay.TriggerOnPlay(this);
+        if(cardToPlay.Tags.Contains(Tag.MinionAttachment))
+        {
+            SelectFieldCardQuery query = new()
+            {
+                CardType = PlayableCardType.Minion,
+            };
+            PlayableCard? cardToAttachTo = SelectFieldCard(cardToPlay, $"Choose a minion to attach {cardToPlay.Name} to", query)?.SelectedCard;
 
-        // Put card in discard
-        player.AddToDiscard(cardToPlay);
+            if (cardToAttachTo != null)
+            {
+                if(AttemptToAffect(cardToAttachTo, PlayableCardType.Action, ProtectionType.Attach))
+                {
+                    cardToAttachTo.Attach(cardToPlay);
+                    cardToPlay.TriggerOnAttach(cardToAttachTo);
+                } 
+                else
+                {
+                    player.AddToDiscard(cardToPlay);
+                }
+            }
+        } 
+        else
+        {
+            // Activate Card Ability
+            cardToPlay.TriggerOnPlay(this);
+
+            // Put card in discard
+            player.AddToDiscard(cardToPlay);
+        }
     }
     private static Result ValidatePlay(Player player, PlayableCard cardToPlay)
     {
-        if (cardToPlay.CardType == PlayableCardType.minion)
+        if (cardToPlay.CardType == PlayableCardType.Minion)
         {
             if (player.MinionPlays == 0) return Result.Fail("You don't have any more minion plays");
         }
-        else if (cardToPlay.CardType == PlayableCardType.action)
+        else if (cardToPlay.CardType == PlayableCardType.Action)
         {
             if (player.ActionPlays == 0) return Result.Fail("You don't have any more action plays");
         }
@@ -271,11 +295,11 @@ internal class Battle
     }
     private static void RemoveResource(Player player, PlayableCard cardToPlay)
     {
-        if (cardToPlay.CardType == PlayableCardType.minion)
+        if (cardToPlay.CardType == PlayableCardType.Minion)
         {
             player.MinionPlays--;
         }
-        else if (cardToPlay.CardType == PlayableCardType.action)
+        else if (cardToPlay.CardType == PlayableCardType.Action)
         {
             player.ActionPlays--;
         }

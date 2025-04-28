@@ -1,5 +1,5 @@
 The next steps are:
-- Show attached cards in display mode
+- Update "Tooth And Claw...And Guns" to erratta, and extend "affected" to include some power changes
 - Finish dinosaur faction.
 - Update display when navigating hand
 - Add ability to cancel a play action

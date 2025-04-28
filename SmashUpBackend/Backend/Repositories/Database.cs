@@ -16,7 +16,7 @@ internal static class Database
         PlayableCard warRaptor = new
         (
             Faction.dinosuars,
-            PlayableCardType.minion,
+            PlayableCardType.Minion,
             WAR_RAPTOR_NAME,
             [
                 @"     _oVo--.__           ",
@@ -73,7 +73,7 @@ internal static class Database
         PlayableCard armoredStego = new
         (
             Faction.dinosuars,
-            PlayableCardType.minion,
+            PlayableCardType.Minion,
             "Armored Stego",
             [
                 @"                  __     ",
@@ -125,7 +125,7 @@ internal static class Database
         PlayableCard laseratops = new
         (
             Faction.dinosuars,
-            PlayableCardType.minion,
+            PlayableCardType.Minion,
             "Laseratops",
             [
                 @"     ====<[]             ",
@@ -146,12 +146,12 @@ internal static class Database
 
             SelectFieldCardQuery query = new()
             {
-                CardType = PlayableCardType.minion,
+                CardType = PlayableCardType.Minion,
                 MaxPower = 2,
                 BaseCard = baseSlot.BaseCard
             };
             PlayableCard? cardToDestroy = battle.SelectFieldCard(laseratops, "Select a card for lasertops to destroy", query)?.SelectedCard;
-            if (cardToDestroy != null) battle.Destroy(cardToDestroy, PlayableCardType.minion);
+            if (cardToDestroy != null) battle.Destroy(cardToDestroy, PlayableCardType.Minion);
         };
 
         return laseratops;
@@ -161,7 +161,7 @@ internal static class Database
         return new
         (
             Faction.dinosuars,
-            PlayableCardType.minion,
+            PlayableCardType.Minion,
             "King Rex",
             [
                 @"          ____           ",
@@ -181,7 +181,7 @@ internal static class Database
         PlayableCard augmentation = new
         (
             Faction.dinosuars,
-            PlayableCardType.action,
+            PlayableCardType.Action,
             "Augmentation",
             [
                 @"         ________/\      ",
@@ -199,7 +199,7 @@ internal static class Database
         {
             SelectFieldCardQuery query = new()
             {
-                CardType = PlayableCardType.minion
+                CardType = PlayableCardType.Minion
             };
             PlayableCard? cardToGainPower = battle.SelectFieldCard(augmentation, "Select a card to gain +4 power until the end of the turn", query)?.SelectedCard;
             if (cardToGainPower != null)
@@ -223,7 +223,7 @@ internal static class Database
         PlayableCard howl = new
         (
             Faction.dinosuars,
-            PlayableCardType.action,
+            PlayableCardType.Action,
             "Howl",
             [
                 @"      ____        \      ",
@@ -269,7 +269,7 @@ internal static class Database
         PlayableCard naturalSelection = new
         (
             Faction.dinosuars,
-            PlayableCardType.action,
+            PlayableCardType.Action,
             "Natural Selection",
             [
                 @"        O                ",
@@ -288,7 +288,7 @@ internal static class Database
         {
             SelectFieldCardQuery query1 = new()
             {
-                CardType = PlayableCardType.minion,
+                CardType = PlayableCardType.Minion,
                 Owner = naturalSelection.Owner
             };
             var result = battle.SelectFieldCard(naturalSelection, "Choose one of your minions on a base", query1);
@@ -299,12 +299,12 @@ internal static class Database
             {
                 SelectFieldCardQuery query2 = new()
                 {
-                    CardType = PlayableCardType.minion,
+                    CardType = PlayableCardType.Minion,
                     MaxPower = ownMinion.CurrentPower - 1,
                     BaseCard = baseCard
                 };
                 PlayableCard? minionToDestroy = battle.SelectFieldCard(naturalSelection, $"Choose a minion with power less than {ownMinion?.CurrentPower} to destroy", query2)?.SelectedCard;
-                if (minionToDestroy != null) battle.Destroy(minionToDestroy, PlayableCardType.action);
+                if (minionToDestroy != null) battle.Destroy(minionToDestroy, PlayableCardType.Action);
             }
             
         };
@@ -316,7 +316,7 @@ internal static class Database
         PlayableCard rampage = new
         (
             Faction.dinosuars,
-            PlayableCardType.action,
+            PlayableCardType.Action,
             "Rampage",
             [
                 @"    __      O    |  |    ",
@@ -334,7 +334,7 @@ internal static class Database
         {
             SelectFieldCardQuery query1 = new()
             {
-                CardType = PlayableCardType.minion,
+                CardType = PlayableCardType.Minion,
                 Owner = rampage.Owner
             };
             var result = battle.SelectFieldCard(rampage, "Choose one of your minions on a base", query1);
@@ -363,7 +363,7 @@ internal static class Database
         PlayableCard survivalOfTheFittest = new
         (
             Faction.dinosuars,
-            PlayableCardType.action,
+            PlayableCardType.Action,
             "Survival Of The Fittest",
             [
                 @"A    Survival Of The    A",
@@ -389,11 +389,11 @@ internal static class Database
                 var lowestPowerCards = allCards.Where(card => card.CurrentPower == lowestPower).ToList();
                 if(lowestPowerCards.Count > 0 && allCards.Any(card => card.CurrentPower > lowestPower))
                 {
-                    if (lowestPowerCards.Count == 1) battle.Destroy(lowestPowerCards.Single(), PlayableCardType.action);
+                    if (lowestPowerCards.Count == 1) battle.Destroy(lowestPowerCards.Single(), PlayableCardType.Action);
                     else if (lowestPowerCards.Count > 1)
                     {
                         PlayableCard cardToDestroy = battle.SelectCard(lowestPowerCards, "These minions are tied. Select one to destroy:");
-                        battle.Destroy(cardToDestroy, PlayableCardType.action);
+                        battle.Destroy(cardToDestroy, PlayableCardType.Action);
                     }
                 }
             }
@@ -408,7 +408,7 @@ internal static class Database
         PlayableCard toothAndClawAndGuns = new
         (
             Faction.dinosuars,
-            PlayableCardType.action,
+            PlayableCardType.Action,
             "Tooth And Claw...And Guns",
             [
                 @"A   Tooth And Claw...   A",
@@ -421,7 +421,10 @@ internal static class Database
                 @" ability does not affect ",
                 @"       this minion       ",
             ]
-        );
+        )
+        {
+            Tags = [Tag.MinionAttachment]
+        };
 
         List<Protection> protectionsGranted = [];
         foreach (var protectionType in Enum.GetValues(typeof(ProtectionType)).Cast<ProtectionType>())
@@ -430,24 +433,9 @@ internal static class Database
             protectionsGranted.Add(protection);
         }
 
-        toothAndClawAndGuns.OnPlay += (battle, baseSlot) =>
-        {
-            SelectFieldCardQuery query = new()
-            {
-                CardType = PlayableCardType.minion,
-            };
-            PlayableCard? cardToAttachTo = battle.SelectFieldCard(toothAndClawAndGuns, "Choose a minion to attach this", query)?.SelectedCard;
-
-            if (cardToAttachTo != null)
-            {
-                cardToAttachTo.Attach(toothAndClawAndGuns);
-                toothAndClawAndGuns.TriggerOnAttach(cardToAttachTo);
-            }
-        };
-
         toothAndClawAndGuns.OnProtect += (battle) =>
         {
-            battle.Destroy(toothAndClawAndGuns, PlayableCardType.action);
+            battle.Destroy(toothAndClawAndGuns, PlayableCardType.Action);
         };
 
         toothAndClawAndGuns.OnAttach += (cardAttachedTo) =>
@@ -462,6 +450,41 @@ internal static class Database
 
         return toothAndClawAndGuns;
     };
+    public static Func<PlayableCard> Upgrade = () =>
+    {
+        PlayableCard upgrade = new
+        (
+            Faction.dinosuars,
+            PlayableCardType.Action,
+            "Upgrade",
+            [
+                @"A        Upgrade   __   A",
+                @"                  / _)   ",
+                @"        _________/ /_    ",
+                @"      _(________()/_()   ",
+                @"    _/  (  | (   /       ",
+                @"   /__.-'|_|--|_|        ",
+                @"    Play on a minion     ",
+                @"Ongoing: This minion has ",
+                @"        +2 power         ",
+            ]
+        )
+        {
+            Tags = [Tag.MinionAttachment]
+        };
+
+        upgrade.OnAttach += (cardAttachedTo) =>
+        {
+            cardAttachedTo.ChangeCurrentPower(2);
+        };
+
+        upgrade.OnDetach += (cardDetachedFrom) =>
+        {
+            cardDetachedFrom.ChangeCurrentPower(-2);
+        };
+
+        return upgrade;
+    };
 
 
     public static Func<PlayableCard> Minion = () =>
@@ -470,7 +493,7 @@ internal static class Database
         PlayableCard minion = new
         (
             Faction.dinosuars,
-            PlayableCardType.minion,
+            PlayableCardType.Minion,
             "minion",
             [
                 @"     _oVo--.__           ",
@@ -496,7 +519,7 @@ internal static class Database
 
     private static readonly Dictionary<Faction, List<Func<PlayableCard>>> CardsByFactionDict = new()
     {
-        //{ Faction.dinosuars, [WarRaptor, WarRaptor, WarRaptor, WarRaptor, ArmoredStego, ArmoredStego, ArmoredStego, Laseratops, Laseratops, KingRex, Augmentation, Augmentation, Howl, Howl, NaturalSelection, Rampage, SurvivalOfTheFittest, ToothAndClawAndGuns] }
-        { Faction.dinosuars, [Minion, Minion, Laseratops, Laseratops, SurvivalOfTheFittest, SurvivalOfTheFittest, ToothAndClawAndGuns, ToothAndClawAndGuns] }
+        //{ Faction.dinosuars, [WarRaptor, WarRaptor, WarRaptor, WarRaptor, ArmoredStego, ArmoredStego, ArmoredStego, Laseratops, Laseratops, KingRex, Augmentation, Augmentation, Howl, Howl, NaturalSelection, Rampage, SurvivalOfTheFittest, ToothAndClawAndGuns, Upgrade] }
+        { Faction.dinosuars, [Minion, Minion, Laseratops, Laseratops, SurvivalOfTheFittest, SurvivalOfTheFittest, ToothAndClawAndGuns, ToothAndClawAndGuns, Upgrade, Upgrade] }
     };
 }

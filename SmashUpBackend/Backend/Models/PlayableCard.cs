@@ -5,8 +5,12 @@ namespace SmashUp.Backend.Models;
 
 internal enum PlayableCardType
 {
-    minion,
-    action
+    Minion,
+    Action
+}
+internal enum Tag
+{
+    MinionAttachment
 }
 
 /// <summary>
@@ -19,11 +23,13 @@ internal class PlayableCard : Card
     public int? PrintedPower { get; set; }
     public int? CurrentPower { get; private set; }
     public List<PlayableCard> Attachments { get; private set; } = [];
+    public List<Tag> Tags { get; set; } = [];
 
     public enum ProtectionType
     {
         Destroy,
-        Return
+        Return,
+        Attach
     }
     /// <summary>
     /// An object that represents a card's immunity against certain abilities
