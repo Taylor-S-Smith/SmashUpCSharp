@@ -391,7 +391,7 @@ internal static class Database
                     if (lowestPowerCards.Count == 1) battle.Destroy(lowestPowerCards.Single());
                     else if (lowestPowerCards.Count > 1)
                     {
-                        PlayableCard cardToDestroy = battle.SelectCard(lowestPowerCards, "These minions are tied. Select one to destroy");
+                        PlayableCard cardToDestroy = battle.SelectCard(lowestPowerCards, "These minions are tied. Select one to destroy:");
                         battle.Destroy(cardToDestroy);
                     }
                 }
