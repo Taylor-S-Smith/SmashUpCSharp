@@ -111,6 +111,10 @@ internal class CardGraphicUtil
                     {
                         lineBuilder.Append($" ({card.CurrentPower})");
                     }
+                    if (card.Attachments.Count > 0)
+                    {
+                        lineBuilder.Append("+");
+                    }
                     if (card.Id == targetedCardId)
                     {
                         lineBuilder.Append('<');

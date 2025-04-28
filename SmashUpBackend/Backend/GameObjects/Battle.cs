@@ -1,15 +1,16 @@
-﻿using SmashUp.Backend.Services;
+﻿using static SmashUp.Backend.Models.PlayableCard;
+using SmashUp.Backend.Services;
 using SmashUp.Backend.Models;
 using SmashUp.Backend.API;
-using LinqKit;
 using FluentResults;
+using LinqKit;
 
 namespace SmashUp.Backend.GameObjects;
 
 /// <summary>
 /// Handles turn structure (phases) and control flow between front and backend
 /// </summary>
-internal class Battle : IBackendBattleAPI
+internal class Battle
 {
     private readonly IFrontendBattleAPI _userInputHandler;
     private readonly Random _random;
@@ -280,21 +281,55 @@ internal class Battle : IBackendBattleAPI
         }
     }
 
-    public void ReturnCard(PlayableCard cardToReturn)
+    public void ReturnCard(PlayableCard cardToReturn, PlayableCardType affectorCardType)
     {
-        RemoveCardFromBattleField(cardToReturn, cardToReturn.Owner.AddToHand);
+        if(AttemptToAffect(cardToReturn, affectorCardType, ProtectionType.Return))
+        {
+            RemoveCardFromBattleField(cardToReturn, cardToReturn.Owner.AddToHand);
+        }
     }
-    public void Destroy(PlayableCard cardToDestroy)
+    public void Destroy(PlayableCard cardToDestroy, PlayableCardType affectorCardType)
     {
-        RemoveCardFromBattleField(cardToDestroy, cardToDestroy.Owner.AddToDiscard);
+        if (AttemptToAffect(cardToDestroy, affectorCardType, ProtectionType.Destroy))
+        {
+            RemoveCardFromBattleField(cardToDestroy, cardToDestroy.Owner.AddToDiscard);
+        }
     }
-    
+
+    /// <summary>
+    /// Checks if a card can be affected by a specific effect. 
+    /// If it is protected, this will also resolve the protection triggers
+    /// </summary>
+    /// <returns>True if card can be affected, otherwise false</returns>
+    private bool AttemptToAffect(PlayableCard cardToAffect, PlayableCardType affectorCardType, ProtectionType protectionType)
+    {
+        List<Protection> protections = cardToAffect.Protections.Where(x => x.From == protectionType && (x.CardType == null || x.CardType == affectorCardType)).ToList();
+        
+        if (protections.Count == 0) return true;
+        else
+        {
+            PlayableCard protector;
+            if (protections.Count == 1)
+            {
+                protector = protections.Single().GrantedBy;
+            }
+            else
+            {
+                protector = SelectCard(protections.Select(x => x.GrantedBy).ToList(), $"{cardToAffect.Owner.Name}, {cardToAffect.Name} is being protected by multiple cards, choose which one to recieve protection from:");
+            }
+
+            protector.TriggerOnProtect(this);
+            return false;
+        }
+    }
+
     private void RemoveCardFromBattleField(PlayableCard cardToRemove, Action<PlayableCard> AddFunction)
     {
         foreach (BaseSlot slot in _table.GetBaseSlots())
         {
             foreach (PlayerTerritory territory in slot.Territories)
             {
+                // Check all played cards on base
                 if (territory.Cards.Remove(cardToRemove))
                 {
                     // Add card to other location
@@ -307,6 +342,25 @@ internal class Battle : IBackendBattleAPI
                     // Trigger leave of battlefield
                     cardToRemove.TriggerOnRemoveFromBattleField(EventManager);
                     return;
+                }
+                else
+                {
+                    // Check cards attached to played cards
+                    foreach(var card in territory.Cards)
+                    {
+                        if (card.Detach(cardToRemove))
+                        {
+                            // Add card to other location
+                            AddFunction(cardToRemove);
+
+                            //Trigger on detach
+                            cardToRemove.TriggerOnDetach(card);
+
+                            // Trigger leave of battlefield
+                            cardToRemove.TriggerOnRemoveFromBattleField(EventManager);
+                            return;
+                        }
+                    }
                 }
             }
         }
@@ -402,12 +456,4 @@ internal class Battle : IBackendBattleAPI
     {
         return _table.GetActiveBases().Where(x => x.Id == chosenBaseId).FirstOrDefault() ?? throw new Exception($"No active base exists with ID {chosenBaseId}");
     }
-}
-
-/// <summary>
-/// This is ONLY for debug/admin operations. This dependency should not exist for normal game operations
-/// </summary>
-internal interface IBackendBattleAPI
-{
-    void ReturnCard(PlayableCard cardToReturn);
 }

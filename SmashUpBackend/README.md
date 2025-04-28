@@ -1,7 +1,10 @@
 The next steps are:
+- Show attached cards in display mode
 - Finish dinosaur faction.
 - Update display when navigating hand
 - Add ability to cancel a play action
+- Have actions call a method to display the action that happen to the user as they unfold, at least for events that are not obvious (e.g. "X was protected from destruction")
+- Warm user before they perform an action that would not result in any meaningful changes
 
 Other TODOs:
 - Remove duplication in Page.Run() logic
@@ -26,6 +29,12 @@ Faction(s) with computer specific Mechanics:
 - Transform cards (Alchemists+)
 - Generate tokens ((Necomancer/Cultists)+Alchemists)
 - Add effects (power, onplay) to cards in hand (Enchanters+)
+- Steal card text
 
 - Keyword: Animate
 - Cultists
+
+
+Test:
+- Tooth protects against detah, discards
+- Two allow you to choose

@@ -213,6 +213,16 @@ namespace SmashUp.Frontend.Pages
                 int cardLength = allGraphics.Max(graphic => graphic.Max(line => line.Length));
                 int numCardsToDisplay = Math.Min(fieldLength / (cardLength + 1), _playableCardOptions.Count);
                 CardGraphicsToDisplay = allGraphics[..numCardsToDisplay];
+
+                // If one one was passsed in, assume that this is card display mode
+                if(_playableCardOptions.Count == 1 && _playableCardOptions.Single().Attachments.Count > 0)
+                {
+                    CardGraphicsToDisplay[0][0] += "  Attached Cards:";
+                    for (int i = 1; i < Math.Min(CardGraphicsToDisplay[0].Length, _playableCardOptions.Single().Attachments.Count + 1); i++)
+                    {
+                        CardGraphicsToDisplay[0][i] += $"  {i}. {_playableCardOptions.Single().Attachments[i - 1].Name}";
+                    }
+                }
             }
 
             int cardHeight = CardGraphicsToDisplay.Length > 0 ? CardGraphicsToDisplay.Max(graphic => graphic.Length) : 0;

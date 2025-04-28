@@ -3,6 +3,7 @@ using SmashUp.Backend.GameObjects;
 using static SmashUp.Backend.GameObjects.Battle;
 using System.Reflection;
 using System.Data.Entity.Core.Mapping;
+using static SmashUp.Backend.Models.PlayableCard;
 
 namespace SmashUp.Backend.Repositories;
 
@@ -150,7 +151,7 @@ internal static class Database
                 BaseCard = baseSlot.BaseCard
             };
             PlayableCard? cardToDestroy = battle.SelectFieldCard(laseratops, "Select a card for lasertops to destroy", query)?.SelectedCard;
-            if (cardToDestroy != null) battle.Destroy(cardToDestroy);
+            if (cardToDestroy != null) battle.Destroy(cardToDestroy, PlayableCardType.minion);
         };
 
         return laseratops;
@@ -303,7 +304,7 @@ internal static class Database
                     BaseCard = baseCard
                 };
                 PlayableCard? minionToDestroy = battle.SelectFieldCard(naturalSelection, $"Choose a minion with power less than {ownMinion?.CurrentPower} to destroy", query2)?.SelectedCard;
-                if (minionToDestroy != null) battle.Destroy(minionToDestroy);
+                if (minionToDestroy != null) battle.Destroy(minionToDestroy, PlayableCardType.action);
             }
             
         };
@@ -388,11 +389,11 @@ internal static class Database
                 var lowestPowerCards = allCards.Where(card => card.CurrentPower == lowestPower).ToList();
                 if(lowestPowerCards.Count > 0 && allCards.Any(card => card.CurrentPower > lowestPower))
                 {
-                    if (lowestPowerCards.Count == 1) battle.Destroy(lowestPowerCards.Single());
+                    if (lowestPowerCards.Count == 1) battle.Destroy(lowestPowerCards.Single(), PlayableCardType.action);
                     else if (lowestPowerCards.Count > 1)
                     {
                         PlayableCard cardToDestroy = battle.SelectCard(lowestPowerCards, "These minions are tied. Select one to destroy:");
-                        battle.Destroy(cardToDestroy);
+                        battle.Destroy(cardToDestroy, PlayableCardType.action);
                     }
                 }
             }
@@ -401,6 +402,65 @@ internal static class Database
         };
 
         return survivalOfTheFittest;
+    };
+    public static Func<PlayableCard> ToothAndClawAndGuns = () =>
+    {
+        PlayableCard toothAndClawAndGuns = new
+        (
+            Faction.dinosuars,
+            PlayableCardType.action,
+            "Tooth And Claw...And Guns",
+            [
+                @"A   Tooth And Claw...   A",
+                @"        And Guns         ",
+                @"    ----------------     ",
+                @"    Play on a minion     ",
+                @" Ongoing: if an ability  ",
+                @"would affect this minion,",
+                @"destroy this card and the",
+                @" ability does not affect ",
+                @"       this minion       ",
+            ]
+        );
+
+        List<Protection> protectionsGranted = [];
+        foreach (var protectionType in Enum.GetValues(typeof(ProtectionType)).Cast<ProtectionType>())
+        {
+            Protection protection = new(protectionType, null, toothAndClawAndGuns);
+            protectionsGranted.Add(protection);
+        }
+
+        toothAndClawAndGuns.OnPlay += (battle, baseSlot) =>
+        {
+            SelectFieldCardQuery query = new()
+            {
+                CardType = PlayableCardType.minion,
+            };
+            PlayableCard? cardToAttachTo = battle.SelectFieldCard(toothAndClawAndGuns, "Choose a minion to attach this", query)?.SelectedCard;
+
+            if (cardToAttachTo != null)
+            {
+                cardToAttachTo.Attach(toothAndClawAndGuns);
+                toothAndClawAndGuns.TriggerOnAttach(cardToAttachTo);
+            }
+        };
+
+        toothAndClawAndGuns.OnProtect += (battle) =>
+        {
+            battle.Destroy(toothAndClawAndGuns, PlayableCardType.action);
+        };
+
+        toothAndClawAndGuns.OnAttach += (cardAttachedTo) =>
+        {
+            cardAttachedTo.Protections.AddRange(protectionsGranted);
+        };
+
+        toothAndClawAndGuns.OnDetach += (cardDetachedFrom) =>
+        {
+            protectionsGranted.ForEach(protection => cardDetachedFrom.Protections.Remove(protection));
+        };
+
+        return toothAndClawAndGuns;
     };
 
 
@@ -422,7 +482,7 @@ internal static class Database
                 @"                         ",
                 @"                         ",
             ],
-            new Random().Next(0, 10)
+            new Random().Next(0, 2)
         );
 
 
@@ -436,7 +496,7 @@ internal static class Database
 
     private static readonly Dictionary<Faction, List<Func<PlayableCard>>> CardsByFactionDict = new()
     {
-        //{ Faction.dinosuars, [WarRaptor, WarRaptor, WarRaptor, WarRaptor, ArmoredStego, ArmoredStego, ArmoredStego, Laseratops, Laseratops, KingRex, Augmentation, Augmentation, Howl, Howl] }
-        { Faction.dinosuars, [Minion, Minion, Minion, Minion, Minion, SurvivalOfTheFittest, SurvivalOfTheFittest, SurvivalOfTheFittest, SurvivalOfTheFittest, SurvivalOfTheFittest, SurvivalOfTheFittest] }
+        //{ Faction.dinosuars, [WarRaptor, WarRaptor, WarRaptor, WarRaptor, ArmoredStego, ArmoredStego, ArmoredStego, Laseratops, Laseratops, KingRex, Augmentation, Augmentation, Howl, Howl, NaturalSelection, Rampage, SurvivalOfTheFittest, ToothAndClawAndGuns] }
+        { Faction.dinosuars, [Minion, Minion, Laseratops, Laseratops, SurvivalOfTheFittest, SurvivalOfTheFittest, ToothAndClawAndGuns, ToothAndClawAndGuns] }
     };
 }
