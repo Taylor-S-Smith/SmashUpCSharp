@@ -28,38 +28,39 @@ internal static class Database
                 @" for each War Raptor on  ",
                 @"this base, including this",
             ],
+            PlayLocation.Base,
             2
         );
 
-        warRaptor.OnPlay += (eventManager, baseSlot) =>
+        warRaptor.OnPlay += (battle, baseSlot) =>
         {
             if (baseSlot == null) throw new Exception("No base passed in for War Raptor");
             // Gain Power for current War Raptors on base
             int currRaptorCount = baseSlot.Territories.SelectMany(x => x.Cards).Where(x => x.Name == WAR_RAPTOR_NAME).ToList().Count;
-            warRaptor.ChangeCurrentPower(currRaptorCount);
+            warRaptor.ApplyPowerChange(battle, warRaptor, currRaptorCount);
         };
 
-        void addCardHandler(PlayableCard card)
+        void addCardHandler(Battle battle, PlayableCard card)
         {
             // It already gains power for itself OnPlay, we don't want to double count it
             if (card.Name == WAR_RAPTOR_NAME && card.Id != warRaptor.Id)
-                warRaptor.ChangeCurrentPower(1);
+                warRaptor.ApplyPowerChange(battle, warRaptor, 1);
         }
 
-        void removeCardHandler(PlayableCard card)
+        void removeCardHandler(Battle battle, PlayableCard card)
         {
             if (card.Name == WAR_RAPTOR_NAME)
-                warRaptor.ChangeCurrentPower(-1);
+                warRaptor.ApplyPowerChange(battle, warRaptor, -1);
         }
 
-        warRaptor.OnAddToBase += (baseCard) =>
+        warRaptor.OnAddToBase += (battle, baseCard) =>
         {
             // Set Up Listeners for future War Raptor Changes
             baseCard.OnAddCard += addCardHandler;
             baseCard.OnRemoveCard += removeCardHandler;
         };
 
-        warRaptor.OnRemoveFromBase += (baseCard) =>
+        warRaptor.OnRemoveFromBase += (battle, baseCard) =>
         {
             // Remove Listeners
             baseCard.OnAddCard -= addCardHandler;
@@ -85,23 +86,24 @@ internal static class Database
                 @"      during other       ",
                 @"     players' turns.     ",
             ],
+            PlayLocation.Base,
             3
 
         );
 
-        void turnStartHandler(ActivePlayer activePlayer)
+        void turnStartHandler(Battle battle, ActivePlayer activePlayer)
         {
-            if (activePlayer.Player != armoredStego.Owner)
+            if (activePlayer.Player != armoredStego.Controller)
             {
-                armoredStego.ChangeCurrentPower(2);
+                armoredStego.ApplyPowerChange(battle, armoredStego, 2);
             }
         }
 
         void endTurnHandler(ActivePlayer activePlayer)
         {
-            if (activePlayer.Player != armoredStego.Owner)
+            if (activePlayer.Player != armoredStego.Controller)
             {
-                armoredStego.ChangeCurrentPower(-2);
+                armoredStego.ExpirePowerChange(-2);
             }
         }
 
@@ -137,6 +139,7 @@ internal static class Database
                 @"Destroy a minion of power",
                 @" 2 or less on this base. ",
             ],
+            PlayLocation.Base,
             4
         );
 
@@ -151,7 +154,7 @@ internal static class Database
                 BaseCard = baseSlot.BaseCard
             };
             PlayableCard? cardToDestroy = battle.SelectFieldCard(laseratops, "Select a card for lasertops to destroy", query)?.SelectedCard;
-            if (cardToDestroy != null) battle.Destroy(cardToDestroy, PlayableCardType.Minion);
+            if (cardToDestroy != null) battle.Destroy(cardToDestroy, laseratops);
         };
 
         return laseratops;
@@ -173,6 +176,7 @@ internal static class Database
                 @"       /~\ \< /          ",
                 @"       /-~\ \_|          ",
             ],
+            PlayLocation.Base, 
             7
         );
     };
@@ -192,7 +196,8 @@ internal static class Database
                 @"   One minion gains +4   ",
                 @" power until the end of  ",
                 @"       your turn.        ",
-            ]
+            ],
+            PlayLocation.Discard
         );
 
         augmentation.OnPlay += (battle, baseSlot) =>
@@ -204,15 +209,18 @@ internal static class Database
             PlayableCard? cardToGainPower = battle.SelectFieldCard(augmentation, "Select a card to gain +4 power until the end of the turn", query)?.SelectedCard;
             if (cardToGainPower != null)
             {
-                cardToGainPower.ChangeCurrentPower(4);
+                bool addedPower = cardToGainPower.ApplyPowerChange(battle, augmentation, 4);
 
-                void endTurnHandler(ActivePlayer activePlayer)
+                if(addedPower)
                 {
-                    cardToGainPower.ChangeCurrentPower(-4);
-                    battle.EventManager.EndOfTurn -= endTurnHandler;
-                }
+                    void endTurnHandler(ActivePlayer activePlayer)
+                    {
+                        cardToGainPower.ExpirePowerChange(-4);
+                        battle.EventManager.EndOfTurn -= endTurnHandler;
+                    }
 
-                battle.EventManager.EndOfTurn += endTurnHandler;
+                    battle.EventManager.EndOfTurn += endTurnHandler;
+                }                
             }
         };
 
@@ -234,31 +242,28 @@ internal static class Database
                 @"  Each of your minions   ",
                 @"gains +1 power until the ",
                 @"    end of your turn     ",
-            ]
+            ],
+            PlayLocation.Discard
         );
 
         howl.OnPlay += (battle, baseSlot) =>
         {
-            List<PlayableCard> cardsToChange = battle.GetValidFieldCards((card) => card.Owner == howl.Owner);
+            List<PlayableCard> cardsToChange = battle.GetValidFieldCards((card) => card.Controller == howl.Controller);
 
             if (cardsToChange.Count > 0)
             {
                 foreach (var card in cardsToChange)
                 {
-                    card.ChangeCurrentPower(1);
-                }
+                    bool appliedPower = card.ApplyPowerChange(battle, howl, 1);
 
-                void endTurnHandler(ActivePlayer activePlayer)
-                {
-                    foreach (var card in cardsToChange)
+                    void endTurnHandler(ActivePlayer activePlayer)
                     {
-                        card.ChangeCurrentPower(-1);
+                        card.ExpirePowerChange(-1);
+                        battle.EventManager.EndOfTurn -= endTurnHandler;
                     }
 
-                    battle.EventManager.EndOfTurn -= endTurnHandler;
+                    battle.EventManager.EndOfTurn += endTurnHandler;
                 }
-
-                battle.EventManager.EndOfTurn += endTurnHandler;
             }
         };
 
@@ -281,7 +286,7 @@ internal static class Database
                 @" Destroy a minion there  ",
                 @"with less power than it. ",
             ],
-            4
+            PlayLocation.Discard
         );
 
         naturalSelection.OnPlay += (battle, baseSlot) =>
@@ -289,7 +294,7 @@ internal static class Database
             SelectFieldCardQuery query1 = new()
             {
                 CardType = PlayableCardType.Minion,
-                Owner = naturalSelection.Owner
+                Controller = naturalSelection.Controller
             };
             var result = battle.SelectFieldCard(naturalSelection, "Choose one of your minions on a base", query1);
             PlayableCard? ownMinion = result?.SelectedCard;
@@ -304,7 +309,7 @@ internal static class Database
                     BaseCard = baseCard
                 };
                 PlayableCard? minionToDestroy = battle.SelectFieldCard(naturalSelection, $"Choose a minion with power less than {ownMinion?.CurrentPower} to destroy", query2)?.SelectedCard;
-                if (minionToDestroy != null) battle.Destroy(minionToDestroy, PlayableCardType.Action);
+                if (minionToDestroy != null) battle.Destroy(minionToDestroy, naturalSelection);
             }
             
         };
@@ -327,7 +332,8 @@ internal static class Database
                 @" one of your minions on  ",
                 @" that base until the end ",
                 @"      of the turn.       ",
-            ]
+            ],
+            PlayLocation.Discard
         );
 
         rampage.OnPlay += (battle, baseSlot) =>
@@ -335,7 +341,7 @@ internal static class Database
             SelectFieldCardQuery query1 = new()
             {
                 CardType = PlayableCardType.Minion,
-                Owner = rampage.Owner
+                Controller = rampage.Controller
             };
             var result = battle.SelectFieldCard(rampage, "Choose one of your minions on a base", query1);
             PlayableCard? ownMinion = result?.SelectedCard;
@@ -375,7 +381,8 @@ internal static class Database
                 @"Destroy the lowest-power ",
                 @"minion on each base with ",
                 @" a higher-power minion.  ",
-            ]
+            ],
+            PlayLocation.Discard
         );
 
         survivalOfTheFittest.OnPlay += (battle, baseSlot) =>
@@ -389,11 +396,11 @@ internal static class Database
                 var lowestPowerCards = allCards.Where(card => card.CurrentPower == lowestPower).ToList();
                 if(lowestPowerCards.Count > 0 && allCards.Any(card => card.CurrentPower > lowestPower))
                 {
-                    if (lowestPowerCards.Count == 1) battle.Destroy(lowestPowerCards.Single(), PlayableCardType.Action);
+                    if (lowestPowerCards.Count == 1) battle.Destroy(lowestPowerCards.Single(), survivalOfTheFittest);
                     else if (lowestPowerCards.Count > 1)
                     {
                         PlayableCard cardToDestroy = battle.SelectCard(lowestPowerCards, "These minions are tied. Select one to destroy:");
-                        battle.Destroy(cardToDestroy, PlayableCardType.Action);
+                        battle.Destroy(cardToDestroy, survivalOfTheFittest);
                     }
                 }
             }
@@ -420,32 +427,30 @@ internal static class Database
                 @"destroy this card and the",
                 @" ability does not affect ",
                 @"       this minion       ",
-            ]
-        )
-        {
-            Tags = [Tag.MinionAttachment]
-        };
+            ],
+            PlayLocation.Minion
+        );
 
         List<Protection> protectionsGranted = [];
-        foreach (var protectionType in Enum.GetValues(typeof(ProtectionType)).Cast<ProtectionType>())
+        foreach (var protectionType in Enum.GetValues(typeof(EffectType)).Cast<EffectType>())
         {
-            Protection protection = new(protectionType, null, toothAndClawAndGuns);
+            Protection protection = new(protectionType, toothAndClawAndGuns);
             protectionsGranted.Add(protection);
         }
 
         toothAndClawAndGuns.OnProtect += (battle) =>
         {
-            battle.Destroy(toothAndClawAndGuns, PlayableCardType.Action);
+            battle.Destroy(toothAndClawAndGuns, toothAndClawAndGuns);
         };
 
-        toothAndClawAndGuns.OnAttach += (cardAttachedTo) =>
+        toothAndClawAndGuns.OnAttach += (battle, minionAttachedTo) =>
         {
-            cardAttachedTo.Protections.AddRange(protectionsGranted);
+            ((PlayableCard)minionAttachedTo).Protections.AddRange(protectionsGranted);
         };
 
-        toothAndClawAndGuns.OnDetach += (cardDetachedFrom) =>
+        toothAndClawAndGuns.OnDetach += (battle, cardDetachedFrom) =>
         {
-            protectionsGranted.ForEach(protection => cardDetachedFrom.Protections.Remove(protection));
+            protectionsGranted.ForEach(protection => ((PlayableCard)cardDetachedFrom).Protections.Remove(protection));
         };
 
         return toothAndClawAndGuns;
@@ -467,23 +472,107 @@ internal static class Database
                 @"    Play on a minion     ",
                 @"Ongoing: This minion has ",
                 @"        +2 power         ",
-            ]
-        )
+            ],
+            PlayLocation.Minion
+        );
+
+        bool appliedPower = false;
+        upgrade.OnAttach += (battle, cardAttachedTo) =>
         {
-            Tags = [Tag.MinionAttachment]
+            appliedPower = cardAttachedTo.ApplyPowerChange(battle, upgrade, 2);
         };
 
-        upgrade.OnAttach += (cardAttachedTo) =>
+        upgrade.OnDetach += (battle, cardDetachedFrom) =>
         {
-            cardAttachedTo.ChangeCurrentPower(2);
-        };
-
-        upgrade.OnDetach += (cardDetachedFrom) =>
-        {
-            cardDetachedFrom.ChangeCurrentPower(-2);
+            if(appliedPower) cardDetachedFrom.ExpirePowerChange(-2);
         };
 
         return upgrade;
+    };
+    public static Func<PlayableCard> WildlifePreserve = () =>
+    {
+        PlayableCard wildlifePreserve = new
+        (
+            Faction.dinosuars,
+            PlayableCardType.Action,
+            "Wildlife Preserve",
+            [
+                @"A   Wildlife Preserve   A",
+                @"             /\/\/\      ",
+                @"          O /\/\/\/\     ",
+                @"      ___/     ||        ",
+                @"     '/\/\     ||        ",
+                @"     Play on a base      ",
+                @"  Ongoing: Your minions  ",
+                @"here are not affected by ",
+                @" other players' actions  ",
+            ],
+            PlayLocation.Base
+        );
+
+        List<Protection> protectionsGranted = [];
+        foreach (var protectionType in Enum.GetValues(typeof(EffectType)).Cast<EffectType>())
+        {
+            Protection protection = new(protectionType, wildlifePreserve, null, PlayableCardType.Action);
+            protectionsGranted.Add(protection);
+        }
+
+        // If the controller changes, the protections we give need to update
+        wildlifePreserve.OnChangeController += (battle, controller) =>
+        {
+            List<Player> otherPlayers = battle.GetPlayers().Where(x => x != controller).ToList();
+            foreach (var protection in protectionsGranted)
+            {
+                protection.FromPlayers = otherPlayers;
+            }
+        };
+
+        void AddProtectionsToCard(Battle battle, PlayableCard card)
+        {
+            if(card.Controller == wildlifePreserve.Controller) card.Protections.AddRange(protectionsGranted);
+        }
+
+        void RemoveProtectionsFromCard(Battle battle, PlayableCard card)
+        {
+            if (card.Controller == wildlifePreserve.Controller) protectionsGranted.ForEach(x => card.Protections.Remove(x));
+        }
+
+        wildlifePreserve.OnAddToBase += (battle,  baseAttachedTo) =>
+        {
+            // Update protections to protect against active opponents
+            List<Player> otherPlayers = battle.GetPlayers().Where(x => x != wildlifePreserve.Controller).ToList();
+            foreach (var protection in protectionsGranted)
+            {
+                protection.FromPlayers = otherPlayers;
+            }
+
+            /// Only cards from the base this is on are protected
+            List<PlayableCard> protectedCards = battle.GetBaseSlots()
+                                                      .Single(slot => slot.BaseCard == baseAttachedTo)
+                                                      .Cards
+                                                      .ToList();
+
+            protectedCards.ForEach(x => AddProtectionsToCard(battle, x));
+
+
+            baseAttachedTo.OnAddCard += AddProtectionsToCard;
+            baseAttachedTo.OnRemoveCard += RemoveProtectionsFromCard;
+        };
+
+        wildlifePreserve.OnRemoveFromBase += (battle, cardDetachedFrom) =>
+        {
+            List<PlayableCard> protectedCards = battle.GetBaseSlots()
+                                                      .Single(slot => slot.BaseCard == cardDetachedFrom)
+                                                      .Cards
+                                                      .ToList();
+
+            protectedCards.ForEach(x => RemoveProtectionsFromCard(battle, x));
+
+            cardDetachedFrom.OnAddCard -= AddProtectionsToCard;
+            cardDetachedFrom.OnRemoveCard -= RemoveProtectionsFromCard;
+        };      
+
+        return wildlifePreserve;
     };
 
 
@@ -505,6 +594,7 @@ internal static class Database
                 @"                         ",
                 @"                         ",
             ],
+            PlayLocation.Base,
             new Random().Next(0, 2)
         );
 
@@ -519,7 +609,7 @@ internal static class Database
 
     private static readonly Dictionary<Faction, List<Func<PlayableCard>>> CardsByFactionDict = new()
     {
-        //{ Faction.dinosuars, [WarRaptor, WarRaptor, WarRaptor, WarRaptor, ArmoredStego, ArmoredStego, ArmoredStego, Laseratops, Laseratops, KingRex, Augmentation, Augmentation, Howl, Howl, NaturalSelection, Rampage, SurvivalOfTheFittest, ToothAndClawAndGuns, Upgrade] }
-        { Faction.dinosuars, [Minion, Minion, Laseratops, Laseratops, SurvivalOfTheFittest, SurvivalOfTheFittest, ToothAndClawAndGuns, ToothAndClawAndGuns, Upgrade, Upgrade] }
+        //{ Faction.dinosuars, [WarRaptor, WarRaptor, WarRaptor, WarRaptor, ArmoredStego, ArmoredStego, ArmoredStego, Laseratops, Laseratops, KingRex, Augmentation, Augmentation, Howl, Howl, NaturalSelection, Rampage, SurvivalOfTheFittest, ToothAndClawAndGuns, Upgrade, WildlifePreserve] }
+        { Faction.dinosuars, [Minion, Minion, Laseratops, Laseratops, SurvivalOfTheFittest, SurvivalOfTheFittest, WildlifePreserve, WildlifePreserve, Upgrade, Upgrade] }
     };
 }

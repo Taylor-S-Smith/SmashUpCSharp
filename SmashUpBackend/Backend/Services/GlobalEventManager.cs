@@ -1,5 +1,4 @@
 ﻿using SmashUp.Backend.GameObjects;
-using SmashUp.Backend.Models;
 
 namespace SmashUp.Backend.Services;
 
@@ -7,12 +6,12 @@ internal class GlobalEventManager
 {
     
 
-    public event Action<ActivePlayer> StartOfTurn = delegate { };
+    public event Action<Battle, ActivePlayer> StartOfTurn = delegate { };
     public event Action<ActivePlayer> EndOfTurn = delegate { };
 
-    public void TriggerStartOfTurn(ActivePlayer activePlayer)
+    public void TriggerStartOfTurn(Battle battle, ActivePlayer activePlayer)
     {
-        StartOfTurn.Invoke(activePlayer);
+        StartOfTurn.Invoke(battle, activePlayer);
     }
     public void TriggerEndOfTurn(ActivePlayer activePlayer)
     {

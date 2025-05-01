@@ -23,7 +23,7 @@ internal class Player : Identifiable
     /// <param name="name"></param>
     public Player(string name, List<PlayableCard> cards)
     {
-        cards.ForEach(card => card.Owner = this);
+        cards.ForEach(card => card.SetOwner(this));
 
         Name = name;
         Deck = new(cards);

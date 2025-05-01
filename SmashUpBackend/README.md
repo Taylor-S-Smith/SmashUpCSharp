@@ -1,15 +1,23 @@
 The next steps are:
-- Update "Tooth And Claw...And Guns" to erratta, and extend "affected" to include some power changes
-- Finish dinosaur faction.
+- Change Battle Play methods to be more modular, PlayMinion and PlayAction should be able to play to just about any location
+- Finish wildlifePreserve
+- Add dinosaur bases.
+- Change trigger functions to be included in the setters when possible, we shouldn't have to call a dedicated trigger if we are also calling a fucntion to preform the action (unless very specific timing is required)
 - Update display when navigating hand
 - Add ability to cancel a play action
 - Have actions call a method to display the action that happen to the user as they unfold, at least for events that are not obvious (e.g. "X was protected from destruction")
 - Warm user before they perform an action that would not result in any meaningful changes
 
 Other TODOs:
+- Update "Tooth And Claw...And Guns" to erratta
 - Remove duplication in Page.Run() logic
 - Build the Base Deck correctly
 - Choose factions correctly
+
+
+Misc Tests:
+- Test removing Upgrade from a minion
+- Test removing Upgrade from a minion when it's ApplyPower was protected
 
 
 Event Approach Rules:
@@ -38,3 +46,7 @@ Faction(s) with computer specific Mechanics:
 Test:
 - Tooth protects against detah, discards
 - Two allow you to choose
+
+
+Disclaimer:
+- I tried to implement the most latest version of the rules, except I did not implement erattaed functionality

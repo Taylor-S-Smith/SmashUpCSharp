@@ -96,7 +96,6 @@ internal class Battle
             }
         }
     }
-
     public void StartBattle()
     {
         while (!_battleEnd)
@@ -104,7 +103,6 @@ internal class Battle
             TurnLoop();
         }
     }
-
     private void TurnLoop()
     {
         StartTurn();
@@ -114,7 +112,6 @@ internal class Battle
         EndTurn();
         SwitchActivePlayer();
     }
-
     /// <summary>
     /// Handles logic relating to the "Start Turn" phase of the Smash Up Rule Book
     /// </summary>
@@ -122,7 +119,7 @@ internal class Battle
     {
         _table.ActivePlayer.Player.MinionPlays = 1;
         _table.ActivePlayer.Player.ActionPlays = 1;
-        EventManager.TriggerStartOfTurn(_table.ActivePlayer);
+        EventManager.TriggerStartOfTurn(this, _table.ActivePlayer);
     }
     /// <summary>
     /// Handles logic relating to the "Play Cards" phase of the Smash Up Rule Book
@@ -147,17 +144,7 @@ internal class Battle
                 Result result = ValidatePlay(_table.ActivePlayer.Player, cardToPlay);
                 if (result.IsSuccess)
                 {
-                    if (cardToPlay.CardType == PlayableCardType.Minion)
-                    {
-                        List<Guid> validBaseIds = _table.GetActiveBases().Select(x => x.Id).ToList();
-                        Guid chosenBaseId = _userInputHandler.SelectBaseCard(validBaseIds, cardToPlay, $"Choose a base to play {cardToPlay.Name} on");
-                        BaseCard chosenBase = GetBaseCardById(chosenBaseId);
-                        PlayMinion(_table.ActivePlayer.Player, cardToPlay, chosenBase);
-                    }
-                    else
-                    {
-                        PlayAction(_table.ActivePlayer.Player, cardToPlay);
-                    }
+                    PlayCard(_table.ActivePlayer.Player, cardToPlay);
                 }
                 else
                 {
@@ -165,9 +152,7 @@ internal class Battle
                 }
             }
         }
-    }
-
-    
+    }    
     /// <summary>
     /// Handles logic relating to the "Score Bases" phase of the Smash Up Rule Book
     /// </summary>
@@ -198,7 +183,6 @@ internal class Battle
         EventManager.TriggerEndOfTurn(_table.ActivePlayer);
         CheckEndOfGame();
     }
-
     private void CheckEndOfGame()
     {
         List<(Player, int)> playerVpTotals = _table.GetPlayerVP();
@@ -222,63 +206,24 @@ internal class Battle
     }
 
 
-    // Card Actions
-    private void PlayMinion(Player player, PlayableCard cardToPlay, BaseCard baseCard)
+    // PLAY CARDS
+    private void PlayCard(Player player, PlayableCard cardToPlay)
     {
-        //Remove resource from player
-        RemoveResource(player, cardToPlay);
+        RemovePlayResource(player, cardToPlay);
 
-        // Remove Card from Previous Location
         player.RemoveFromHand(cardToPlay);
 
-        // Add Card to territory
-        BaseSlot slot = _table.GetBaseSlots().Where(x => x.BaseCard == baseCard).Single();
-        PlayerTerritory territory = slot.Territories.Where(x => x.player == cardToPlay.Owner).Single();
-        territory.Cards.Add(cardToPlay);
-
-        // Activate Card Ability
-        cardToPlay.TriggerOnPlay(this, slot);
-        cardToPlay.TriggerOnAddToBase(baseCard);
-
-        // Trigger Card Effects (Including Update Base Total)
-        baseCard.TriggerOnAddCard(cardToPlay);
-    }
-    private void PlayAction(Player player, PlayableCard cardToPlay)
-    {
-        // Remove resource from player
-        RemoveResource(player, cardToPlay);
-
-        // Remove Card from Hand
-        player.RemoveFromHand(cardToPlay);
-
-        if(cardToPlay.Tags.Contains(Tag.MinionAttachment))
+        if (cardToPlay.PlayLocation == PlayLocation.Base)
         {
-            SelectFieldCardQuery query = new()
-            {
-                CardType = PlayableCardType.Minion,
-            };
-            PlayableCard? cardToAttachTo = SelectFieldCard(cardToPlay, $"Choose a minion to attach {cardToPlay.Name} to", query)?.SelectedCard;
-
-            if (cardToAttachTo != null)
-            {
-                if(AttemptToAffect(cardToAttachTo, PlayableCardType.Action, ProtectionType.Attach))
-                {
-                    cardToAttachTo.Attach(cardToPlay);
-                    cardToPlay.TriggerOnAttach(cardToAttachTo);
-                } 
-                else
-                {
-                    player.AddToDiscard(cardToPlay);
-                }
-            }
-        } 
-        else
+            PlayCardToBase(cardToPlay);
+        }
+        else if (cardToPlay.PlayLocation == PlayLocation.Minion)
         {
-            // Activate Card Ability
-            cardToPlay.TriggerOnPlay(this);
-
-            // Put card in discard
-            player.AddToDiscard(cardToPlay);
+            PlayCardToMinion(player, cardToPlay);
+        }
+        else if(cardToPlay.PlayLocation == PlayLocation.Discard)
+        {
+            PlayCardToDiscard(player, cardToPlay);
         }
     }
     private static Result ValidatePlay(Player player, PlayableCard cardToPlay)
@@ -293,7 +238,7 @@ internal class Battle
         }
         return Result.Ok();
     }
-    private static void RemoveResource(Player player, PlayableCard cardToPlay)
+    private static void RemovePlayResource(Player player, PlayableCard cardToPlay)
     {
         if (cardToPlay.CardType == PlayableCardType.Minion)
         {
@@ -304,30 +249,76 @@ internal class Battle
             player.ActionPlays--;
         }
     }
-
-    public void ReturnCard(PlayableCard cardToReturn, PlayableCardType affectorCardType)
+    private void PlayCardToBase(PlayableCard cardToPlay)
     {
-        if(AttemptToAffect(cardToReturn, affectorCardType, ProtectionType.Return))
+        List<Guid> validBaseIds = _table.GetActiveBases().Select(x => x.Id).ToList();
+        Guid chosenBaseId = _userInputHandler.SelectBaseCard(validBaseIds, cardToPlay, $"Choose a base to play {cardToPlay.Name} on");
+        BaseCard chosenBase = GetBaseCardById(chosenBaseId);
+
+        // Add Card to territory
+        // NOTE: It is a rules req that the card exists in the base BEFORE on play is triggered
+        // Which happens before add to base effects, which means that it can't be triggered in a
+        // more primitive funciton in the table
+        BaseSlot slot = _table.GetBaseSlots().Where(x => x.BaseCard == chosenBase).Single();
+        PlayerTerritory territory = slot.Territories.Where(x => x.player == cardToPlay.Controller).Single();
+        territory.Cards.Add(cardToPlay);
+
+        // Activate Card Ability
+        cardToPlay.TriggerOnPlay(this, slot);
+        cardToPlay.TriggerOnAddToBase(this, chosenBase);
+
+        // Trigger Base Effects (This includes updating the base's total power)
+        chosenBase.TriggerOnAddCard(this, cardToPlay);
+    }
+    private void PlayCardToDiscard(Player player, PlayableCard cardToPlay)
+    {
+        // Activate Card Ability
+        cardToPlay.TriggerOnPlay(this);
+
+        // Put card in discard
+        player.AddToDiscard(cardToPlay);
+    }
+    private void PlayCardToMinion(Player player, PlayableCard cardToPlay)
+    {
+        SelectFieldCardQuery query = new()
         {
-            RemoveCardFromBattleField(cardToReturn, cardToReturn.Owner.AddToHand);
+            CardType = PlayableCardType.Minion,
+        };
+        PlayableCard? cardToAttachTo = SelectFieldCard(cardToPlay, $"Choose a minion to attach {cardToPlay.Name} to", query)?.SelectedCard;
+
+        if (cardToAttachTo != null)
+        {
+            if (AttemptToAffect(cardToAttachTo, EffectType.Attach, PlayableCardType.Action, player))
+            {
+                cardToAttachTo.Attach(cardToPlay);
+                cardToPlay.TriggerOnAttach(this, cardToAttachTo);
+            }
+            else
+            {
+                player.AddToDiscard(cardToPlay);
+            }
         }
     }
-    public void Destroy(PlayableCard cardToDestroy, PlayableCardType affectorCardType)
+
+
+    // CARD EFFECTS
+    public void Destroy(PlayableCard cardToDestroy, PlayableCard affector)
     {
-        if (AttemptToAffect(cardToDestroy, affectorCardType, ProtectionType.Destroy))
+        if (AttemptToAffect(cardToDestroy, EffectType.Destroy, affector.CardType, affector.Controller))
         {
+            //Reset the card's controller
+            cardToDestroy.ChangeController(this, cardToDestroy.Owner);
             RemoveCardFromBattleField(cardToDestroy, cardToDestroy.Owner.AddToDiscard);
         }
     }
-
     /// <summary>
     /// Checks if a card can be affected by a specific effect. 
     /// If it is protected, this will also resolve the protection triggers
     /// </summary>
     /// <returns>True if card can be affected, otherwise false</returns>
-    private bool AttemptToAffect(PlayableCard cardToAffect, PlayableCardType affectorCardType, ProtectionType protectionType)
+    public bool AttemptToAffect(PlayableCard cardToAffect, EffectType protectionType, PlayableCardType affectorCardType, Player affectorPlayer)
     {
-        List<Protection> protections = cardToAffect.Protections.Where(x => x.From == protectionType && (x.CardType == null || x.CardType == affectorCardType)).ToList();
+        List<Protection> protections = cardToAffect.Protections.Where(x => x.From == protectionType && (x.CardType == null || x.CardType == affectorCardType) && (x.FromPlayers == null || x.FromPlayers.Contains(affectorPlayer))).ToList();
         
         if (protections.Count == 0) return true;
         else
@@ -339,14 +330,13 @@ internal class Battle
             }
             else
             {
-                protector = SelectCard(protections.Select(x => x.GrantedBy).ToList(), $"{cardToAffect.Owner.Name}, {cardToAffect.Name} is being protected by multiple cards, choose which one to recieve protection from:");
+                protector = SelectCard(protections.Select(x => x.GrantedBy).ToList(), $"{cardToAffect.Controller.Name}, {cardToAffect.Name} is being protected by multiple cards, choose which one to recieve protection from:");
             }
 
             protector.TriggerOnProtect(this);
             return false;
         }
     }
-
     private void RemoveCardFromBattleField(PlayableCard cardToRemove, Action<PlayableCard> AddFunction)
     {
         foreach (BaseSlot slot in _table.GetBaseSlots())
@@ -360,8 +350,8 @@ internal class Battle
                     AddFunction(cardToRemove);
 
                     // Trigger leave of base
-                    cardToRemove.TriggerOnRemoveFromBase(slot.BaseCard);
-                    slot.BaseCard.TriggerOnRemoveCard(cardToRemove);
+                    cardToRemove.TriggerOnRemoveFromBase(this, slot.BaseCard);
+                    slot.BaseCard.TriggerOnRemoveCard(this, cardToRemove);
 
                     // Trigger leave of battlefield
                     cardToRemove.TriggerOnRemoveFromBattleField(EventManager);
@@ -378,7 +368,7 @@ internal class Battle
                             AddFunction(cardToRemove);
 
                             //Trigger on detach
-                            cardToRemove.TriggerOnDetach(card);
+                            cardToRemove.TriggerOnDetach(this, card);
 
                             // Trigger leave of battlefield
                             cardToRemove.TriggerOnRemoveFromBattleField(EventManager);
@@ -390,18 +380,25 @@ internal class Battle
         }
     }
 
-    // Exposing table functions
+
+    // TABLE FUNCTIONS
     public List<BaseSlot> GetBaseSlots()
     {
         return _table.GetBaseSlots();
     }
+    internal List<Player> GetPlayers()
+    {
+        return _table.Players;
+    }
 
+
+    // INTERACTING WITH UI
     public class SelectFieldCardQuery
     {
         public PlayableCardType? CardType { get; set; } 
         public BaseCard? BaseCard { get; set; }
         public int? MaxPower { get; set; }
-        public Player? Owner { get; set; }
+        public Player? Controller { get; set; }
     }
     public record SelectFieldCardResult(PlayableCard? SelectedCard, BaseCard? SelectedCardBase, bool ActionCanceled);
     /// <returns>Selected Field Card Result, or null if there are no available targets</returns>
@@ -410,7 +407,7 @@ internal class Battle
         var cardPred = PredicateBuilder.New<PlayableCard>();
         if(query.CardType != null) cardPred.And((PlayableCard card) => card.CardType == query.CardType);
         if (query.MaxPower != null) cardPred.And((PlayableCard card) => card.CurrentPower <= query.MaxPower);
-        if (query.Owner != null) cardPred.And((PlayableCard card) => card.Owner == query.Owner);
+        if (query.Controller != null) cardPred.And((PlayableCard card) => card.Controller == query.Controller);
 
         List<List<Guid>> validFieldCardIds = GetValidFieldCardIds(cardPred, query.BaseCard);
         if (validFieldCardIds.Count == 0) return null;
@@ -436,7 +433,6 @@ internal class Battle
         Guid chosenId = _userInputHandler.SelectPlayableCard(options, displayText);
         return options.Where(x => x.Id == chosenId).SingleOrDefault() ?? throw new Exception($"No option with ID: {chosenId}");
     }
-
 
     public List<PlayableCard> GetValidFieldCards(Func<PlayableCard, bool> pred, BaseCard? baseCard = null)
     {

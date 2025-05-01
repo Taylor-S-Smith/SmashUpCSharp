@@ -1,4 +1,5 @@
-﻿using SmashUp.Backend.Services;
+﻿using SmashUp.Backend.GameObjects;
+using SmashUp.Backend.Services;
 
 namespace SmashUp.Backend.Models;
 
@@ -11,10 +12,10 @@ internal class BaseCard : Card
 
     public int CurrentPower { get; set; } = 0;
 
-    public event Action<PlayableCard> OnAddCard;
-    public void TriggerOnAddCard(PlayableCard card) => OnAddCard.Invoke(card);
-    public event Action<PlayableCard> OnRemoveCard;
-    public void TriggerOnRemoveCard(PlayableCard card) => OnRemoveCard.Invoke(card);
+    public void TriggerOnAddCard(Battle battle, PlayableCard card) => OnAddCard.Invoke(battle, card);
+    public event Action<Battle, PlayableCard> OnAddCard;
+    public void TriggerOnRemoveCard(Battle battle, PlayableCard card) => OnRemoveCard.Invoke(battle, card);
+    public event Action<Battle, PlayableCard> OnRemoveCard;
 
 
     public BaseCard(Faction faction, string name, string[] graphic, int breakpoint, (int, int, int) pointSpread) : base(faction, name, graphic)
@@ -29,7 +30,7 @@ internal class BaseCard : Card
             CurrentPower += amountChanged;
         }
 
-        OnAddCard = (card) =>
+        OnAddCard = (battle, card) =>
         {
             if (card.CurrentPower != null)
             {
@@ -38,7 +39,7 @@ internal class BaseCard : Card
             }
         };
 
-        OnRemoveCard = (card) =>
+        OnRemoveCard = (battle, card) =>
         {
             if (card.CurrentPower != null)
             {

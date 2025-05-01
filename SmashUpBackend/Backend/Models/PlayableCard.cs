@@ -8,9 +8,11 @@ internal enum PlayableCardType
     Minion,
     Action
 }
-internal enum Tag
+internal enum PlayLocation
 {
-    MinionAttachment
+    Base,
+    Discard,
+    Minion
 }
 
 /// <summary>
@@ -18,45 +20,78 @@ internal enum Tag
 /// </summary>
 internal class PlayableCard : Card
 {
-    public Player Owner { get; set; } = null!;
+    public Player Owner { get; private set; } = null!;
+    public Player Controller { get; private set; } = null!;
     public PlayableCardType CardType { get; }
     public int? PrintedPower { get; set; }
     public int? CurrentPower { get; private set; }
     public List<PlayableCard> Attachments { get; private set; } = [];
-    public List<Tag> Tags { get; set; } = [];
+    public PlayLocation PlayLocation { get; private set; }
 
-    public enum ProtectionType
+    public enum EffectType
     {
         Destroy,
         Return,
-        Attach
+        Attach,
+        ApplyPower
     }
     /// <summary>
     /// An object that represents a card's immunity against certain abilities
     /// </summary>
-    /// <param name="From">The action the protection is for</param>
-    /// <param name="CardType">The card type the protection is against. If null, it will protect against all card types</param>
-    /// <param name="GrantedBy">The card that grants this protection, important for triggering OnProtect effects</param>
-    public record Protection(ProtectionType From, PlayableCardType? CardType, PlayableCard GrantedBy);
+    /// <param name="from">The action the protection is for</param>
+    /// <param name="cardType">The card type the protection is against. If null, it will protect against all card types</param>
+    /// <param name="grantedBy">The card that grants this protection, important for triggering OnProtect effects</param>
+    public record Protection(EffectType from, PlayableCard grantedBy, List<Player>? fromPlayers=null, PlayableCardType? cardType=null)
+    {
+        public EffectType From { get; init; } = from;
+        public PlayableCard GrantedBy { get; init; } = grantedBy;
+        public List<Player>? FromPlayers { get; set; } = fromPlayers;
+        public PlayableCardType? CardType { get; init; } = cardType;
+    }
     public List<Protection> Protections = [];
 
     public event Action<int> OnPowerChange = delegate { };
     public void TriggerOnPlay(Battle battle, BaseSlot? baseSlot=null) => OnPlay(battle, baseSlot);
     public event Action<Battle, BaseSlot?> OnPlay = delegate { };
-    public void TriggerOnAddToBase(BaseCard baseCard) => OnAddToBase(baseCard);
-    public event Action<BaseCard> OnAddToBase = delegate { };
-    public void TriggerOnRemoveFromBase(BaseCard baseCard) => OnRemoveFromBase(baseCard);
-    public event Action<BaseCard> OnRemoveFromBase = delegate { };
+    public void TriggerOnAddToBase(Battle battle, BaseCard baseCard) => OnAddToBase(battle, baseCard);
+    public event Action<Battle, BaseCard> OnAddToBase = delegate { };
+    public void TriggerOnRemoveFromBase(Battle battle, BaseCard baseCard) => OnRemoveFromBase(battle, baseCard);
+    public event Action<Battle, BaseCard> OnRemoveFromBase = delegate { };
     public void TriggerOnRemoveFromBattleField(GlobalEventManager eventManager) => OnRemoveFromBattlefield(eventManager);
     public event Action<GlobalEventManager> OnRemoveFromBattlefield;
     public void TriggerOnProtect(Battle battle) => OnProtect(battle);
-    public event Action<Battle> OnProtect;
-    public void TriggerOnAttach(PlayableCard cardAttachedTo) => OnAttach(cardAttachedTo);
-    public event Action<PlayableCard> OnAttach;
-    public void TriggerOnDetach(PlayableCard cardDetatchedFrom) => OnDetach(cardDetatchedFrom);
-    public event Action<PlayableCard> OnDetach;
+    public event Action<Battle> OnProtect = delegate { };
+    public void TriggerOnAttach(Battle battle, PlayableCard cardAttachedTo) => OnAttach(battle, cardAttachedTo);
+    public event Action<Battle, PlayableCard> OnAttach = delegate { };
+    public void TriggerOnDetach(Battle battle, PlayableCard cardDetatchedFrom) => OnDetach(battle, cardDetatchedFrom);
+    public event Action<Battle, PlayableCard> OnDetach = delegate { };
 
-    public void ChangeCurrentPower(int amountToChange)
+    public event Action<Battle, Player> OnChangeController = delegate { };
+
+    /// <summary>
+    /// Use this whenever a card directly changes the power of another card. 
+    /// NOT when power expires.
+    /// This counts as "affecting" the card and can be countered
+    /// </summary>
+    public bool ApplyPowerChange(Battle battle, PlayableCard affectingCard, int amountToChange)
+    {
+        if(battle.AttemptToAffect(this, EffectType.ApplyPower, affectingCard.CardType, affectingCard.Controller))
+        {
+            ChangeCurrentPower(amountToChange);
+            return true;
+        }
+        return false;
+    }
+    /// <summary>
+    /// Use when expiring an existing power change.
+    /// NOT when power is directly applied
+    /// This does not count as "affecting" the card and cannot be countered
+    /// </summary>
+    public void ExpirePowerChange(int amountToChange)
+    {
+        ChangeCurrentPower(amountToChange);
+    }
+    private void ChangeCurrentPower(int amountToChange)
     {
         if(CurrentPower != null)
         {
@@ -76,11 +111,23 @@ internal class PlayableCard : Card
         return Attachments.Remove(cardToDetach);
     }
 
-    public PlayableCard(Faction faction, PlayableCardType cardType, string name, string[] graphic, int? power=null) : base(faction, name, graphic)
+    public void SetOwner(Player owner)
+    {
+        Owner = owner;
+        Controller = owner;
+    }
+    public void ChangeController(Battle battle, Player controller)
+    {
+        Controller = controller;
+        OnChangeController.Invoke(battle, controller);
+    }
+
+    public PlayableCard(Faction faction, PlayableCardType cardType, string name, string[] graphic, PlayLocation playLocation, int? power=null) : base(faction, name, graphic)
     {
         CardType = cardType;
         PrintedPower = power;
         CurrentPower = power;
+        PlayLocation = playLocation;
 
         OnRemoveFromBattlefield = (eventManager) =>
         {
