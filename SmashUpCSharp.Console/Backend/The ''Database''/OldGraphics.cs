@@ -1,0 +1,2032 @@
+﻿using Models.Cards;
+using SmashUp.Backend.Repositories;
+
+namespace SmashUp.The___Database__
+{
+    internal class Database(IBaseCardRepository baseCardRepo, IFactionRepository factionRepo, IPlayableCardRepository playableCardRepo) : IDatabase
+    {
+        readonly IBaseCardRepository _baseCardRepo = baseCardRepo;
+        readonly IFactionRepository _factionRepo = factionRepo;
+        readonly IPlayableCardRepository _playableCardRepo = playableCardRepo;
+
+        public void LoadData()
+        {
+            _factionRepo.Create(Aliens);
+            _factionRepo.Create(Dinosaurs);
+            _factionRepo.Create(Ninjas);
+            _factionRepo.Create(Pirates);
+            _factionRepo.Create(Robots);
+            _factionRepo.Create(Tricksters);
+            _factionRepo.Create(Wizards);
+            _factionRepo.Create(Zombies);
+
+            _baseCardRepo.Create(TheHomeworld);
+            _baseCardRepo.Create(TheMotherShip);
+            _baseCardRepo.Create(JungleOasis);
+            _baseCardRepo.Create(TarPits);
+            _baseCardRepo.Create(NinjaDojo);
+            _baseCardRepo.Create(TempleOfGoju);
+            _baseCardRepo.Create(TheGreyOpal);
+            _baseCardRepo.Create(Tortuga);
+            _baseCardRepo.Create(Factory4361337);
+            _baseCardRepo.Create(TheCentralBrain);
+            _baseCardRepo.Create(CaveOfShinies);
+            _baseCardRepo.Create(MushroomKingdom);
+            _baseCardRepo.Create(SchoolOfWizardry);
+            _baseCardRepo.Create(GreatLibrary);
+            _baseCardRepo.Create(EvansCityCemetary);
+            _baseCardRepo.Create(RhodesPlazaMall);
+
+            _playableCardRepo.Create(Collector);
+            _playableCardRepo.Create(Scout);
+            _playableCardRepo.Create(Invader);
+            _playableCardRepo.Create(SupremeOverlord);
+            _playableCardRepo.Create(BeamUp);
+            _playableCardRepo.Create(Disintegrator);
+            _playableCardRepo.Create(Abduction);
+            _playableCardRepo.Create(CropCircles);
+            _playableCardRepo.Create(Probe);
+            _playableCardRepo.Create(JammedSignal);
+            _playableCardRepo.Create(Terraforming);
+            _playableCardRepo.Create(Invasion);
+            _playableCardRepo.Create(WarRaptor);
+            _playableCardRepo.Create(ArmoredStego);
+            _playableCardRepo.Create(Lazertops);
+            _playableCardRepo.Create(KingRex);
+            _playableCardRepo.Create(Augmentation);
+            _playableCardRepo.Create(Howl);
+            _playableCardRepo.Create(NaturalSelection);
+            _playableCardRepo.Create(Rampage);
+            _playableCardRepo.Create(SurvivalOfTheFittest);
+            _playableCardRepo.Create(ToothAndClawAndGuns);
+            _playableCardRepo.Create(Upgrade);
+            _playableCardRepo.Create(WildlifePreserve);
+            _playableCardRepo.Create(NinjaAcolyte);
+            _playableCardRepo.Create(Shinobi);
+            _playableCardRepo.Create(TigerAssassin);
+            _playableCardRepo.Create(NinjaMaster);
+            _playableCardRepo.Create(Assassination);
+            _playableCardRepo.Create(Disguise);
+            _playableCardRepo.Create(HiddenNinja);
+            _playableCardRepo.Create(Infiltrate);
+            _playableCardRepo.Create(Poison);
+            _playableCardRepo.Create(SeeingStars);
+            _playableCardRepo.Create(SmokeBomb);
+            _playableCardRepo.Create(WayOfDeception);
+            _playableCardRepo.Create(FirstMate);
+            _playableCardRepo.Create(SaucyWench);
+            _playableCardRepo.Create(Buccaneer);
+            _playableCardRepo.Create(PirateKing);
+            _playableCardRepo.Create(Broadside);
+            _playableCardRepo.Create(Cannon);
+            _playableCardRepo.Create(Dinghy);
+            _playableCardRepo.Create(FullSail);
+            _playableCardRepo.Create(Powderkeg);
+            _playableCardRepo.Create(SeaDogs);
+            _playableCardRepo.Create(Shanghai);
+            _playableCardRepo.Create(Swashbuckling);
+            _playableCardRepo.Create(Zapbot);
+            _playableCardRepo.Create(Hoverbot);
+            _playableCardRepo.Create(MicrobotReclaimer);
+            _playableCardRepo.Create(MicrobotGuard);
+            _playableCardRepo.Create(MicrobotFixer);
+            _playableCardRepo.Create(MicrobotArchive);
+            _playableCardRepo.Create(MicrobotAlpha);
+            _playableCardRepo.Create(Warbot);
+            _playableCardRepo.Create(Nukebot);
+            _playableCardRepo.Create(TechCenter);
+            _playableCardRepo.Create(Gremlin);
+            _playableCardRepo.Create(Gnome);
+            _playableCardRepo.Create(Brownie);
+            _playableCardRepo.Create(Leprechaun);
+            _playableCardRepo.Create(BlockThePath);
+            _playableCardRepo.Create(Disenchant);
+            _playableCardRepo.Create(EnshroudingMist);
+            _playableCardRepo.Create(FlameTrap);
+            _playableCardRepo.Create(Hideout);
+            _playableCardRepo.Create(MarkOfSleep);
+            _playableCardRepo.Create(PayThePiper);
+            _playableCardRepo.Create(TakeTheShinies);
+            _playableCardRepo.Create(Neophyte);
+            _playableCardRepo.Create(Enchantress);
+            _playableCardRepo.Create(Chronomage);
+            _playableCardRepo.Create(Archmage);
+            _playableCardRepo.Create(MassEnchantment);
+            _playableCardRepo.Create(MysticStudies);
+            _playableCardRepo.Create(Portal);
+            _playableCardRepo.Create(Sacrifice);
+            _playableCardRepo.Create(Scry);
+            _playableCardRepo.Create(Summon);
+            _playableCardRepo.Create(TimeLoop);
+            _playableCardRepo.Create(WindsofChange);
+            _playableCardRepo.Create(Walker);
+            _playableCardRepo.Create(TenaciousZ);
+            _playableCardRepo.Create(GraveDigger);
+            _playableCardRepo.Create(ZombieLord);
+            _playableCardRepo.Create(TheyKeepComing);
+            _playableCardRepo.Create(GraveRobbing);
+            _playableCardRepo.Create(Overrun);
+            _playableCardRepo.Create(LendAHand);
+            _playableCardRepo.Create(Outbreak);
+            _playableCardRepo.Create(MallCrawl);
+            _playableCardRepo.Create(TheyAreComing);
+            _playableCardRepo.Create(NotEnoughBullets);
+        }
+
+        //FACTIONS
+
+        readonly Faction Aliens = new("Aliens");
+        readonly Faction Dinosaurs = new("Dinosaurs");
+        readonly Faction Ninjas = new("Ninjas");
+        readonly Faction Pirates = new("Pirates");
+        readonly Faction Robots = new("Robots");
+        readonly Faction Tricksters = new("Tricksters");
+        readonly Faction Wizards = new("Wizards");
+        readonly Faction Zombies = new("Zombies");
+
+        //BASE CARDS
+
+        private readonly BaseCard TheHomeworld = new(
+            0,
+            "The Homeworld",
+                [
+    
+
+                    "      4      2      1       ",
+                    "                            ",
+                    "After each time a minion is ",
+                    " played here, it's owner may",
+                    "  play an extra minion of   ",
+                    "      power 3 or less.      ",
+    
+    
+                ],
+                23,
+                [4, 2, 1]
+        );
+
+        private readonly BaseCard TheMotherShip = new(
+            0,
+            "The Mother Ship",
+            [
+
+                "      4      2      1       ",
+                "                            ",
+                "After this base scores, the ",
+                "winner may return one of his",
+                "or her minions of power 3 or",
+                "less from here to their hand",
+            ],
+            20,
+            [4, 2, 1]
+        );
+        private readonly BaseCard JungleOasis = new(
+            1,
+            "Jungle Oasis",
+            [
+
+
+                "      2      0      0       ",
+                "                            ",
+                "                            ",
+                "                            ",
+                "                            ",
+                "                            ",
+
+
+            ],
+            12,
+            [2, 0, 0]
+        );
+        private readonly BaseCard TarPits = new(
+            1,
+            "Tar Pits",
+            [
+
+
+                "      4      3      1       ",
+                "                            ",
+                "After each time a minion is ",
+                "destroyed here, place it at ",
+                "     the bottom of its      ",
+                "        owners deck.        ",
+
+
+            ],
+            16,
+            [4, 3, 1]
+        );
+        private readonly BaseCard NinjaDojo = new(
+            2,
+            "Ninja Dojo",
+            [
+
+
+                "      2      3      2       ",
+                "                            ",
+                "                            ",
+                "After this base scores, the ",
+                "   winner may destroy any   ",
+                "        one minion.         ",
+
+            ],
+            18,
+            [2, 3, 2]
+        );
+        private readonly BaseCard TempleOfGoju = new(
+            2,
+            "Temple of Goju",
+            [
+
+
+                "       4      2      1      ",
+                "                            ",
+                "  After this base scores,   ",
+                "place each player's highest ",
+                "  power minion here on the  ",
+                "bottom of its owner's deck. ",
+
+            ],
+            18,
+            [4, 2, 1]
+        );
+        private readonly BaseCard TheGreyOpal = new(
+            3,
+            "The Grey Opal",
+            [
+
+
+                "      3      1      1       ",
+                "After this base scores, all ",
+                "   players other than the   ",
+                "  winner may move a minion  ",
+                "  from here to another base ",
+                "instead of the discard pile.",
+
+            ],
+            17,
+            [3, 1, 1]
+        );
+        private readonly BaseCard Tortuga = new(
+            3,
+            "Tortuga",
+            [
+
+
+                "      4      3      2       ",
+                "                            ",
+                "                            ",
+                " The runner up may move one ",
+                "of his or her minions to the",
+                "base that replaces this base",
+
+            ],
+            21,
+            [4, 3, 2]
+        );
+        private readonly BaseCard Factory4361337 = new(
+            4,
+            "Factory 436-1337",
+            [
+
+
+                "       2      2      1      ",
+                "                            ",
+                "                            ",
+                " When this base scores, the ",
+                "winner gains 1 VP for every ",
+                "5 power that player has here",
+
+            ],
+            22,
+            [2, 2, 1]
+        );
+        private readonly BaseCard TheCentralBrain = new(
+            4,
+            "The Central Brain",
+            [
+
+
+                "      4      2      1       ",
+                "                            ",
+                "                            ",
+                "                            ",
+                "    Each minion here has    ",
+                "         +1 power.          ",
+
+            ],
+            19,
+            [4, 2, 1]
+        );
+        private readonly BaseCard CaveOfShinies = new(
+            5,
+            "Cave of Shinies",
+            [
+
+
+                "      4      2      1       ",
+                "                            ",
+                "                            ",
+                "After each time a minion is ",
+                " destroyed here, its owner  ",
+                "        gains 1 VP.         ",
+
+            ],
+            23,
+            [4, 2, 1]
+        );
+        private readonly BaseCard MushroomKingdom = new(
+            5,
+            "Mushroom Kingdom",
+            [
+
+
+                "       4      2      1      ",
+                "                            ",
+                "    At the start of each    ",
+                " player's turn, that player ",
+                "may move one other player's ",
+                "minion from any base to here",
+
+            ],
+            20,
+            [4, 2, 1]
+        );
+        private readonly BaseCard SchoolOfWizardry = new(
+            6,
+            "School of Wizardry",
+            [
+
+
+                "      4      2      1       ",
+                "After this base scores, the ",
+                "  winner looks at the top   ",
+                "  cards of the base deck,   ",
+                "chooses one to replace this ",
+                "base, and returns the others",
+
+            ],
+            20,
+            [4, 2, 1]
+        );
+        private readonly BaseCard GreatLibrary = new(
+            6,
+            "The Great Library",
+            [
+
+
+                "      4      2      1       ",
+                "                            ",
+                "                            ",
+                "After this base scores, all ",
+                " players with minions here  ",
+                "     may draw one card.     ",
+
+            ],
+            22,
+            [4, 2, 1]
+        );
+        private readonly BaseCard EvansCityCemetary = new(
+            7,
+            "Evans City Cemetery",
+            [
+
+
+                "      5      3      1       ",
+                "                            ",
+                "                            ",
+                "After this base scores, the ",
+                " winner discards his or her ",
+                " hand and draws five cards. ",
+
+            ],
+            20,
+            [5, 3, 1]
+        );
+        private readonly BaseCard RhodesPlazaMall = new(
+            7,
+            "Rhodes Plaza Mall",
+            [
+
+
+                "                            ",
+                "      0      0      0       ",
+                "                            ",
+                "When this base scores, each ",
+                " player gains 1 VP for each ",
+                "minion that player has here.",
+
+            ],
+            24,
+            [0, 0, 0]
+         );
+
+        //PLAYABLE CARDS
+
+        private readonly PlayableCard Collector = new
+        (
+            0,
+            "Collector",
+            [
+                @"2       Collector       2",
+                @"         (o)             ",
+                @"         -|-r======      ",
+                @"         / \             ",
+                @"       -------           ",
+                @" You may return a minion ",
+                @"  of power 3 or less on  ",
+                @" this base to its owner's",
+                @"         hand.           ",
+            ]
+        );
+        private readonly PlayableCard Scout = new
+        (
+            0,
+            "Scout",
+            [   
+
+                @"3         Scout         3",
+                @"         (o)             ",
+                @"         0|-r            ",
+                @"         / >             ",
+                @"Special: After this base ",
+                @"is scored, you may place ",
+                @"  this minion into your  ",
+                @"   hand instead of the   ",
+                @"      discard pile       ",
+
+            ]
+        );
+        private readonly PlayableCard Invader = new
+        (
+            0,
+            "Invader",
+            [
+
+                @"3        Invader        3",
+                @"              ___        ",
+                @"         (o) [___]       ",
+                @"         -|--|           ",
+                @"         / \ |           ",
+                @"                         ",
+                @"                         ",
+                @"       Gain 1 VP         ",
+                @"                         ",
+
+            ]
+        );
+
+        private readonly PlayableCard SupremeOverlord = new
+        (
+            0,
+            "Supreme Overlord",
+            [
+
+                @"5   Supreme Overlord    5",
+                @"          _ w _          ",
+                @"         / (o) \         ",
+                @"        |_/-|-\_|        ",
+                @"       ()___|___()       ",
+                @"       ||__/_\__||       ",
+                @"                         ",
+                @" You may return a minion ",
+                @"   to its owner's hand.  ",
+
+            ]
+        );
+
+        private readonly PlayableCard BeamUp = new
+        (
+            0,
+            "Beam Up",
+            [
+
+                @"A        Beam Up        A",
+                @"      \___________/      ",
+                @"         |     |         ",
+                @"         | \ / |         ",
+                @"         |  |  |         ",
+                @"         | /o\ |         ",
+                @"                         ",
+                @" Return a minion to its  ",
+                @"      owner's hand.      ",
+
+            ]
+        );
+
+        private readonly PlayableCard Disintegrator = new
+        (
+            0,
+            "Disintegrator",
+            [
+
+                @"A     Disintegrator     A",
+                @" \___________/           ",
+                @"   |                     ",
+                @"   |               \o/   ",
+                @"   [}--------|      |    ",
+                @"            / \    / \   ",
+                @"Place a minion of power 3",
+                @"or less on the bottom of ",
+                @"     its owner's deck.   ",
+
+            ]
+        );
+
+        private readonly PlayableCard Abduction = new
+        (
+            0,
+            "Abduction",
+            [
+                @"A       Abduction       A",
+                @"         O=====<         ",
+                @"          \(o)/          ",
+                @"            |            ",
+                @"           / \           ",
+                @"         -------         ",
+                @" Return a minion to its  ",
+                @"  owner's hand. Play an  ",
+                @"      extra minion       ",
+            ]
+        );
+
+        private readonly PlayableCard CropCircles = new
+        (
+            0,
+            "Crop Circles",
+            [
+                @"A     Crop Circles      A",
+                @"       O  ____  O        ",
+                @"        \/    \/         ",
+                @"    O---|      |---O     ",
+                @"        /\____/\         ",
+                @"       O        O        ",
+                @"  Choose a base. Return  ",
+                @"each minion on that base ",
+                @"  to its owner's hand.   ",
+            ]
+        );
+
+        private readonly PlayableCard Probe = new
+        (
+            0,
+            "Probe",
+            [
+                @"A         Probe         A",
+                @"                         ",
+                @"     (o)         (o)     ",
+                @"     -|- _>-->O_ -|-     ",
+                @"     / \ |-----| / \     ",
+                @"Look at another player's ",
+                @"hand and choose a minion ",
+                @"   in it. That player    ",
+                @"  discards that minion.  ",
+            ]
+        );
+
+        private readonly PlayableCard JammedSignal = new
+        (
+            0,
+            "Jammed Signal",
+            [
+                @"A     Jammed Signal     A",
+                @"         ___\/__         ",
+                @"        | ~~~~~ |        ",
+                @"        | ~~~~~ |        ",
+                @"        |_~~~~~_|        ",
+                @"         V     V         ",
+                @"Play on a base. Ongoing: ",
+                @" All players ignore this ",
+                @"     base's ability      ",
+            ]
+        );
+
+        private readonly PlayableCard Terraforming = new
+        (
+            0,
+            "Terraforming",
+            [
+                @"A     Terraforming      A",
+                @"    ____           / n   ",
+                @"  _/____\_        |  nn  ",
+                @" |________|       |   nn ",
+                @"    \[}            \ nn  ",
+                @" Search base deck for a  ",
+                @"base. Swap it with a base",
+                @"in play. You may play an ",
+                @"  extra minion on it.    ",
+            ]
+        );
+
+        private readonly PlayableCard Invasion = new
+        (
+            0,
+            "Invasion",
+            [
+                @"A       Invasion        A",
+                @"    ____         ____    ",
+                @"  _/____\_     _/____\_  ",
+                @" |________|   |________| ",
+                @"          ____           ",
+                @"        _/____\_         ",
+                @"       |________|        ",
+                @"Move a minion to another ",
+                @"          base.          ",
+            ]
+        );
+
+        private readonly PlayableCard WarRaptor = new
+        (
+            1,
+            "War Raptor",
+            [
+                @"2      War Raptor       2",
+                @"     _oVo--.__           ",
+                @"    '^^`)._  `\'_'_'     ",
+                @"     """"' //(( ,_.-'      ",
+                @"           / /           ",
+                @"         `~`~            ",
+                @" Ongoing: Gains +1 power ",
+                @" for each War Raptor on  ",
+                @"this base, including this",
+            ]
+        );
+
+        private readonly PlayableCard ArmoredStego = new
+        (
+            1,
+            "Armored Stego",
+            [
+                @"3     Armored Stego     3",
+                @"                  __     ",
+                @"        _/\/\/\/\/ _)    ",
+                @"      _|          /      ",
+                @"    _|  (  | (   /       ",
+                @"   /__.-'|_|--|_|        ",
+                @"  Ongoing: Has +2 power  ",
+                @"      during other       ",
+                @"     players' turns.     ",
+            ]
+        );
+
+        private readonly PlayableCard Lazertops = new
+        (
+            1,
+            "Lazertops",
+            [
+                @"4      Lazertops        4",
+                @"     ====<[]             ",
+                @"     /| __||___          ",
+                @"  \\| |/       \         ",
+                @"  (___   ) |  )  \_      ",
+                @"      |_|--|_|'-.__\     ",
+                @" ----------------------  ",
+                @"Destroy a minion of power",
+                @" 2 or less on this base. ",
+            ]
+        );
+
+        private readonly PlayableCard KingRex = new
+        (
+            1,
+            "King Rex",
+            [
+                @"7       King Rex        7",
+                @"          ____           ",
+                @"       .-~    '.         ",
+                @"      / /  ~@\   )       ",
+                @"     | /  \~\.  `\       ",
+                @"    /  |  |< ~\(..)      ",
+                @"       \  \<   .,,       ",
+                @"       /~\ \< /          ",
+                @"       /-~\ \_|          ",
+            ]
+        );
+
+        private readonly PlayableCard Augmentation = new
+        (
+            1,
+            "Augmentation",
+            [
+                @"A     Augmentation      A",
+                @"         ________/\      ",
+                @"      _ / |_O_|   0|     ",
+                @"     /_|       ____|     ",
+                @"     /_|      _____|     ",
+                @"     /_|     |           ",
+                @"   One minion gains +4   ",
+                @" power until the end of  ",
+                @"       your turn.        ",
+            ]
+        );
+
+        private readonly PlayableCard Howl = new
+        (
+            1,
+            "Howl",
+            [
+                @"A         Howl          A",
+                @"      ____        \      ",
+                @"     /    \     \  \     ",
+                @"    |   ===O  )  |  |    ",
+                @"     \____/     /  /     ",
+                @"       ||         /      ",
+                @"  Each of your minions   ",
+                @"gains +1 power until the ",
+                @"    end of your turn     ",
+            ]
+        );
+
+        private readonly PlayableCard NaturalSelection = new
+        (
+            1,
+            "Natural Selection",
+            [
+                @"A   Natural Selection   A",
+                @"        O                ",
+                @"      --|--    o         ",
+                @"        |     /|\        ",
+                @"       / \    / \        ",
+                @"   Choose one of your    ",
+                @"   minions on a base.    ",
+                @" Destroy a minion there  ",
+                @"with less power than it. ",
+            ]
+        );
+
+        private readonly PlayableCard Rampage = new
+        (
+            1,
+            "Rampage",
+            [
+                @"A        Rampage  __    A",
+                @"    __      O    |  |    ",
+                @"   | {__   /|\    } |    ",
+                @"   |    |  / \   |  |    ",
+                @"Reduce the breakpoint of ",
+                @" a base by the power of  ",
+                @" one of your minions on  ",
+                @" that base until the end ",
+                @"      of the turn.       ",
+            ]
+        );
+
+        private readonly PlayableCard SurvivalOfTheFittest = new
+        (
+            1,
+            "Survival Of The Fittest",
+            [
+                @"A    Survival Of The    A",
+                @"         Fittest         ",
+                @"         |_____|         ",
+                @"        |/     \|        ",
+                @"         \_____/         ",
+                @"           >->o          ",
+                @"Destroy the lowest-power ",
+                @"minion on each base with ",
+                @" a higher-power minion.  ",
+            ]
+        );
+
+        private readonly PlayableCard ToothAndClawAndGuns = new
+        (
+            1,
+            "Tooth And Claw...And Guns",
+            [
+                @"A   Tooth And Claw...   A",
+                @"        And Guns         ",
+                @"    ----------------     ",
+                @"    Play on a minion     ",
+                @" Ongoing: if an ability  ",
+                @"would affect this minion,",
+                @"destroy this card and the",
+                @" ability does not affect ",
+                @"       this minion       ",
+            ]
+        );
+
+        private readonly PlayableCard Upgrade = new
+        (
+            1,
+            "Upgrade",
+            [
+                @"A        Upgrade   __   A",
+                @"                  / _)   ",
+                @"        _________/ /_    ",
+                @"      _(________()/_()   ",
+                @"    _/  (  | (   /       ",
+                @"   /__.-'|_|--|_|        ",
+                @"    Play on a minion     ",
+                @"Ongoing: This minion has ",
+                @"        +2 power         ",
+            ]
+        );
+
+        private readonly PlayableCard WildlifePreserve = new
+        (
+            1,
+            "Wildlife Preserve",
+            [
+                @"A   Wildlife Preserve   A",
+                @"             /\/\/\      ",
+                @"          O /\/\/\/\     ",
+                @"      ___/     ||        ",
+                @"     '/\/\     ||        ",
+                @"     Play on a base      ",
+                @"  Ongoing: Your minions  ",
+                @"here are not affected by ",
+                @" other players' actions  ",
+            ]
+        );
+
+        private readonly PlayableCard NinjaAcolyte = new
+        (
+            2,
+            "Ninja Acolyte",
+            [
+                @"2     Ninja Acolyte     2",
+                @"            o            ",
+                @"          X-|-X          ",
+                @"           / >           ",
+                @" Talent: If you have not ",
+                @"played a minion, you may ",
+                @"  return this minion to  ",
+                @"  your hand and play an  ",
+                @"extra minion on this base",
+            ]
+        );
+
+        private readonly PlayableCard Shinobi = new
+        (
+            2,
+            "Shinobi",
+            [
+                @"3        Shinobi        3",
+                @"          | o            ",
+                @"          I-|-x          ",
+                @"          |< \           ",
+                @" Special: Before a base  ",
+                @"scores, you can play this",
+                @"  minion there. You can  ",
+                @" only use one Shinobi’s  ",
+                @"    ability per base.    ",
+            ]
+        );
+
+        private readonly PlayableCard TigerAssassin = new
+        (
+            2,
+            "Tiger Assassin",
+            [
+                @"4    Tiger Assassin     4",
+                @"                         ",
+                @"            o            ",
+                @"        ==|-|-|==        ",
+                @"           < >           ",
+                @"                         ",
+                @"You may destroy a minion ",
+                @"  of power 3 or less on  ",
+                @"       this base.        ",
+            ]
+        );
+
+        private readonly PlayableCard NinjaMaster = new
+        (
+            2,
+            "Ninja Master",
+            [
+                @"5     Ninja Master      5",
+                @"       |       |         ",
+                @"       |   O   |         ",
+                @"       I---|---I         ",
+                @"           |             ",
+                @"          / \            ",
+                @"         |   |           ",
+                @"You may destroy a minion ",
+                @"      on this base.      ",
+            ]
+        );
+
+        private readonly PlayableCard Assassination = new
+        (
+            2,
+            "Assassination",
+            [
+                @"A     Assassination     A",
+                @"                         ",
+                @"        O     \o/        ",
+                @"       -|-|==  |         ",
+                @"       / >    / \        ",
+                @"    Play on a minion.    ",
+                @"  Ongoing: Destroy this  ",
+                @"    minion at the end    ",
+                @"       of the turn.      ",
+            ]
+        );
+
+        private readonly PlayableCard Disguise = new
+        (
+            2,
+            "Disguise",
+            [
+                @"A        Disguise       A",
+                @"    \  O        (o)      ",
+                @"     \-|-X  ->  -|-      ",
+                @"      < >       / \      ",
+                @"Choose one or two of your",
+                @"minions on one base. Play",
+                @"an equal number of extra ",
+                @"minions there, and return",
+                @" chosen minions to hand. ",
+            ]
+        );
+
+        private readonly PlayableCard HiddenNinja = new
+        (
+            2,
+            "Hidden Ninja",
+            [
+                @"A     Hidden Ninja      A",
+                @"                         ",
+                @"     o      o      o     ",
+                @"    /|\    /|\    /|\    ",
+                @"    / \    / \    / \    ",
+                @"                         ",
+                @" Special: Before a base  ",
+                @"     scores, play a      ",
+                @"      minion there.      ",
+            ]
+        );
+
+        private readonly PlayableCard Infiltrate = new
+        (
+            2,
+            "Infiltrate",
+            [
+                @"A       Infiltrate !    A",
+                @"     _____         O]    ",
+                @"    |     |       ┌|┘    ",
+                @"  __|_____|__     / \    ",
+                @" Play on a base. Destroy ",
+                @"an action here. Ongoing: ",
+                @"   you may ignore this   ",
+                @"base's  ability until the",
+                @"start of your next turn. ",
+            ]
+        );
+
+        private readonly PlayableCard Poison = new
+        (
+            2,
+            "Poison",
+            [
+                @"A         Poison        A",
+                @"          _| |_          ",
+                @"         /     \         ",
+                @"        | X X X |        ",
+                @"         \_____/         ",
+                @"Play on a minion. Destroy",
+                @"any number of actions on ",
+                @"it. Ongoing: This minion ",
+                @" has -4 power. (Min. 0)  ",
+            ]
+        );
+
+        private readonly PlayableCard SeeingStars = new
+        (
+            2,
+            "Seeing Stars",
+            [
+                @"A     Seeing Stars      A",
+                @"     X                   ",
+                @"      \O                 ",
+                @"       |\                ",
+                @"      / >   \   \        ",
+                @"              _/\_       ",
+                @"           \ \    /      ",
+                @"  Destroy a  /_  _\minion",
+                @"of power 2 or  \/  less. ",
+            ]
+        );
+
+        private readonly PlayableCard SmokeBomb = new
+        (
+            2,
+            "Smoke Bomb",
+            [
+                @"A      Smoke Bomb       A",
+                @"~~~~~~~~~~~~~~~~~~~~~~~~~",
+                @"~~~~~~~~~~~~~~~~~~~~~~~~~",
+                @"~Play on one of your own~",
+                @"~minions. Ongoing: This~~",
+                @"minion is not affected by",
+                @"~other players' actions.~",
+                @"Destroy this card at the~",
+                @"~~~start of your turn.~~~",
+            ]
+        );
+
+        private readonly PlayableCard WayOfDeception = new
+        (
+            2,
+            "Way Of Deception",
+            [
+                @"A    Way Of Deception   A",
+                @"            o            ",
+                @"           /|\           ",
+                @"          X< >X          ",
+                @"            I            ",
+                @"            I            ",
+                @"            I            ",
+                @"    Move one of your     ",
+                @"minions to another base. ",
+            ]
+        );
+
+        private readonly PlayableCard FirstMate = new
+        (
+            3,
+            "First Mate",
+            [
+                @"2      First Mate       2",
+                @"           n_            ",
+                @"          ("")            ",
+                @"          -|-            ",
+                @"          / \            ",
+                @"Special: After this base ",
+                @" is scored, you may move ",
+                @" this minion to another  ",
+                @"base instead of discard. ",
+            ]
+        );
+
+        private readonly PlayableCard SaucyWench = new
+        (
+            3,
+            "Saucy Wench",
+            [
+                @"3      Saucy Wench      3",
+                @"            _            ",
+                @"          /("")\          ",
+                @"           <|-r          ",
+                @"           / \           ",
+                @"                         ",
+                @"You may destroy a minion ",
+                @"   of power 2 or less    ",
+                @"      on this base.      ",
+            ]
+        );
+
+        private readonly PlayableCard Buccaneer = new
+        (
+            3,
+            "Buccaneer",
+            [
+                @"4       Buccaneer       4",
+                @"          /v\            ",
+                @"          ("") |          ",
+                @"          -|-|===>       ",
+                @"          / \            ",
+                @"                         ",
+                @" Special: If this minion ",
+                @"would be destroyed, move ",
+                @"   it to another base.   ",
+            ]
+        );
+
+        private readonly PlayableCard PirateKing = new
+        (
+            3,
+            "Pirate King",
+            [
+                @"5  Pirate  _ _   King   5",
+                @"          /_V_\          ",
+                @"          (' ') ?        ",
+                @"    <===|--WWW--┘        ",
+                @"            |            ",
+                @"           / \           ",
+                @"          |   |          ",
+                @" Before a base scores you",
+                @"  may move this there.   ",
+            ]
+        );
+
+        private readonly PlayableCard Broadside = new
+        (
+            3,
+            "Broadside",
+            [
+                @"A       Broadside       A",
+                @"   ________| |________   ",
+                @"  |  _   _    _   _   |  ",
+                @"  | (O) (O)  (O) (O)  |  ",
+                @"   \_________________/   ",
+                @"   Destroy all of one    ",
+                @"player's minions of power",
+                @"2 or less at a base where",
+                @"   you have a minion.    ",
+            ]
+        );
+
+        private readonly PlayableCard Cannon = new
+        (
+            3,
+            "Cannon",
+            [
+                @"A        Cannon_        A",
+                @"   ___________/ |     __ ",
+                @"  /           | |   __  /",
+                @"O|____        | |   __ | ",
+                @" /    \_______| |     __\",
+                @"|      |      \_|        ",
+                @" \____/                  ",
+                @"Destroy up to two minions",
+                @"   of power 2 or less.   ",
+            ]
+        );
+
+        private readonly PlayableCard Dinghy = new
+        (
+            3,
+            "Dinghy",
+            [
+                @"A         Dinghy        A",
+                @"                         ",
+                @"      ____/_\______      ",
+                @"     |       \     |     ",
+                @"~~~~~~\_______\ __/~~~~~~",
+                @"              \_\        ",
+                @"                         ",
+                @" Move up to two of your  ",
+                @" minions to other bases. ",
+            ]
+        );
+
+        private readonly PlayableCard FullSail = new
+        (
+            3,
+            "Full Sail",
+            [
+                @"A       Full Sail       A",
+                @"      |\        |\       ",
+                @"      | \       | \      ",
+                @"    __|--`_   __|--`_    ",
+                @"    \_____/   \_____/    ",
+                @" Move any number of your ",
+                @" minions to other bases. ",
+                @" Special: Before a base  ",
+                @"scores, you may play this",
+            ]
+        );
+
+        private readonly PlayableCard Powderkeg = new
+        (
+            3,
+            "Powderkeg",
+            [
+                @"A       Powderkeg       A",
+                @"          ______         ",
+                @"         |      |        ",
+                @"         |Powder|        ",
+                @"         |______|        ",
+                @"   Destroy one of your   ",
+                @" minions and all minions ",
+                @"with equal or less power ",
+                @"    on the same base.    ",
+            ]
+        );
+
+        private readonly PlayableCard SeaDogs = new
+        (
+            3,
+            "Sea Dogs",
+            [
+                @"A       Sea Dogs        A",
+                @"              /\_        ",
+                @"       |\____/ o_)       ",
+                @"       |  __   /         ",
+                @"       |_|  |_|          ",
+                @"Name a faction. Move all ",
+                @"other players' minions of",
+                @"  that faction from one  ",
+                @"     base to another.    ",
+            ]
+        );
+
+        private readonly PlayableCard Shanghai = new
+        (
+            3,
+            "Shanghai",
+            [
+                @"A        Shanghai       A",
+                @"        _                ",
+                @"      /("")\     \O/      ",
+                @"       <|-r      |       ",
+                @"       / \      / \      ",
+                @"    -----------------    ",
+                @"                         ",
+                @"  Move another player's  ",
+                @" minion to another base. ",
+            ]
+        );
+
+        private readonly PlayableCard Swashbuckling = new
+        (
+            3,
+            "Swashbuckling ",
+            [
+                @"A     Swashbuckling     A",
+                @"                         ",
+                @"       /v\  \/           ",
+                @"       ( )  /\  o        ",
+                @"        |--/  \-|        ",
+                @"       / \     < \       ",
+                @"  Each of your minions   ",
+                @"gains +1 power until the ",
+                @"    end of the turn.     ",
+            ]
+        );
+
+        private readonly PlayableCard Zapbot = new
+        (
+            4,
+            "Zapbot",
+            [
+                @"2        Zapbot         2",
+                @"           ___           ",
+                @"     |__| [__()          ",
+                @"       \ __|__           ",
+                @"        |     |--[}==    ",
+                @"        |_____|          ",
+                @"        O     O          ",
+                @"  You may play an extra  ",
+                @"minion of power 2 or less",
+            ]
+        );
+
+        private readonly PlayableCard Hoverbot = new
+        (
+            4,
+            "Hoverbot",
+            [
+                @"3       Hoverbot        3",
+                @"        __|--|__         ",
+                @"       /__    __\        ",
+                @"        / \  / \         ",
+                @"         / \/ \          ",
+                @"Reveal the top card of   ",
+                @"your deck. Play it if it ",
+                @" is a minion. Otherwise, ",
+                @" return it to your deck. ",
+            ]
+        );
+
+        private readonly PlayableCard MicrobotReclaimer = new
+        (
+            4,
+            "Microbot Reclaimer",
+            [
+                @"1  Microbot Reclaimer   1",
+                @"       |---[o]--\        ",
+                @"      [ ] __|__  \       ",
+                @"         /_____\  D      ",
+                @"   If this is the first  ",
+                @"  minion you played this ",
+                @"  turn, you may play an  ",
+                @"extra minion. Put in deck",
+                @"any # discarded Microbots",
+            ]
+        );
+
+        private readonly PlayableCard MicrobotGuard = new
+        (
+            4,
+            "Microbot Guard",
+            [
+                @"1     Microbot Guard    1",
+                @"           ___           ",
+                @"         /\ _ /\         ",
+                @"        |--|O|--|        ",
+                @"         \ | | /         ",
+                @"Destroy a minion on this ",
+                @"base with power less than",
+                @"  the number of minions  ",
+                @"      you have here.     ",
+            ]
+        );
+
+        private readonly PlayableCard MicrobotFixer = new
+        (
+            4,
+            "Microbot Fixer",
+            [
+                @"1     Microbot Fixer    1",
+                @"     o-\  __|_           ",
+                @"        \| o  |-[        ",
+                @"      }--|____|--X       ",
+                @"   If this is the first  ",
+                @"  minion you played this ",
+                @"  turn, you may play an  ",
+                @"  extra minion. Ongoing: ",
+                @" Microbots gain +1 power ",
+            ]
+        );
+
+        private readonly PlayableCard MicrobotArchive = new
+        (
+            4,
+            "Microbot Archive",
+            [
+                @"1   Microbot Archive    1",
+                @"            [=}          ",
+                @"         ___|_           ",
+                @"        /   _ \--\o      ",
+                @"        |  |O||          ",
+                @"        |_____|          ",
+                @"  Ongoing: After one of  ",
+                @"    your Microbots is    ",
+                @" destroyed, draw a card. ",
+            ]
+        );
+
+        private readonly PlayableCard MicrobotAlpha = new
+        (
+            4,
+            "Microbot Alpha",
+            [
+                @"1    Microbot Alpha     1",
+                @"          _[o]_          ",
+                @"       ]-|_ | _|-[       ",
+                @"          _|_|_          ",
+                @"         /_____\         ",
+                @" Ongoing: Gains +1 power ",
+                @" for each of your other  ",
+                @"   Microbots. All your   ",
+                @"  minions are Microbots. ",
+            ]
+        );
+
+        private readonly PlayableCard Warbot = new
+        (
+            4,
+            "Warbot",
+            [
+                @"4        Warbot         4",
+                @"       __________        ",
+                @" |__| | ________ | |__|  ",
+                @"   \  ||________||  /    ",
+                @"    \_|          |_/     ",
+                @"      |__________|       ",
+                @"        |_|  |_|         ",
+                @"  Ongoing: This minion   ",
+                @"  cannot be destroyed.   ",
+            ]
+        );
+
+        private readonly PlayableCard Nukebot = new
+        (
+            4,
+            "Nukebot",
+            [
+                @"5        Nukebot        5",
+                @"           ___           ",
+                @"        <=|_=_|=>        ",
+                @"            |            ",
+                @"        /--[_]--\        ",
+                @"       /    |    \       ",
+                @" After this is destroyed,",
+                @"   destroy each other    ",
+                @"  player's minions here. ",
+            ]
+        );
+
+        private readonly PlayableCard TechCenter = new
+        (
+            4,
+            "Tech Center",
+            [
+                @"A      Tech Center      A",
+                @"          __|__          ",
+                @"        _|     |_        ",
+                @"    ]--/_       _\--[    ",
+                @"       _|__ _ __|_       ",
+                @"      / |__| |__| \      ",
+                @"     Choose a base.      ",
+                @"  Draw a card for each   ",
+                @" of your minions there.  ",
+            ]
+        );
+
+        private readonly PlayableCard Gremlin = new
+        (
+            5,
+            "Gremlin",
+            [
+                @"2        Gremlin        2",
+                @"         _  _  _         ",
+                @"        /_(o o)_\        ",
+                @"          /|_|\          ",
+                @"           | |           ",
+                @" Ongoing: After this is  ",
+                @" destroyed, draw a card  ",
+                @"  and each other player  ",
+                @" discards a random card. ",
+            ]
+        );
+
+        private readonly PlayableCard Gnome = new
+        (
+            5,
+            "Gnome",
+            [
+                @"3         Gnome         3",
+                @"          /___\          ",
+                @"        \ (o o)-U        ",
+                @"         \/|_|\          ",
+                @"           | |           ",
+                @"You may destroy a minion ",
+                @" on this base with power ",
+                @" less than the number of ",
+                @"  minions you have here. ",
+            ]
+        );
+
+        private readonly PlayableCard Brownie = new
+        (
+            5,
+            "Brownie",
+            [
+                @"4        Brownie        4",
+                @"          www   c        ",
+                @"         (o o) /         ",
+                @"         /www-/          ",
+                @"          | |            ",
+                @" Ongoing: After another  ",
+                @"player plays a card that ",
+                @"affects this minion, they",
+                @"discard two random cards.",
+            ]
+        );
+
+        private readonly PlayableCard Leprechaun = new
+        (
+            5,
+            "Leprechaun",
+            [
+                @"5      Leprechaun       5",
+                @"          _[_]_          ",
+                @"        c (o o) O        ",
+                @"        |__www__/        ",
+                @"        |   |            ",
+                @"        |  / \           ",
+                @"  After another player   ",
+                @"plays a minion here with ",
+                @" less power, destroy it. ",
+            ]
+        );
+
+        private readonly PlayableCard BlockThePath = new
+        (
+            5,
+            "Block The Path",
+            [
+                @"A    Block the Path     A",
+                @"   WWW  c \      _[ ]    ",
+                @"  ( |o) |  |  ]-|_ ||    ",
+                @"   |_W--|  |     _|_|_   ",
+                @"   | |  | /     /_____\  ",
+                @" Play on a base and name ",
+                @"   a faction. Ongoing:   ",
+                @" minions of that faction ",
+                @" cannot be played here.  ",
+            ]
+        );
+
+        private readonly PlayableCard Disenchant = new
+        (
+            5,
+            "Disenchant",
+            [
+                @"A      Disenchant       A",
+                @"       www   c**         ",
+                @"      (o o) /  ***       ",
+                @"      /www-/     ***     ",
+                @"      _|_|_              ",
+                @"     |     |             ",
+                @"Destroy an an action that",
+                @"  has been played on a   ",
+                @"     minion or base.     ",
+            ]
+        );
+
+        private readonly PlayableCard EnshroudingMist = new
+        (
+            5,
+            "Enshrouding Mist",
+            [
+                @"A   Enshrouding Mist    A",
+                @"~~~~~~~~~~~~~~~~~~~~~~~~~",
+                @"~~~~~~~~_~~_~~_~~*~~~~~~~",
+                @"~~~~~~~/_(o o)_\*O*~~~~~~",
+                @"~~~~~~~~~/|_|---/~~~~~~~~",
+                @"~~~~~~~~~~| |~~~~~~~~~~~~",
+                @"Play on a base. Ongoing: ",
+                @"  On your turn, you may  ",
+                @"play an extra minion here",
+            ]
+        );
+
+        private readonly PlayableCard FlameTrap = new
+        (
+            5,
+            "Flame Trap",
+            [
+                @"A      Flame Trap       A",
+                @"          )(             ",
+                @"        )\O/\            ",
+                @"       / )| (|  __       ",
+                @"       \(/ \)/ |__ _     ",
+                @"Play on a base. Ongoing: ",
+                @"  After another player   ",
+                @"  plays a minion here,   ",
+                @"destroy it and this card.",
+            ]
+        );
+
+        private readonly PlayableCard Hideout = new
+        (
+            5,
+            "Hideout",
+            [
+                @"A        Hideout        A",
+                @"         _______         ",
+                @"        /_______\        ",
+                @"         | | | |         ",
+                @"Play on a base. Ongoing: ",
+                @"If another players action",
+                @"would affect your minions",
+                @" here, destroy this card ",
+                @"and protect your minions.",
+            ]
+        );
+
+        private readonly PlayableCard MarkOfSleep = new
+        (
+            5,
+            "Mark Of Sleep",
+            [
+                @"A     Mark Of Sleep     A",
+                @"           Z             ",
+                @"    ____ z               ",
+                @"   /|  o\ _____________  ",
+                @"  |      |_____________  ",
+                @"   \____/                ",
+                @"  Choose a player. That  ",
+                @"player can't play actions",
+                @"   on their next turn.   ",
+            ]
+        );
+
+        private readonly PlayableCard PayThePiper = new
+        (
+            5,
+            "Pay The Piper",
+            [
+                @"A     Pay The Piper     A",
+                @"   ___    ♫  \_____/     ",
+                @"  ( |o)==    /     \     ",
+                @"   |_|/     |  $$$  |    ",
+                @"   | |       \_____/     ",
+                @"Play on a base. Ongoing: ",
+                @"  After another player   ",
+                @"plays a minion here, that",
+                @" player discards a card. ",
+            ]
+        );
+
+        private readonly PlayableCard TakeTheShinies = new
+        (
+            5,
+            "Take The Shinies",
+            [
+                @"A   Take The Shinies    A",
+                @"       |   $$$   |       ",
+                @"       |         |       ",
+                @"        \_______/        ",
+                @"       _ \(o o)/         ",
+                @"        _  |_|           ",
+                @"       _   | |           ",
+                @"    Each other player    ",
+                @"discards two random cards",
+            ]
+        );
+
+        private readonly PlayableCard Neophyte = new
+        (
+            6,
+            "Neophyte",
+            [
+                @"2       Neophyte        2",
+                @"          o              ",
+                @"          |- [_]         ",
+                @"         / \ | |         ",
+                @" Reveal the top card of  ",
+                @"your deck. You may place ",
+                @" it in your hand or play ",
+                @"     it as an action.    ",
+                @"  Otherwise, return it.  ",
+            ]
+        );
+
+        private readonly PlayableCard Enchantress = new
+        (
+            6,
+            "Enchantress",
+            [
+                @"2      Enchantress      2",
+                @"         _*_*_*_         ",
+                @"       */* * * *\*       ",
+                @"      *|*   O | *|*      ",
+                @"      *|*  -|-| *|*      ",
+                @"      *|*  / \  *|*      ",
+                @"                         ",
+                @"       Draw a card.      ",
+                @"                         ",
+            ]
+        );
+
+        private readonly PlayableCard Chronomage = new
+        (
+            6,
+            "Chronomage",
+            [
+                @"3      Chronomage       3",
+                @"              _______    ",
+                @"             |*******|   ",
+                @"              \_***_/    ",
+                @"    O__ __     _|*|_     ",
+                @"   /|         /  *  \    ",
+                @"   / \       |_______|   ",
+                @"  You may play an extra  ",
+                @"    action this turn.    ",
+            ]
+        );
+
+        private readonly PlayableCard Archmage = new
+        (
+            6,
+            "Archmage",
+            [
+                @"4       Archmage        4",
+                @"         /*_*_* \        ",
+                @"        ||/ O |*|        ",
+                @"         |__|_/*/        ",
+                @"         |  |            ",
+                @"         | / \           ",
+                @"Ongoing: You may play an ",
+                @" extra action on each of ",
+                @"       your turns.       ",
+            ]
+        );
+
+        private readonly PlayableCard MassEnchantment = new
+        (
+            6,
+            "Mass Enchantment",
+            [
+                @"A    Mass Enchantment   A",
+                @"              |          ",
+                @"      O  *****| __o      ",
+                @"     -|-/*****|    \     ",
+                @"     / \      |    /\    ",
+                @"  Reveal the top card of ",
+                @"each other player's deck.",
+                @"Play one revealed action ",
+                @"   as an extra action.   ",
+            ]
+        );
+
+        private readonly PlayableCard MysticStudies = new
+        (
+            6,
+            "Mystic Studies",
+            [
+                @"A    Mystic Studies     A",
+                @"                         ",
+                @"    _,-----. .-----,_    ",
+                @"   //~~~~~~ | ~~~~~~\\   ",
+                @"  //~~~~~~  |  ~~~~~~\\  ",
+                @" //________ | ________\\ ",
+                @" '--------.___.--------' ",
+                @"                         ",
+                @"     Draw two cards.     ",
+            ]
+        );
+
+        private readonly PlayableCard Portal = new
+        (
+            6,
+            "Portal",
+            [
+                @"A        Portal         A",
+                @"         /****\          ",
+                @"        |******|         ",
+                @"         \****/          ",
+                @"Reveal the top 5 cards of",
+                @"your deck. Place any # of",
+                @"  minions revealed into  ",
+                @" your hand. Return the   ",
+                @"other cards to your deck.",
+            ]
+        );
+
+        private readonly PlayableCard Sacrifice = new
+        (
+            6,
+            "Sacrifice",
+            [
+                @"A       Sacrifice       A",
+                @"                         ",
+                @"                         ",
+                @"        | |  | |         ",
+                @"       (__|  |__)        ",
+                @"   Choose one of your    ",
+                @"minions. Draw cards equal",
+                @"  to its power. Destroy  ",
+                @"      that minion.       ",
+            ]
+        );
+
+        private readonly PlayableCard Scry = new
+        (
+            6,
+            "Scry",
+            [
+                @"A         Scry          A",
+                @"        /      \         ",
+                @"       |        |        ",
+                @"        \______/         ",
+                @"       /________\        ",
+                @" Search your deck for an ",
+                @" action and reveal it to ",
+                @"  all players. Place it  ",
+                @"     into your deck.     ",
+            ]
+        );
+
+        private readonly PlayableCard Summon = new
+        (
+            6,
+            "Summon",
+            [
+                @"A   ___  Summon         A",
+                @".-~     '.               ",
+                @" / /  ~@\   )            ",
+                @" |  |< ~\(..)            ",
+                @" \  \<   .,,    _____    ",
+                @"/~\ \< /         \O/     ",
+                @"/-~\ \_|          |      ",
+                @"                 / \     ",
+                @"  Play an extra minion.  ",
+            ]
+        );
+
+        private readonly PlayableCard TimeLoop = new
+        (
+            6,
+            "Time Loop",
+            [
+                @"A       Time Loop       A",
+                @"       _________         ",
+                @"      /   1|2   \        ",
+                @"     |     |     |       ",
+                @"     |9    O    3|       ",
+                @"     |      \    |       ",
+                @"      \____6_\__/        ",
+                @"                         ",
+                @" Play two extra actions. ",
+            ]
+        );
+
+        private readonly PlayableCard WindsofChange = new
+        (
+            6,
+            "Winds of Change",
+            [
+                @"A    Winds of Change    A",
+                @"~  ~  ~  ~  ~  ~  ~  ~  ~",
+                @"  ~  ~  ~  ~  ~  ~  ~  ~ ",
+                @"~  ~  ~  ~  ~  ~  ~  ~  ~",
+                @"  ~  ~  ~  ~  ~  ~  ~  ~ ",
+                @" Shuffle your hand into  ",
+                @" your deck and draw five ",
+                @" cards. You may play an  ",
+                @"      extra action.      ",
+            ]
+        );
+
+        private readonly PlayableCard Walker = new
+        (
+            7,
+            "Walker",
+            [
+                @"2        Walker         2",
+                @"           O__           ",
+                @"          /              ",
+                @"         / \             ",
+                @"      ---------          ",
+                @" Look at the top card of ",
+                @"your deck. Discard it or ",
+                @"  return it to the top   ",
+                @"      of your deck.      ",
+            ]
+        );
+
+        private readonly PlayableCard TenaciousZ = new
+        (
+            7,
+            "Tenacious Z",
+            [
+                @"2      Tenacious Z      2",
+                @"        ___              ",
+                @"       |RIP|   O/        ",
+                @"~~~~~~~~~~~~~//~~~~~~~~~~",
+                @"~~~~~~~~~~~~~/\~~~~~~~~~~",
+                @"Special: During your turn",
+                @" you may play this card  ",
+                @" from your discard as an ",
+                @"extra minion(Once a turn)",
+            ]
+        );
+
+        private readonly PlayableCard GraveDigger = new
+        (
+            7,
+            "Grave Digger",
+            [
+                @"3     Grave Digger      3",
+                @"                         ",
+                @"          _O             ",
+                @"          |-\           ",
+                @"__________|/_\___________",
+                @"~~~~~~~~~~U~~~~~~~~~~~~~~",
+                @" You may place a minion  ",
+                @" from your discard pile  ",
+                @"     into your hand.     ",
+            ]
+        );
+
+        private readonly PlayableCard ZombieLord = new
+        (
+            7,
+            "Zombie Lord",
+            [
+                @"5  Zombie   _   Lord    5",
+                @"          _/_\_ |        ",
+                @"           |_| /|        ",
+                @"         [_]| / |        ",
+                @"           / \           ",
+                @"You may play a minion of ",
+                @"power 2 or less from your",
+                @"  discard on each base   ",
+                @"where you have no minions",
+            ]
+        );
+
+        private readonly PlayableCard TheyKeepComing = new
+        (
+            7,
+            "They Keep Coming",
+            [
+                @"A   They Keep Coming    A",
+                @"                         ",
+                @"                         ",
+                @"   O__    O__    \(o)/   ",
+                @"  /      /         |     ",
+                @"_/_\____/_\____O/_/_\____",
+                @"~~~~~~~~~~~~~~~|~~~~~~~~~",
+                @"Play an extra minion from",
+                @"   your discard pile.    ",
+            ]
+        );
+
+        private readonly PlayableCard GraveRobbing = new
+        (
+            7,
+            "Grave Robbing",
+            [
+                @"A     Grave Robbing     A",
+                @"          O              ",
+                @"         /\       ___    ",
+                @" _I--D__/\ \O _  |RIP|___",
+                @" ~~~~~~~~~|  \  |~~~~~~~~",
+                @" ~~~~~~~~~|___|\|~~~~~~~~",
+                @" Place a card from your  ",
+                @" discard pile into your  ",
+                @"          hand.          ",
+            ]
+        );
+
+        private readonly PlayableCard Overrun = new
+        (
+            7,
+            "Overrun",
+            [
+                @"A        Overrun        A",
+                @"          \O             ",
+                @"           |\            ",
+                @"          /_\  X         ",
+                @"  O/  O/ |   | \O  \O  \O",
+                @"Play on a base. Ongoing: ",
+                @"Other players cannot play",
+                @"  minions on this base.  ",
+                @"Destroy this on your turn",
+            ]
+        );
+
+        private readonly PlayableCard LendAHand = new
+        (
+            7,
+            "Lend A Hand",
+            [
+                @"A      Lend A Hand      A",
+                @"                         ",
+                @"        O   o   O        ",
+                @"       /-/  |  \-\       ",
+                @"      / \  / \   /\      ",
+                @"                         ",
+                @"  Shuffle any number of  ",
+                @"cards from your discard  ",
+                @"   pile into your deck.  ",
+            ]
+        );
+
+        private readonly PlayableCard Outbreak = new
+        (
+            7,
+            "Outbreak",
+            [
+                @"A       Outbreak        A",
+                @"           __            ",
+                @"          |  |           ",
+                @"   O   O  |  |__O    (o) ",
+                @"  /-  /-  |  |  |\   -|-r",
+                @" /\  /\   |  | / \X  / \ ",
+                @"Play an extra minion on a",
+                @" base where you have no  ",
+                @"         minions.        ",
+            ]
+        );
+
+        private readonly PlayableCard MallCrawl = new
+        (
+            7,
+            "Mall Crawl",
+            [
+                @"A      Mall Crawl       A",
+                @"        ______           ",
+                @"    ___/RHODES\___  o    ",
+                @"   |   |PLAZA!|   | -\   ",
+                @"   |   |      |   |  /\  ",
+                @"Search your deck for any ",
+                @"number of cards with the ",
+                @"same name and place them ",
+                @" into your discard pile. ",
+            ]
+        );
+
+        private readonly PlayableCard TheyAreComing = new
+        (
+            7,
+            "They Are Coming",
+            [
+                @"A    They Are Coming    A",
+                @"   ___        ___        ",
+                @"  |RIP|      |RIP|   O   ",
+                @"  |   |  O/  |   | // \  ",
+                @"Play on a base. Ongoing: ",
+                @"  On your turn, you may  ",
+                @" a minion here from your ",
+                @" discard pile instead of ",
+                @"     from your hand.     ",
+            ]
+        );
+
+        private readonly PlayableCard NotEnoughBullets = new
+        (
+            7,
+            "Not Enough Bullets",
+            [
+                @"A  Not Enough Bullets   A",
+                @"     _                   ",
+                @"   /("")\      _O _O    ",
+                @"    <|-r   -    \    \   ",
+                @"    / \  O==--< /\   /\  ",
+                @"   Place any number of   ",
+                @"  minions with the same  ",
+                @" name from your discard  ",
+                @"   pile into your hand.  ",
+            ]
+        );
+    }
+}
