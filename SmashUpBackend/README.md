@@ -1,7 +1,7 @@
 The next steps are:
-- Change Battle Play methods to be more modular, PlayMinion and PlayAction should be able to play to just about any location
-- Finish wildlifePreserve
-- Add dinosaur bases.
+- Add clarifications and erratta to dinosaur faction
+- Refactor input field to support a variety of display types, including: hand, single card display, list display
+- Reuse Battle Page, rather than create new instance each time
 - Change trigger functions to be included in the setters when possible, we shouldn't have to call a dedicated trigger if we are also calling a fucntion to preform the action (unless very specific timing is required)
 - Update display when navigating hand
 - Add ability to cancel a play action
@@ -49,4 +49,6 @@ Test:
 
 
 Disclaimer:
-- I tried to implement the most latest version of the rules, except I did not implement erattaed functionality
+- When multiple effects are triggered by a single action, the rules say to let the active player decide the order.
+  To avoid implementing a complex choosing system in an already complex UI, I instead let effects resolve in the 
+  order they entered the battlefield. E.g. A bases "after a minion here is destroyed" effect will always trigger before a minion's 

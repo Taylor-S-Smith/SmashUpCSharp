@@ -21,11 +21,11 @@ internal class Deck<T> where T : Card
     {
         return _cards.Select(c => c.Name).ToList();
     }
-    public void Add(List<T> cards)
+    public void AddToBottom(List<T> cards)
     {
         _cards.AddRange(cards);
     }
-    public void Add(T card)
+    public void AddToBottom(T card)
     {
         _cards.Add(card);
     }
@@ -43,10 +43,10 @@ internal class Deck<T> where T : Card
     public List<T> Draw(int numCards = 1)
     {
         int drawCount = Math.Min(numCards, _cards.Count);
-        if (drawCount == 0) return [];
+        if (drawCount == 0 || _cards.Count == 0) return [];
 
-        List<T> drawnCards = _cards.GetRange(_cards.Count - drawCount, drawCount);
-        _cards.RemoveRange(_cards.Count - drawCount, drawCount);
+        List<T> drawnCards = _cards.GetRange(0, drawCount);
+        _cards.RemoveRange(0, drawCount);
 
         return drawnCards;
     }

@@ -15,7 +15,11 @@ internal partial class Application()
     private class ConsoleAppBattleUI() : IFrontendBattleAPI
     {
         private Table _table = null!;
-        private readonly Guid _endTurnButtonId = Guid.NewGuid();
+        private static readonly Button _showDiscardButton = new(Guid.NewGuid(), "DISCARD");
+        private static readonly Button _endTurnButton = new(Guid.NewGuid(), "END TURN");
+        private static readonly Button _showDeckButton = new(Guid.NewGuid(), "DECK");
+        private static readonly List<Button> _buttons = [_showDiscardButton, _endTurnButton, _showDeckButton];
+        private static readonly List<Guid> _buttonIds = _buttons.Select(x => x.Id).ToList();
 
         public bool AskMulligan()
         {
@@ -50,19 +54,30 @@ internal partial class Application()
             }
             var handTargeter = new SelectOption(handCards.Select(x => x.Id).ToList());
             targetLogics.Add(handTargeter);
-            var endButtonTargeter = new SelectOption([_endTurnButtonId]);
+            var endButtonTargeter = new SelectOption(_buttonIds);
             targetLogics.Add(endButtonTargeter);
 
             //Don't forget to handle card displaying
+            BattlePage page = new(_table.GetBaseSlots(), _table.ActivePlayer.Player, _table.ActivePlayer.Player.Hand.ToList(), _buttons, new Targeter(targetLogics, handTargeter), displayText);
             while (true)
             {
-                var chosenId = new BattlePage(_table.GetBaseSlots(), _table.ActivePlayer.Player, _table.ActivePlayer.Player.Hand.ToList(), _endTurnButtonId, new Targeter(targetLogics, handTargeter), displayText).Run();
+                var chosenId = page.Run();
                 displayText = "";
 
-                if (chosenId == _endTurnButtonId)
+                if (chosenId == _endTurnButton.Id)
                 {
                     return null;
-                } 
+                }
+                else if (chosenId == _showDiscardButton.Id)
+                {
+                    Console.WriteLine(string.Join(", ", _table.ActivePlayer.Player.DiscardPile.Select(x => x.Name)));
+                    Console.ReadLine();
+                }
+                else if (chosenId == _showDeckButton.Id)
+                {
+                    Console.WriteLine(string.Join(", ", _table.ActivePlayer.Player.Deck.GetCards()));
+                    Console.ReadLine();
+                }
                 else if (handCards.Select(x => x.Id).Contains(chosenId)) 
                 { 
                     return chosenId; 
@@ -71,7 +86,8 @@ internal partial class Application()
                 {
                     //Switch to "Display Single Card Info" mode
                     var cardToDisplay = selectableFieldCards.SelectMany(x => x).Where(x => x.Id == chosenId).Single();
-                    new BattlePage(_table.GetBaseSlots(), _table.ActivePlayer.Player, [cardToDisplay], _endTurnButtonId, new Targeter([])).Run();
+                    new BattlePage(_table.GetBaseSlots(), _table.ActivePlayer.Player, [cardToDisplay], _buttons, new Targeter([])).Run();
+                    page.Run();
                 }
             }
             
@@ -81,7 +97,7 @@ internal partial class Application()
         {
             var fieldCardTargeter = new Select2DOption(validCardIds);
 
-            Guid? selectedCardId = new BattlePage(_table.GetBaseSlots(), _table.ActivePlayer.Player, [cardToDisplay], _endTurnButtonId, new Targeter([fieldCardTargeter]), displayText ?? "").Run();
+            Guid? selectedCardId = new BattlePage(_table.GetBaseSlots(), _table.ActivePlayer.Player, [cardToDisplay], _buttons, new Targeter([fieldCardTargeter]), displayText ?? "").Run();
 
             return new(selectedCardId, selectedCardId == null);
         }
@@ -90,12 +106,12 @@ internal partial class Application()
         {
             List<PlayableCard> cardsToDisplay = [];
             if (cardToDisplay != null) cardsToDisplay.Add(cardToDisplay);
-            return new BattlePage(_table.GetBaseSlots(), _table.ActivePlayer.Player, cardsToDisplay, _endTurnButtonId, new Targeter([new SelectOption(validBaseIds)]), displayText).Run();
+            return new BattlePage(_table.GetBaseSlots(), _table.ActivePlayer.Player, cardsToDisplay, _buttons, new Targeter([new SelectOption(validBaseIds)]), displayText).Run();
         }
 
         public Guid SelectPlayableCard(List<PlayableCard> options, string displayText)
         {
-            return new BattlePage(_table.GetBaseSlots(), _table.ActivePlayer.Player, options, _endTurnButtonId, new Targeter([new SelectOption(options.Select(x => x.Id).ToList())]), displayText).Run();
+            return new BattlePage(_table.GetBaseSlots(), _table.ActivePlayer.Player, options, _buttons, new Targeter([new SelectOption(options.Select(x => x.Id).ToList())]), displayText).Run();
         }
 
         public List<PlayableCard> DiscardTo10(Player player)
@@ -137,7 +153,7 @@ internal partial class Application()
         }
         else if (result == StartPageResult.StartGame)
         {
-            Battle battle = new(new ConsoleAppTestUI(), new GlobalEventManager(), new Random(), new BaseCardService(new BaseCardRepository()), new PlayableCardService(new PlayableCardRepository()));
+            Battle battle = new(new ConsoleAppTestUI(), new GlobalEventManager(), new Random());
             battle.StartBattle();
         }
         else if (result == StartPageResult.ShowCollection)

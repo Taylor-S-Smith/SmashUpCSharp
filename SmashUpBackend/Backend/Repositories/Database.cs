@@ -9,6 +9,8 @@ namespace SmashUp.Backend.Repositories;
 
 internal static class Database
 {
+    //DINOSAURS
+
     public static Func<PlayableCard> WarRaptor = () =>
     {
         string WAR_RAPTOR_NAME = "War Raptor";
@@ -117,6 +119,19 @@ internal static class Database
         {
             eventManager.StartOfTurn -= turnStartHandler;
             eventManager.EndOfTurn -= endTurnHandler;
+        };
+
+        armoredStego.OnChangeController += (battle, oldController, newController) =>
+        {
+            var activePlayer = battle.GetActivePlayer();
+            if (activePlayer == oldController && activePlayer != newController)
+            {
+                armoredStego.ExpirePowerChange(-2);
+            }
+            else if (activePlayer != oldController && activePlayer == newController)
+            {
+                armoredStego.ApplyPowerChange(battle, armoredStego, 2);
+            }
         };
 
 
@@ -518,9 +533,9 @@ internal static class Database
         }
 
         // If the controller changes, the protections we give need to update
-        wildlifePreserve.OnChangeController += (battle, controller) =>
+        wildlifePreserve.OnChangeController += (battle, oldController, newController) =>
         {
-            List<Player> otherPlayers = battle.GetPlayers().Where(x => x != controller).ToList();
+            List<Player> otherPlayers = battle.GetPlayers().Where(x => x != newController).ToList();
             foreach (var protection in protectionsGranted)
             {
                 protection.FromPlayers = otherPlayers;
@@ -576,6 +591,61 @@ internal static class Database
     };
 
 
+    public static Func<BaseCard> JungleOasis = () =>
+    {
+        return new
+        (
+            Faction.dinosuars,
+            "Jungle Oasis",
+            [
+                "      2      0      0       ",
+                "                            ",
+                "                            ",
+                "                            ",
+                "                            ",
+                "                            ",
+            ],
+            12,
+            (2, 0, 0)
+        );
+
+
+    };
+
+    public static Func<BaseCard> TarPits = () =>
+    {
+        BaseCard tarPits = new
+        (
+            Faction.dinosuars,
+            "Tar Pits",
+            [
+                "      4      3      1       ",
+                "                            ",
+                "After each time a minion is ",
+                "destroyed here, place it at ",
+                "     the bottom of its      ",
+                "        owners deck.        ",
+
+
+            ],
+            16,
+            (4, 3, 1)
+        );
+
+
+        tarPits.AfterMinionDestroyed += (minion) =>
+        {
+            minion.Owner.DiscardPile.Remove(minion);
+            minion.Owner.Deck.AddToBottom(minion);
+        };
+
+        return tarPits;
+    };
+
+
+
+
+    // GENERAL
     public static Func<PlayableCard> Minion = () =>
     {
 
@@ -602,14 +672,15 @@ internal static class Database
         return minion;
     };
 
-    public static List<PlayableCard> GetCardsByFaction(Faction faction)
-    {
-        return CardsByFactionDict[faction].Select(x => x()).ToList();
-    } 
 
-    private static readonly Dictionary<Faction, List<Func<PlayableCard>>> CardsByFactionDict = new()
+    public static readonly Dictionary<Faction, List<Func<PlayableCard>>> PlayableCardsByFactionDict = new()
     {
         //{ Faction.dinosuars, [WarRaptor, WarRaptor, WarRaptor, WarRaptor, ArmoredStego, ArmoredStego, ArmoredStego, Laseratops, Laseratops, KingRex, Augmentation, Augmentation, Howl, Howl, NaturalSelection, Rampage, SurvivalOfTheFittest, ToothAndClawAndGuns, Upgrade, WildlifePreserve] }
-        { Faction.dinosuars, [Minion, Minion, Laseratops, Laseratops, SurvivalOfTheFittest, SurvivalOfTheFittest, WildlifePreserve, WildlifePreserve, Upgrade, Upgrade] }
+        { Faction.dinosuars, [Minion, Laseratops, Augmentation, Augmentation, Augmentation, Augmentation, Augmentation, Augmentation, Augmentation] }
+    };
+
+    public static readonly Dictionary<Faction, List<Func<BaseCard>>> BaseCardsByFactionDict = new()
+    {
+        { Faction.dinosuars, [JungleOasis, TarPits] }
     };
 }

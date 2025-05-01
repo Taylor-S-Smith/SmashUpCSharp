@@ -66,7 +66,8 @@ internal class PlayableCard : Card
     public void TriggerOnDetach(Battle battle, PlayableCard cardDetatchedFrom) => OnDetach(battle, cardDetatchedFrom);
     public event Action<Battle, PlayableCard> OnDetach = delegate { };
 
-    public event Action<Battle, Player> OnChangeController = delegate { };
+    // First Player is the current Controller, the second is the one we are changing to
+    public event Action<Battle, Player, Player> OnChangeController = delegate { };
 
     /// <summary>
     /// Use this whenever a card directly changes the power of another card. 
@@ -116,10 +117,10 @@ internal class PlayableCard : Card
         Owner = owner;
         Controller = owner;
     }
-    public void ChangeController(Battle battle, Player controller)
+    public void ChangeController(Battle battle, Player newController)
     {
-        Controller = controller;
-        OnChangeController.Invoke(battle, controller);
+        OnChangeController.Invoke(battle, Controller, newController);
+        Controller = newController;
     }
 
     public PlayableCard(Faction faction, PlayableCardType cardType, string name, string[] graphic, PlayLocation playLocation, int? power=null) : base(faction, name, graphic)

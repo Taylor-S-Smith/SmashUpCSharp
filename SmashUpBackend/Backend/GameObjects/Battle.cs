@@ -4,6 +4,7 @@ using SmashUp.Backend.Models;
 using SmashUp.Backend.API;
 using FluentResults;
 using LinqKit;
+using SmashUp.Backend.Repositories;
 
 namespace SmashUp.Backend.GameObjects;
 
@@ -16,23 +17,17 @@ internal class Battle
     private readonly Random _random;
     public readonly GlobalEventManager EventManager;
 
-    private readonly BaseCardService _baseCardService;
-    private readonly PlayableCardService _playableCardService;
-
     private readonly Table _table;
     private bool _battleEnd;
 
     private const int WINNING_VP = 15;
 
-    public Battle(IFrontendBattleAPI userInputHandler, GlobalEventManager eventManager, Random random, BaseCardService baseCardService, PlayableCardService playableCardService)
+    public Battle(IFrontendBattleAPI userInputHandler, GlobalEventManager eventManager, Random random)
     {
         _userInputHandler = userInputHandler;
 
         EventManager = eventManager;
         _random = random;
-
-        _baseCardService = baseCardService;
-        _playableCardService = playableCardService;
 
         _table = SetUp();
 
@@ -58,7 +53,7 @@ internal class Battle
         {
             string playerName = choice.Item1;
             List<Faction> factions = choice.Item2.Select(x => x.Faction).ToList();
-            List<PlayableCard> cards = _playableCardService.GetCards(factions);
+            List<PlayableCard> cards = CardRepository.GetPlayableCards(factions);
 
             var player = new Player(playerName, cards);
             players.Add(player);
@@ -66,7 +61,7 @@ internal class Battle
 
         //Build the Base Deck
         List<Faction> allFactions = factionChoices.SelectMany(x => x.Item2.Select(y => y.Faction)).ToList();
-        Deck<BaseCard> baseDeck = new(_baseCardService.GetCards(allFactions));
+        Deck<BaseCard> baseDeck = new(CardRepository.GetBaseCards(allFactions));
 
         //Draw And Play Bases
         List<BaseCard> startingBases = baseDeck.Draw(players.Count + 1);
@@ -264,8 +259,8 @@ internal class Battle
         territory.Cards.Add(cardToPlay);
 
         // Activate Card Ability
-        cardToPlay.TriggerOnPlay(this, slot);
         cardToPlay.TriggerOnAddToBase(this, chosenBase);
+        cardToPlay.TriggerOnPlay(this, slot);
 
         // Trigger Base Effects (This includes updating the base's total power)
         chosenBase.TriggerOnAddCard(this, cardToPlay);
@@ -276,7 +271,7 @@ internal class Battle
         cardToPlay.TriggerOnPlay(this);
 
         // Put card in discard
-        player.AddToDiscard(cardToPlay);
+        player.DiscardPile.Add(cardToPlay);
     }
     private void PlayCardToMinion(Player player, PlayableCard cardToPlay)
     {
@@ -295,7 +290,7 @@ internal class Battle
             }
             else
             {
-                player.AddToDiscard(cardToPlay);
+                player.DiscardPile.Add(cardToPlay);
             }
         }
     }
@@ -308,7 +303,8 @@ internal class Battle
         {
             //Reset the card's controller
             cardToDestroy.ChangeController(this, cardToDestroy.Owner);
-            RemoveCardFromBattleField(cardToDestroy, cardToDestroy.Owner.AddToDiscard);
+            var baseCard = RemoveCardFromBattleField(cardToDestroy, cardToDestroy.Owner.DiscardPile.Add);
+            baseCard.TriggerAfterDestroyCard(cardToDestroy);
         }
     }
     /// <summary>
@@ -316,9 +312,9 @@ internal class Battle
     /// If it is protected, this will also resolve the protection triggers
     /// </summary>
     /// <returns>True if card can be affected, otherwise false</returns>
-    public bool AttemptToAffect(PlayableCard cardToAffect, EffectType protectionType, PlayableCardType affectorCardType, Player affectorPlayer)
+    public bool AttemptToAffect(PlayableCard cardToAffect, EffectType effect, PlayableCardType affectorCardType, Player affectorPlayer)
     {
-        List<Protection> protections = cardToAffect.Protections.Where(x => x.From == protectionType && (x.CardType == null || x.CardType == affectorCardType) && (x.FromPlayers == null || x.FromPlayers.Contains(affectorPlayer))).ToList();
+        List<Protection> protections = cardToAffect.Protections.Where(x => x.From == effect && (x.CardType == null || x.CardType == affectorCardType) && (x.FromPlayers == null || x.FromPlayers.Contains(affectorPlayer))).ToList();
         
         if (protections.Count == 0) return true;
         else
@@ -337,7 +333,12 @@ internal class Battle
             return false;
         }
     }
-    private void RemoveCardFromBattleField(PlayableCard cardToRemove, Action<PlayableCard> AddFunction)
+    /// <summary>
+    /// Removes card from base, calls appropriate triggers
+    /// </summary>
+    /// <param name="AddFunction">Function that is called after removal, usually determines where the card ends up</param>
+    /// <returns>Base the card was removed from</returns>
+    private BaseCard RemoveCardFromBattleField(PlayableCard cardToRemove, Action<PlayableCard> AddFunction)
     {
         foreach (BaseSlot slot in _table.GetBaseSlots())
         {
@@ -355,7 +356,7 @@ internal class Battle
 
                     // Trigger leave of battlefield
                     cardToRemove.TriggerOnRemoveFromBattleField(EventManager);
-                    return;
+                    return slot.BaseCard;
                 }
                 else
                 {
@@ -372,12 +373,14 @@ internal class Battle
 
                             // Trigger leave of battlefield
                             cardToRemove.TriggerOnRemoveFromBattleField(EventManager);
-                            return;
+                            return slot.BaseCard;
                         }
                     }
                 }
             }
         }
+
+        throw new Exception($"{cardToRemove.Name} with ID {cardToRemove.Id} is not on the battlefield, so can't be removed");
     }
 
 
@@ -386,9 +389,13 @@ internal class Battle
     {
         return _table.GetBaseSlots();
     }
-    internal List<Player> GetPlayers()
+    public List<Player> GetPlayers()
     {
         return _table.Players;
+    }
+    public Player GetActivePlayer()
+    {
+        return _table.ActivePlayer.Player;
     }
 
 
@@ -476,4 +483,5 @@ internal class Battle
     {
         return _table.GetActiveBases().Where(x => x.Id == chosenBaseId).FirstOrDefault() ?? throw new Exception($"No active base exists with ID {chosenBaseId}");
     }
+
 }

@@ -17,8 +17,8 @@ internal class Player : Identifiable
 
     private readonly List<PlayableCard> _hand = [];
     public IReadOnlyList<PlayableCard> Hand => _hand.AsReadOnly();
-    private Deck<PlayableCard> Deck { get; }
-    private Deck<PlayableCard> DiscardPile { get; } = new();
+    public Deck<PlayableCard> Deck { get; }
+    public List<PlayableCard> DiscardPile { get; } = [];
 
     /// <param name="name"></param>
     public Player(string name, List<PlayableCard> cards)
@@ -35,7 +35,7 @@ internal class Player : Identifiable
     }
     public List<string> GetDiscard()
     {
-        return DiscardPile.GetCards();
+        return DiscardPile.Select(c => c.Name).ToList();
     }
 
     public void GainVP(int numVPGained)
@@ -59,17 +59,12 @@ internal class Player : Identifiable
         _hand.Add(card);
     }
 
-    public void AddToDiscard(PlayableCard cardToDiscard)
-    {
-        DiscardPile.Add(cardToDiscard);
-    }
-
     /// <summary>
     /// Shuffles cards from hand to deck.
     /// </summary>
     public void Recard()
     {
-        Deck.Add(_hand);
+        Deck.AddToBottom(_hand);
         Deck.Shuffle();
         _hand.Clear();
     }
