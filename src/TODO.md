@@ -4,7 +4,6 @@ Other TODOs:
 - Choose factions correctly
 - "Tooth And Claw And Guns" permanantly negates the effect, it should only until the end of the turn. Probably make a list of functions that are being held off of a minion.
 
-
 Misc Tests:
 - Test removing Upgrade from a minion
 - Test removing Upgrade from a minion when it's ApplyPower was protected

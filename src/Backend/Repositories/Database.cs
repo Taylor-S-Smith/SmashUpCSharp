@@ -725,7 +725,6 @@ internal static class Database
 
         return neophyte;
     };
-
     public static Func<PlayableCard> Enchantress = () =>
     {
         PlayableCard enchantress = new
@@ -755,7 +754,6 @@ internal static class Database
 
         return enchantress;
     };
-
     public static Func<PlayableCard> Chronomage = () =>
     {
         PlayableCard chronomage = new
@@ -764,7 +762,6 @@ internal static class Database
             PlayableCardType.Minion,
             "Chronomage",
             [
-                @"3      Chronomage       3",
                 @"              _______    ",
                 @"             |*******|   ",
                 @"              \_***_/    ",
@@ -786,6 +783,66 @@ internal static class Database
         };
 
         return chronomage;
+    };
+    public static Func<PlayableCard> Archmage = () =>
+    {
+        PlayableCard archmage = new
+        (
+            Faction.Dinosuars,
+            PlayableCardType.Minion,
+            "Archmage",
+            [
+                @"         /*_*_* \        ",
+                @"        ||/ O |*|        ",
+                @"         |__|_/*/        ",
+                @"         |  |            ",
+                @"         | / \           ",
+                @"Ongoing: You may play an ",
+                @" extra action on each of ",
+                @"       your turns.       ",
+            ],
+            PlayLocation.Base,
+            4
+        );
+
+        void turnStartHandler(Battle battle, ActivePlayer activePlayer)
+        {
+            if (activePlayer.Player == archmage.Controller)
+            {
+                activePlayer.Player.ActionPlays += 1;
+            }
+        }
+
+        archmage.OnPlay += (battle, baseSlot) =>
+        {
+            var activePlayer = battle.GetActivePlayer();
+            if(activePlayer == archmage.Controller) activePlayer.ActionPlays += 1;
+            battle.EventManager.StartOfTurn += turnStartHandler;
+        };
+
+        archmage.OnDiscard += (eventManager) =>
+        {
+            eventManager.StartOfTurn -= turnStartHandler;
+        };
+
+        archmage.OnChangeController += (battle, oldController, newController) =>
+        {
+            var activePlayer = battle.GetActivePlayer();
+            if (activePlayer == oldController && activePlayer != newController)
+            {
+                if(activePlayer.ActionPlays > 0)
+                {
+                    activePlayer.ActionPlays -= 1;
+                }
+            }
+            else if (activePlayer != oldController && activePlayer == newController)
+            {
+                activePlayer.ActionPlays += 1;
+            }
+        };
+
+
+        return archmage;
     };
 
 
@@ -820,7 +877,8 @@ internal static class Database
     public static readonly Dictionary<Faction, List<Func<PlayableCard>>> PlayableCardsByFactionDict = new()
     {
         { Faction.Dinosuars, [WarRaptor, WarRaptor, WarRaptor, WarRaptor, ArmoredStego, ArmoredStego, ArmoredStego, Laseratops, Laseratops, KingRex, Augmentation, Augmentation, Howl, Howl, NaturalSelection, Rampage, SurvivalOfTheFittest, ToothAndClawAndGuns, Upgrade, WildlifePreserve] },
-        { Faction.Wizards, [Neophyte, Neophyte, Neophyte, Neophyte, Enchantress, Enchantress, Chronomage, Chronomage, Augmentation, Augmentation, Augmentation, Augmentation, Augmentation, Augmentation, Augmentation, Augmentation, Augmentation, Augmentation, Augmentation] }
+        { Faction.Wizards, [Neophyte, Neophyte, Neophyte, Neophyte, Enchantress, Enchantress, Chronomage, Chronomage, Archmage] }
+        //{ Faction.Wizards, [Archmage, Augmentation, Augmentation, Augmentation, Augmentation] }
     };
 
     public static readonly Dictionary<Faction, List<Func<BaseCard>>> BaseCardsByFactionDict = new()
