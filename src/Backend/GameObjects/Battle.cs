@@ -301,11 +301,16 @@ internal class Battle
     {
         if (AttemptToAffect(cardToDestroy, EffectType.Destroy, affector.CardType, affector.Controller))
         {
-            //Reset the card's controller
-            cardToDestroy.ChangeController(this, cardToDestroy.Owner);
             var baseCard = RemoveCardFromBattleField(cardToDestroy, cardToDestroy.Owner.DiscardPile.Add);
             baseCard.TriggerAfterDestroyCard(cardToDestroy);
         }
+    }
+    /// <summary>
+    /// Discarding removes the card from play, but does not count as affecting the card
+    /// </summary>
+    public void Discard(PlayableCard cardToDiscard)
+    {
+        var baseCard = RemoveCardFromBattleField(cardToDiscard, cardToDiscard.Owner.DiscardPile.Add);
     }
     /// <summary>
     /// Checks if a card can be affected by a specific effect. 
@@ -340,6 +345,7 @@ internal class Battle
     /// <returns>Base the card was removed from</returns>
     private BaseCard RemoveCardFromBattleField(PlayableCard cardToRemove, Action<PlayableCard> AddFunction)
     {
+        BaseCard? baseTheCardIsOn = null;
         foreach (BaseSlot slot in _table.GetBaseSlots())
         {
             foreach (PlayerTerritory territory in slot.Territories)
@@ -353,10 +359,8 @@ internal class Battle
                     // Trigger leave of base
                     cardToRemove.TriggerOnRemoveFromBase(this, slot.BaseCard);
                     slot.BaseCard.TriggerOnRemoveCard(this, cardToRemove);
-
-                    // Trigger leave of battlefield
-                    cardToRemove.TriggerOnRemoveFromBattleField(EventManager);
-                    return slot.BaseCard;
+                    baseTheCardIsOn = slot.BaseCard;
+                    break;
                 }
                 else
                 {
@@ -370,17 +374,21 @@ internal class Battle
 
                             //Trigger on detach
                             cardToRemove.TriggerOnDetach(this, card);
-
-                            // Trigger leave of battlefield
-                            cardToRemove.TriggerOnRemoveFromBattleField(EventManager);
-                            return slot.BaseCard;
+                            baseTheCardIsOn = slot.BaseCard;
+                            break;
                         }
                     }
                 }
             }
+            if (baseTheCardIsOn != null) break;
         }
 
-        throw new Exception($"{cardToRemove.Name} with ID {cardToRemove.Id} is not on the battlefield, so can't be removed");
+
+        if(baseTheCardIsOn == null) throw new Exception($"{cardToRemove.Name} with ID {cardToRemove.Id} is not on the battlefield, so can't be removed");
+        cardToRemove.TriggerOnRemoveFromBattleField(EventManager);
+        cardToRemove.ChangeController(this, cardToRemove.Owner);
+
+        return baseTheCardIsOn;        
     }
 
 

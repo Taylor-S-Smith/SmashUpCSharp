@@ -4,6 +4,7 @@ using static SmashUp.Backend.GameObjects.Battle;
 using System.Reflection;
 using System.Data.Entity.Core.Mapping;
 using static SmashUp.Backend.Models.PlayableCard;
+using System.Security.AccessControl;
 
 namespace SmashUp.Backend.Repositories;
 
@@ -230,8 +231,11 @@ internal static class Database
                 {
                     void endTurnHandler(ActivePlayer activePlayer)
                     {
-                        cardToGainPower.ExpirePowerChange(-4);
-                        battle.EventManager.EndOfTurn -= endTurnHandler;
+                        if(activePlayer.Player == augmentation.Controller)
+                        {
+                            cardToGainPower.ExpirePowerChange(-4);
+                            battle.EventManager.EndOfTurn -= endTurnHandler;
+                        }
                     }
 
                     battle.EventManager.EndOfTurn += endTurnHandler;
@@ -273,8 +277,12 @@ internal static class Database
 
                     void endTurnHandler(ActivePlayer activePlayer)
                     {
-                        card.ExpirePowerChange(-1);
-                        battle.EventManager.EndOfTurn -= endTurnHandler;
+                        if (activePlayer.Player == howl.Controller)
+                        {
+                            card.ExpirePowerChange(-1);
+                            battle.EventManager.EndOfTurn -= endTurnHandler;
+                        }
+                            
                     }
 
                     battle.EventManager.EndOfTurn += endTurnHandler;
@@ -562,16 +570,32 @@ internal static class Database
             }
 
             /// Only cards from the base this is on are protected
-            List<PlayableCard> protectedCards = battle.GetBaseSlots()
+            List<PlayableCard> minionsOnBase = battle.GetBaseSlots()
                                                       .Single(slot => slot.BaseCard == baseAttachedTo)
                                                       .Cards
+                                                      .Where(x => x.CardType == PlayableCardType.Minion)
                                                       .ToList();
 
-            protectedCards.ForEach(x => AddProtectionsToCard(battle, x));
+            minionsOnBase.ForEach(x => AddProtectionsToCard(battle, x));
 
 
             baseAttachedTo.OnAddCard += AddProtectionsToCard;
             baseAttachedTo.OnRemoveCard += RemoveProtectionsFromCard;
+
+            // Remove any actions from other players on your minions
+            foreach (var minion in minionsOnBase)
+            {
+                if(minion.Controller == wildlifePreserve.Controller)
+                {
+                    foreach(var action in minion.Attachments)
+                    {
+                        if (action.Controller != wildlifePreserve.Controller)
+                        {
+                            battle.Discard(action);
+                        }
+                    }
+                }
+            }            
         };
 
         wildlifePreserve.OnRemoveFromBase += (battle, cardDetachedFrom) =>
@@ -589,7 +613,6 @@ internal static class Database
 
         return wildlifePreserve;
     };
-
 
     public static Func<BaseCard> JungleOasis = () =>
     {
@@ -611,7 +634,6 @@ internal static class Database
 
 
     };
-
     public static Func<BaseCard> TarPits = () =>
     {
         BaseCard tarPits = new
@@ -641,9 +663,6 @@ internal static class Database
 
         return tarPits;
     };
-
-
-
 
     // GENERAL
     public static Func<PlayableCard> Minion = () =>

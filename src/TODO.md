@@ -42,9 +42,8 @@ Faction(s) with computer specific Mechanics:
 - Keyword: Animate
 - Cultists
 
-
 Test:
-- Tooth protects against detah, discards
+- Wildlife preserve discards all other players cards currently on your minions
 - Two allow you to choose
 
 
@@ -52,3 +51,17 @@ Disclaimer:
 - When multiple effects are triggered by a single action, the rules say to let the active player decide the order.
   To avoid implementing a complex choosing system in an already complex UI, I instead let effects resolve in the 
   order they entered the battlefield. E.g. A bases "after a minion here is destroyed" effect will always trigger before a minion's 
+
+
+
+Card Ideas:
+- After a card is destroyed, put it in YOUR discard pile.
+- Transform a card into another random one.
+- Generate a random card
+- Choose a base. Generate a 1-power minion there
+- Give the minion's in your hand +1 power
+- 
+- 0 Power; Animate: gain +2 power
+- Play on a minion. Ongoing: This minion has +1 power. Animate: Gain control of this minion
+- Your cards are animated until the end of the turn
+- Grand Animator Magus: Ongoing: Your cards are animated
