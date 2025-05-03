@@ -10,7 +10,7 @@ Misc Tests:
 - War Raptor can survive Leprachaun
 - Move a war raptor to a base with a different number of war raptors
 - There are two War Raptors on a base, so they are power 4. I move one of them to a base with a Cub Scout also at power 4. Raptor Restroyed.
-
+- Tooth and Claw And Guns stops a minions own effect (Oponents war raptor won't gain power)
 
 Event Approach Rules:
 - Events should only be used for logic that:

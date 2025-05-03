@@ -825,14 +825,7 @@ internal static class Database
         archmage.OnChangeController += (battle, oldController, newController) =>
         {
             var activePlayer = battle.GetActivePlayer();
-            if (activePlayer == oldController && activePlayer != newController)
-            {
-                if(activePlayer.ActionPlays > 0)
-                {
-                    activePlayer.ActionPlays -= 1;
-                }
-            }
-            else if (activePlayer != oldController && activePlayer == newController)
+            if (activePlayer != oldController && activePlayer == newController)
             {
                 activePlayer.ActionPlays += 1;
             }
