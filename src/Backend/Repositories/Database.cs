@@ -42,13 +42,6 @@ internal static class Database
             warRaptor.ApplyPowerChange(battle, warRaptor, currRaptorCount);
         }
 
-        warRaptor.OnPlay += (battle, baseSlot) =>
-        {
-            if (baseSlot == null) throw new Exception("No base passed in for War Raptor");
-            // Gain Power for current War Raptors on base
-            ChangePowerForEachWarRaptorOnBase(battle, baseSlot);
-        };
-
         void addCardHandler(Battle battle, PlayableCard card)
         {
             // It already gains power for itself OnPlay, we don't want to double count it
@@ -80,7 +73,6 @@ internal static class Database
 
         return warRaptor;
     };
-
     public static Func<PlayableCard> ArmoredStego = () =>
     {
         PlayableCard armoredStego = new

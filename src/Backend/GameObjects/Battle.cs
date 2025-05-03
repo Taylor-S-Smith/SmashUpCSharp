@@ -340,8 +340,8 @@ internal class Battle
         territory.Cards.Add(cardToPlay);
 
         // Activate Card Ability
-        cardToPlay.TriggerOnAddToBase(this, slot);
         cardToPlay.TriggerOnPlay(this, slot);
+        cardToPlay.TriggerOnAddToBase(this, slot);
 
         // Trigger Base Effects (This includes updating the base's total power)
         chosenBase.TriggerOnAddCard(this, cardToPlay);

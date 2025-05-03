@@ -9,6 +9,7 @@ Misc Tests:
 - Test removing Upgrade from a minion when it's ApplyPower was protected
 - War Raptor can survive Leprachaun
 - Move a war raptor to a base with a different number of war raptors
+- There are two War Raptors on a base, so they are power 4. I move one of them to a base with a Cub Scout also at power 4. Raptor Restroyed.
 
 
 Event Approach Rules:
