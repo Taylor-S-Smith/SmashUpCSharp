@@ -676,7 +676,6 @@ internal static class Database
             PlayableCardType.Minion,
             "Neophyte",
             [
-                @"2       Neophyte        2",
                 @"          o              ",
                 @"          |- [_]         ",
                 @"         / \ | |         ",
@@ -727,6 +726,68 @@ internal static class Database
         return neophyte;
     };
 
+    public static Func<PlayableCard> Enchantress = () =>
+    {
+        PlayableCard enchantress = new
+        (
+            Faction.Wizards,
+            PlayableCardType.Minion,
+            "Enchantress",
+            [
+                @"         _*_*_*_         ",
+                @"       */* * * *\*       ",
+                @"      *|*   O | *|*      ",
+                @"      *|*  -|-| *|*      ",
+                @"      *|*  / \  *|*      ",
+                @"                         ",
+                @"       Draw a card.      ",
+                @"                         ",
+            ],
+            PlayLocation.Base,
+            2
+        );
+
+        enchantress.OnPlay += (battle, baseslot) =>
+        {
+            var drawnCard = enchantress.Controller.Draw();
+            enchantress.Controller.Hand.Add(drawnCard);
+        };
+
+        return enchantress;
+    };
+
+    public static Func<PlayableCard> Chronomage = () =>
+    {
+        PlayableCard chronomage = new
+        (
+            Faction.Wizards,
+            PlayableCardType.Minion,
+            "Chronomage",
+            [
+                @"3      Chronomage       3",
+                @"              _______    ",
+                @"             |*******|   ",
+                @"              \_***_/    ",
+                @"    O__ __     _|*|_     ",
+                @"   /|         /  *  \    ",
+                @"   / \       |_______|   ",
+                @"  You may play an extra  ",
+                @"    action this turn.    ",
+            ],
+            PlayLocation.Base,
+            3
+        );
+
+        chronomage.OnPlay += (battle, baseslot) =>
+        {
+            var activePlayer = battle.GetActivePlayer();
+
+            if (chronomage.Controller == activePlayer) activePlayer.ActionPlays += 1;
+        };
+
+        return chronomage;
+    };
+
 
     // GENERAL
     public static Func<PlayableCard> Minion = () =>
@@ -759,7 +820,7 @@ internal static class Database
     public static readonly Dictionary<Faction, List<Func<PlayableCard>>> PlayableCardsByFactionDict = new()
     {
         { Faction.Dinosuars, [WarRaptor, WarRaptor, WarRaptor, WarRaptor, ArmoredStego, ArmoredStego, ArmoredStego, Laseratops, Laseratops, KingRex, Augmentation, Augmentation, Howl, Howl, NaturalSelection, Rampage, SurvivalOfTheFittest, ToothAndClawAndGuns, Upgrade, WildlifePreserve] },
-        { Faction.Wizards, [Neophyte, Neophyte, Neophyte, Neophyte, Neophyte, Neophyte, Augmentation, Augmentation, Augmentation, Augmentation, Augmentation, Augmentation, Augmentation, Augmentation, Augmentation, Augmentation, Augmentation] }
+        { Faction.Wizards, [Neophyte, Neophyte, Neophyte, Neophyte, Enchantress, Enchantress, Chronomage, Chronomage, Augmentation, Augmentation, Augmentation, Augmentation, Augmentation, Augmentation, Augmentation, Augmentation, Augmentation, Augmentation, Augmentation] }
     };
 
     public static readonly Dictionary<Faction, List<Func<BaseCard>>> BaseCardsByFactionDict = new()
