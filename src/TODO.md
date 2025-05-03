@@ -43,7 +43,8 @@ Disclaimer:
 - When multiple effects are triggered by a single action, the rules say to let the active player decide the order.
   To avoid implementing a complex choosing system in an already complex UI, I instead let effects resolve in the 
   order they entered the battlefield. E.g. A bases "after a minion here is destroyed" effect will always trigger before a minion's
-
+- Some card text had to change to fit, but still should work as expected
+- Some names had to change to fit
 
 Card Ideas:
 - After a card is destroyed, put it in YOUR discard pile.

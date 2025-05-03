@@ -430,15 +430,15 @@ internal static class Database
 
         return survivalOfTheFittest;
     };
-    public static Func<PlayableCard> ToothAndClawAndGuns = () =>
+    public static Func<PlayableCard> ToothClawAndGuns = () =>
     {
         PlayableCard toothAndClawAndGuns = new
         (
             Faction.Dinosuars,
             PlayableCardType.Action,
-            "Tooth And Claw...And Guns",
+            "Tooth Claw And Guns",
             [
-                @"A  Tooth Claw and Guns  A",
+                @"A  Tooth Claw And Guns  A",
                 @"    ----------------     ",
                 @"    Play on a minion     ",
                 @"   Ongoing: If another   ",
@@ -903,6 +903,35 @@ internal static class Database
 
         return massEnchantment;
     };
+    public static Func<PlayableCard> MysticStudies = () =>
+    {
+        PlayableCard enchantress = new
+        (
+            Faction.Wizards,
+            PlayableCardType.Minion,
+            "Mystic Studies",
+            [
+                @"A    Mystic Studies     A",
+                @"                         ",
+                @"    _,-----. .-----,_    ",
+                @"   //~~~~~~ | ~~~~~~\\   ",
+                @"  //~~~~~~  |  ~~~~~~\\  ",
+                @" //________ | ________\\ ",
+                @" '--------.___.--------' ",
+                @"                         ",
+                @"     Draw two cards.     ",
+            ],
+            PlayLocation.Discard
+        );
+
+        enchantress.OnPlay += (battle, baseslot) =>
+        {
+            var drawnCards = enchantress.Controller.Draw(2);
+            enchantress.Controller.Hand.AddRange(drawnCards);
+        };
+
+        return enchantress;
+    };
 
     // GENERAL
     public static Func<PlayableCard> Minion = () =>
@@ -934,9 +963,9 @@ internal static class Database
 
     public static readonly Dictionary<Faction, List<Func<PlayableCard>>> PlayableCardsByFactionDict = new()
     {
-        { Faction.Dinosuars, [WarRaptor, WarRaptor, WarRaptor, WarRaptor, ArmoredStego, ArmoredStego, ArmoredStego, Laseratops, Laseratops, KingRex, Augmentation, Augmentation, Howl, Howl, NaturalSelection, Rampage, SurvivalOfTheFittest, ToothAndClawAndGuns, Upgrade, WildlifePreserve] },
+        { Faction.Dinosuars, [WarRaptor, WarRaptor, WarRaptor, WarRaptor, ArmoredStego, ArmoredStego, ArmoredStego, Laseratops, Laseratops, KingRex, Augmentation, Augmentation, Howl, Howl, NaturalSelection, Rampage, SurvivalOfTheFittest, ToothClawAndGuns, Upgrade, WildlifePreserve] },
         { Faction.Wizards, [Neophyte, Neophyte, Neophyte, Neophyte, Enchantress, Enchantress, Chronomage, Chronomage, Archmage, MassEnchantment] }
-        //{ Faction.Wizards, [WarRaptor, WarRaptor, WarRaptor, WarRaptor, WarRaptor, WarRaptor, WarRaptor] }
+        //{ Faction.Wizards, [Neophyte, MysticStudies, MysticStudies, MysticStudies, MysticStudies, MysticStudies, MysticStudies, MysticStudies, MysticStudies, MysticStudies] }
     };
 
     public static readonly Dictionary<Faction, List<Func<BaseCard>>> BaseCardsByFactionDict = new()
