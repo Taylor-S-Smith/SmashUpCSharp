@@ -1,5 +1,4 @@
 ﻿using SmashUp.Backend.GameObjects;
-using SmashUp.Backend.Services;
 
 namespace SmashUp.Backend.Models;
 

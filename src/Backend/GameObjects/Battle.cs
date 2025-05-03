@@ -192,10 +192,10 @@ internal class Battle
                 int totalPower = playersCards.Sum(x => x.CurrentPower) ?? 0;
                 if (playersCards.Any(card => card.CardType == PlayableCardType.Minion) || totalPower > 0)
                 {
-                    scoreDict.TryGetValue((int)totalPower, out List<Player>? players);
+                    scoreDict.TryGetValue(totalPower, out List<Player>? players);
 
                     if (players != null) players.Add(player);
-                    else scoreDict.Add((int)totalPower, [player]);
+                    else scoreDict.Add(totalPower, [player]);
                 }
             }
 
@@ -219,6 +219,7 @@ internal class Battle
             // Step 5: Award treasures
             // Step 6: Play/invoke "after scoring" abilities
             // Step 7: Discard all the cards on the base
+            baseToScore.Cards.ForEach(x => RemoveCardFromBattleField(x));
             baseToScore.Cards.ForEach(Discard);
 
             // Step 8: Discard the base
