@@ -1,5 +1,6 @@
 Cards that need a special:
 - Summon
+- timeLoop
 
 
 Other TODOs:

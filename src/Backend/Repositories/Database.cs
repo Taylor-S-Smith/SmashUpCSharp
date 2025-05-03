@@ -1047,6 +1047,34 @@ internal static class Database
 
         return summon;
     };
+    public static Func<PlayableCard> TimeLoop = () =>
+    {
+        PlayableCard timeLoop = new
+        (
+            Faction.Wizards,
+            PlayableCardType.Action,
+            "Time Loop",
+            [
+                @"A       Time Loop       A",
+                @"       _________         ",
+                @"      /   1|2   \        ",
+                @"     |     |     |       ",
+                @"     |9    O    3|       ",
+                @"     |      \    |       ",
+                @"      \____6_\__/        ",
+                @"                         ",
+                @" Play two extra actions. ",
+            ],
+            PlayLocation.Discard
+        );
+
+        timeLoop.OnPlay += (battle, baseslot) =>
+        {
+            timeLoop.Controller.ActionPlays += 2;
+        };
+
+        return timeLoop;
+    };
     // GENERAL
     public static Func<PlayableCard> Minion = () =>
     {
@@ -1078,8 +1106,8 @@ internal static class Database
     public static readonly Dictionary<Faction, List<Func<PlayableCard>>> PlayableCardsByFactionDict = new()
     {
         { Faction.Dinosuars, [WarRaptor, WarRaptor, WarRaptor, WarRaptor, ArmoredStego, ArmoredStego, ArmoredStego, Laseratops, Laseratops, KingRex, Augmentation, Augmentation, Howl, Howl, NaturalSelection, Rampage, SurvivalOfTheFittest, ToothClawAndGuns, Upgrade, WildlifePreserve] },
-        //{ Faction.Wizards, [Neophyte, Neophyte, Neophyte, Neophyte, Enchantress, Enchantress, Chronomage, Chronomage, Archmage, MassEnchantment, Portal, Sacrifice, Summon, Summon] }
-        { Faction.Wizards, [Archmage, Summon, Archmage, Summon, Archmage, Summon, Archmage, Summon, Archmage, Summon] }
+        { Faction.Wizards, [Neophyte, Neophyte, Neophyte, Neophyte, Enchantress, Enchantress, Chronomage, Chronomage, Archmage, MassEnchantment, MysticStudies, MysticStudies, Portal, Sacrifice, Summon, Summon, TimeLoop] }
+        //{ Faction.Wizards, [TimeLoop, Summon, TimeLoop, MysticStudies, MysticStudies, MysticStudies, Summon, TimeLoop, Summon, TimeLoop, Summon, TimeLoop, Summon] }
     };
 
     public static readonly Dictionary<Faction, List<Func<BaseCard>>> BaseCardsByFactionDict = new()
