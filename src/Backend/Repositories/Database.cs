@@ -5,6 +5,7 @@ using static SmashUp.Backend.Models.PlayableCard;
 using System.Diagnostics;
 using System.Numerics;
 using SmashUp.Frontend.Utilities;
+using System.Text;
 
 namespace SmashUp.Backend.Repositories;
 
@@ -844,7 +845,68 @@ internal static class Database
 
         return archmage;
     };
+    public static Func<PlayableCard> MassEnchantment = () =>
+    {
+        PlayableCard massEnchantment = new
+        (
+            Faction.Wizards,
+            PlayableCardType.Action,
+            "Mass Enchantment",
+            [
+                @"A    Mass Enchantment   A",
+                @"              |          ",
+                @"      O  *****| __o      ",
+                @"     -|-/*****|    \     ",
+                @"     / \      |    /\    ",
+                @"  Reveal the top card of ",
+                @"each other player's deck.",
+                @"Play one revealed action ",
+                @"   as an extra action.   ",
+            ],
+            PlayLocation.Discard
+        );
 
+        massEnchantment.OnPlay += (battle, baseSlot) =>
+        {
+            // Reveal the top card of each other player’s deck
+            List<PlayableCard> revealedCards = [];
+            List<string> cardNames = [];
+            
+            foreach (Player player in battle.GetPlayers())
+            {
+                if(player != massEnchantment.Controller)
+                {
+                    var card = player.Draw();
+                    revealedCards.Add(card);
+                    cardNames.Add($"{player.Name}'s {card.Name}");
+                }
+            }
+            string displayText = $"You revealed {string.Join(", ", cardNames)}";
+
+            // Play one revealed action as an extra action
+            bool isValidChoice(PlayableCard card) => card.CardType == PlayableCardType.Action;
+            PlayableCard? chosenCard = null;
+            if (revealedCards.Any(isValidChoice))
+            {
+                chosenCard = battle.SelectCard(revealedCards, displayText, isValidChoice);
+                chosenCard.ChangeController(battle, massEnchantment.Controller);
+                battle.PlayExtraCard(chosenCard);
+            } 
+            else
+            {
+                battle.SelectOption([new("CONTINUE")], revealedCards, displayText);
+            }
+            
+
+            // Return unused cards to the top of their decks
+            foreach (var card in revealedCards)
+            {
+                if(card != chosenCard) card.Controller.Deck.AddToTop(card);
+            }
+        };
+
+        return massEnchantment;
+    };
 
     // GENERAL
     public static Func<PlayableCard> Minion = () =>
@@ -877,8 +939,8 @@ internal static class Database
     public static readonly Dictionary<Faction, List<Func<PlayableCard>>> PlayableCardsByFactionDict = new()
     {
         { Faction.Dinosuars, [WarRaptor, WarRaptor, WarRaptor, WarRaptor, ArmoredStego, ArmoredStego, ArmoredStego, Laseratops, Laseratops, KingRex, Augmentation, Augmentation, Howl, Howl, NaturalSelection, Rampage, SurvivalOfTheFittest, ToothAndClawAndGuns, Upgrade, WildlifePreserve] },
-        { Faction.Wizards, [Neophyte, Neophyte, Neophyte, Neophyte, Enchantress, Enchantress, Chronomage, Chronomage, Archmage] }
-        //{ Faction.Wizards, [Archmage, Augmentation, Augmentation, Augmentation, Augmentation] }
+        //{ Faction.Wizards, [Neophyte, Neophyte, Neophyte, Neophyte, Enchantress, Enchantress, Chronomage, Chronomage, Archmage, MassEnchantment] }
+        { Faction.Wizards, [MassEnchantment, Archmage, Archmage, Archmage, Archmage, Archmage] }
     };
 
     public static readonly Dictionary<Faction, List<Func<BaseCard>>> BaseCardsByFactionDict = new()

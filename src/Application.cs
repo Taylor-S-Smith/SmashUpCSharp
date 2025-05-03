@@ -112,7 +112,7 @@ internal partial class Application()
             return new BattlePage(_table.GetBaseSlots(), _table.ActivePlayer.Player, cardsToDisplay, _buttons, new Targeter([new SelectOption(validBaseIds)]), displayText).Run();
         }
 
-        public List<Guid> SelectPlayableCard(List<PlayableCard> options, int numToReturn, string displayText)
+        public List<Guid> SelectPlayableCard(List<PlayableCard> options, int numToReturn, string displayText, Func<PlayableCard, bool>? isValidOption)
         {
             List<Guid> selectedOptions = [];
             var page = new BattlePage(_table.GetBaseSlots(), _table.ActivePlayer.Player, options, _buttons, new Targeter([new SelectOption(options.Select(x => x.Id).ToList())]), displayText);
@@ -120,8 +120,11 @@ internal partial class Application()
             while(selectedOptions.Count < numToReturn)
             {
                 Guid chosenOptionId = page.Run();
-                selectedOptions.Add(chosenOptionId);
-                options.Remove(options.Where(x => x.Id == chosenOptionId).Single());
+                if(isValidOption == null || isValidOption(options.Where(x => x.Id == chosenOptionId).Single()))
+                {
+                    selectedOptions.Add(chosenOptionId);
+                    options.Remove(options.Where(x => x.Id == chosenOptionId).Single());
+                }
             }
             return selectedOptions;
         }
