@@ -13,6 +13,7 @@ Other TODOs:
 - Remove duplication in Page.Run() logic
 - Build the Base Deck correctly
 - Choose factions correctly
+- "Tooth And Claw And Guns" permanantly negates the effect, it should only until the end of the turn. Probably make a list of functions that are being held off of a minion.
 
 
 Misc Tests:
@@ -50,8 +51,7 @@ Test:
 Disclaimer:
 - When multiple effects are triggered by a single action, the rules say to let the active player decide the order.
   To avoid implementing a complex choosing system in an already complex UI, I instead let effects resolve in the 
-  order they entered the battlefield. E.g. A bases "after a minion here is destroyed" effect will always trigger before a minion's 
-
+  order they entered the battlefield. E.g. A bases "after a minion here is destroyed" effect will always trigger before a minion's
 
 
 Card Ideas:

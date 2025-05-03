@@ -441,12 +441,12 @@ internal static class Database
             PlayableCardType.Action,
             "Tooth And Claw...And Guns",
             [
-                @"A   Tooth And Claw...   A",
-                @"        And Guns         ",
+                @"A  Tooth Claw and Guns  A",
                 @"    ----------------     ",
                 @"    Play on a minion     ",
-                @" Ongoing: if an ability  ",
-                @"would affect this minion,",
+                @"   Ongoing: If another   ",
+                @" player's ability would  ",
+                @"   affect this minion,   ",
                 @"destroy this card and the",
                 @" ability does not affect ",
                 @"       this minion       ",
@@ -468,7 +468,8 @@ internal static class Database
 
         toothAndClawAndGuns.OnAttach += (battle, minionAttachedTo) =>
         {
-            ((PlayableCard)minionAttachedTo).Protections.AddRange(protectionsGranted);
+            protectionsGranted.ForEach(protection => protection.FromPlayers = battle.GetPlayers().Where(player => player != toothAndClawAndGuns.Controller).ToList());
+            minionAttachedTo.Protections.AddRange(protectionsGranted);
         };
 
         toothAndClawAndGuns.OnDetach += (battle, cardDetachedFrom) =>
@@ -663,6 +664,8 @@ internal static class Database
 
         return tarPits;
     };
+
+
 
     // GENERAL
     public static Func<PlayableCard> Minion = () =>
