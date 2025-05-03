@@ -977,6 +977,47 @@ internal static class Database
 
         return portal;
     };
+    public static Func<PlayableCard> Sacrifice = () =>
+    {
+        PlayableCard sacrifice = new
+        (
+            Faction.Wizards,
+            PlayableCardType.Action,
+            "Sacrifice",
+            [
+                @"A       Sacrifice       A",
+                @"                         ",
+                @"                         ",
+                @"        | |  | |         ",
+                @"       (__|  |__)        ",
+                @"   Choose one of your    ",
+                @"minions. Draw cards equal",
+                @"  to its power. Destroy  ",
+                @"      that minion.       ",
+            ],
+            PlayLocation.Discard
+
+        );
+
+        sacrifice.OnPlay += (battle, baseSlot) =>
+        {
+            SelectFieldCardQuery query = new()
+            {
+                CardType = PlayableCardType.Minion,
+                Controller = sacrifice.Controller
+            };
+            PlayableCard? cardToDestroy = battle.SelectFieldCard(sacrifice, "Select a card to sacrifice", query)?.SelectedCard;
+            if (cardToDestroy != null)
+            {
+                List<PlayableCard> drawnCards = sacrifice.Controller.Draw(cardToDestroy.CurrentPower ?? 0);
+                sacrifice.Controller.Hand.AddRange(drawnCards);
+                battle.Destroy(cardToDestroy, sacrifice);
+            }
+        };
+
+
+        return sacrifice;
+    };
 
     // GENERAL
     public static Func<PlayableCard> Minion = () =>
@@ -1009,8 +1050,8 @@ internal static class Database
     public static readonly Dictionary<Faction, List<Func<PlayableCard>>> PlayableCardsByFactionDict = new()
     {
         { Faction.Dinosuars, [WarRaptor, WarRaptor, WarRaptor, WarRaptor, ArmoredStego, ArmoredStego, ArmoredStego, Laseratops, Laseratops, KingRex, Augmentation, Augmentation, Howl, Howl, NaturalSelection, Rampage, SurvivalOfTheFittest, ToothClawAndGuns, Upgrade, WildlifePreserve] },
-        //{ Faction.Wizards, [Neophyte, Neophyte, Neophyte, Neophyte, Enchantress, Enchantress, Chronomage, Chronomage, Archmage, MassEnchantment, Portal] }
-        { Faction.Wizards, [Portal, Portal, Portal, Portal, Portal, Portal, Portal, Portal, Portal, Portal] }
+        { Faction.Wizards, [Neophyte, Neophyte, Neophyte, Neophyte, Enchantress, Enchantress, Chronomage, Chronomage, Archmage, MassEnchantment, Portal, Sacrifice] }
+        //{ Faction.Wizards, [Sacrifice, Archmage, ToothClawAndGuns, Sacrifice, Archmage, ToothClawAndGuns, Sacrifice, WarRaptor, ToothClawAndGuns, Sacrifice, Archmage, ToothClawAndGuns, Sacrifice, Archmage, ToothClawAndGuns, Sacrifice, Archmage, ToothClawAndGuns] }
     };
 
     public static readonly Dictionary<Faction, List<Func<BaseCard>>> BaseCardsByFactionDict = new()
