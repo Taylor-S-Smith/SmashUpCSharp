@@ -1,6 +1,5 @@
 The next steps are:
-- Finish Turn Phase Logic
-- Implement rest of Front-End API
+- Implement mulligan
 - Wizards!!!
 - Refactor input field to support a variety of display types, including: hand, single card display, list display
 - Reuse Battle Page, rather than create new instance each time

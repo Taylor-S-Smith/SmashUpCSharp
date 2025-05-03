@@ -19,11 +19,6 @@ internal partial class Application()
         private static readonly List<Button> _buttons = [_showDiscardButton, _endTurnButton, _showDeckButton];
         private static readonly List<Guid> _buttonIds = _buttons.Select(x => x.Id).ToList();
 
-        public bool AskMulligan()
-        {
-            throw new NotImplementedException();
-        }
-
         public virtual List<(string, List<FactionModel>)> ChooseFactions(List<string> playerNames, List<FactionModel> factionOptions)
         {
             return new DeckSelectionPage(playerNames, factionOptions).Run();
@@ -34,6 +29,19 @@ internal partial class Application()
             int numPlayers = new PlayerNumPage().Run();
             List<string> names = new PlayerNamePage(numPlayers).Run();
             return names;
+        }
+
+        public bool SelectBool(List<PlayableCard> cardsToDisplay, string displayText)
+        {
+            // Create Targeter
+            Button yes = new(Guid.NewGuid(), "Yes");
+            Button no = new(Guid.NewGuid(), "No");
+
+            var buttonTargeter = new SelectOption([yes.Id, no.Id]);
+
+            var optionId = new BattlePage(_table != null ? _table.GetBaseSlots() : [], new("Mulligan", []), cardsToDisplay, [yes, no], new Targeter([buttonTargeter]), displayText).Run();
+
+            return optionId == yes.Id;
         }
 
         public void InitializeData(Table table)
@@ -87,8 +95,7 @@ internal partial class Application()
                     new BattlePage(_table.GetBaseSlots(), _table.ActivePlayer.Player, [cardToDisplay], _buttons, new Targeter([])).Run();
                     page.Run();
                 }
-            }
-            
+            }            
         }
 
         public SelectFieldCardUIResult SelectFieldCard(List<List<Guid>> validCardIds, PlayableCard? cardToDisplay, string? displayText)

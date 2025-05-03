@@ -83,7 +83,7 @@ internal class Battle
         //Mulligan
         if (!player.Hand.Any(x => x.CardType == PlayableCardType.Minion))
         {
-            bool wantsToMulligan = _userInputHandler.AskMulligan();
+            bool wantsToMulligan = _userInputHandler.SelectBool(player.Hand.ToList(), $"{player.Name}'s hand contains no minions, would you like to mulligan?");
 
             if (wantsToMulligan)
             {
