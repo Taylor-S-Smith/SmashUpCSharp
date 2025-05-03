@@ -1,4 +1,9 @@
+Cards that need a special:
+- Summon
+
+
 Other TODOs:
+- When your hand runs out of cards (AKA, when targer has no options), skip to next available targeter. If none exist, stay in same targeter.
 - Remove duplication in Page.Run() logic
 - Build the Base Deck correctly
 - Choose factions correctly

@@ -902,7 +902,7 @@ internal static class Database
     };
     public static Func<PlayableCard> MysticStudies = () =>
     {
-        PlayableCard enchantress = new
+        PlayableCard mysticStudies = new
         (
             Faction.Wizards,
             PlayableCardType.Action,
@@ -921,13 +921,13 @@ internal static class Database
             PlayLocation.Discard
         );
 
-        enchantress.OnPlay += (battle, baseslot) =>
+        mysticStudies.OnPlay += (battle, baseslot) =>
         {
-            var drawnCards = enchantress.Controller.Draw(2);
-            enchantress.Controller.Hand.AddRange(drawnCards);
+            var drawnCards = mysticStudies.Controller.Draw(2);
+            mysticStudies.Controller.Hand.AddRange(drawnCards);
         };
 
-        return enchantress;
+        return mysticStudies;
     };
     public static Func<PlayableCard> Portal = () =>
     {
@@ -1018,7 +1018,35 @@ internal static class Database
 
         return sacrifice;
     };
+    //public static Func<PlayableCard> Scry = () => { }
+    public static Func<PlayableCard> Summon = () =>
+    {
+        PlayableCard summon = new
+        (
+            Faction.Wizards,
+            PlayableCardType.Action,
+            "Summon",
+            [
+                @"A   ___  Summon         A",
+                @".-~     '.               ",
+                @" / /  ~@\   )            ",
+                @" |  |< ~\(..)            ",
+                @" \  \<   .,,    _____    ",
+                @"/~\ \< /         \O/     ",
+                @"/-~\ \_|          |      ",
+                @"                 / \     ",
+                @"  Play an extra minion.  ",
+            ],
+            PlayLocation.Discard
+        );
 
+        summon.OnPlay += (battle, baseslot) =>
+        {
+            summon.Controller.MinionPlays += 1;
+        };
+
+        return summon;
+    };
     // GENERAL
     public static Func<PlayableCard> Minion = () =>
     {
@@ -1050,8 +1078,8 @@ internal static class Database
     public static readonly Dictionary<Faction, List<Func<PlayableCard>>> PlayableCardsByFactionDict = new()
     {
         { Faction.Dinosuars, [WarRaptor, WarRaptor, WarRaptor, WarRaptor, ArmoredStego, ArmoredStego, ArmoredStego, Laseratops, Laseratops, KingRex, Augmentation, Augmentation, Howl, Howl, NaturalSelection, Rampage, SurvivalOfTheFittest, ToothClawAndGuns, Upgrade, WildlifePreserve] },
-        { Faction.Wizards, [Neophyte, Neophyte, Neophyte, Neophyte, Enchantress, Enchantress, Chronomage, Chronomage, Archmage, MassEnchantment, Portal, Sacrifice] }
-        //{ Faction.Wizards, [Sacrifice, Archmage, ToothClawAndGuns, Sacrifice, Archmage, ToothClawAndGuns, Sacrifice, WarRaptor, ToothClawAndGuns, Sacrifice, Archmage, ToothClawAndGuns, Sacrifice, Archmage, ToothClawAndGuns, Sacrifice, Archmage, ToothClawAndGuns] }
+        //{ Faction.Wizards, [Neophyte, Neophyte, Neophyte, Neophyte, Enchantress, Enchantress, Chronomage, Chronomage, Archmage, MassEnchantment, Portal, Sacrifice, Summon, Summon] }
+        { Faction.Wizards, [Archmage, Summon, Archmage, Summon, Archmage, Summon, Archmage, Summon, Archmage, Summon] }
     };
 
     public static readonly Dictionary<Faction, List<Func<BaseCard>>> BaseCardsByFactionDict = new()
