@@ -340,7 +340,7 @@ internal class Battle
         territory.Cards.Add(cardToPlay);
 
         // Activate Card Ability
-        cardToPlay.TriggerOnAddToBase(this, chosenBase);
+        cardToPlay.TriggerOnAddToBase(this, slot);
         cardToPlay.TriggerOnPlay(this, slot);
 
         // Trigger Base Effects (This includes updating the base's total power)
@@ -435,7 +435,7 @@ internal class Battle
                 if (territory.Cards.Remove(cardToRemove))
                 {
                     // Trigger leave of base
-                    cardToRemove.TriggerOnRemoveFromBase(this, slot.BaseCard);
+                    cardToRemove.TriggerOnRemoveFromBase(this, slot);
                     slot.BaseCard.TriggerOnRemoveCard(this, cardToRemove);
                     baseTheCardIsOn = slot.BaseCard;
                     break;

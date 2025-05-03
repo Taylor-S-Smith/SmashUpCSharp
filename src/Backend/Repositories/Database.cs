@@ -36,12 +36,17 @@ internal static class Database
             2
         );
 
+        void ChangePowerForEachWarRaptorOnBase(Battle battle, BaseSlot baseSlot, int amount = 1)
+        {
+            int currRaptorCount = baseSlot.Territories.SelectMany(x => x.Cards).Where(x => x.Name == WAR_RAPTOR_NAME).ToList().Count;
+            warRaptor.ApplyPowerChange(battle, warRaptor, currRaptorCount);
+        }
+
         warRaptor.OnPlay += (battle, baseSlot) =>
         {
             if (baseSlot == null) throw new Exception("No base passed in for War Raptor");
             // Gain Power for current War Raptors on base
-            int currRaptorCount = baseSlot.Territories.SelectMany(x => x.Cards).Where(x => x.Name == WAR_RAPTOR_NAME).ToList().Count;
-            warRaptor.ApplyPowerChange(battle, warRaptor, currRaptorCount);
+            ChangePowerForEachWarRaptorOnBase(battle, baseSlot);
         };
 
         void addCardHandler(Battle battle, PlayableCard card)
@@ -57,22 +62,25 @@ internal static class Database
                 warRaptor.ApplyPowerChange(battle, warRaptor, -1);
         }
 
-        warRaptor.OnAddToBase += (battle, baseCard) =>
+        warRaptor.OnAddToBase += (battle, baseSlot) =>
         {
+            ChangePowerForEachWarRaptorOnBase(battle, baseSlot);
             // Set Up Listeners for future War Raptor Changes
-            baseCard.OnAddCard += addCardHandler;
-            baseCard.OnRemoveCard += removeCardHandler;
+            baseSlot.BaseCard.OnAddCard += addCardHandler;
+            baseSlot.BaseCard.OnRemoveCard += removeCardHandler;
         };
 
-        warRaptor.OnRemoveFromBase += (battle, baseCard) =>
+        warRaptor.OnRemoveFromBase += (battle, baseSlot) =>
         {
+            ChangePowerForEachWarRaptorOnBase(battle, baseSlot, -1);
             // Remove Listeners
-            baseCard.OnAddCard -= addCardHandler;
-            baseCard.OnRemoveCard -= removeCardHandler;
+            baseSlot.BaseCard.OnAddCard -= addCardHandler;
+            baseSlot.BaseCard.OnRemoveCard -= removeCardHandler;
         };
 
         return warRaptor;
     };
+
     public static Func<PlayableCard> ArmoredStego = () =>
     {
         PlayableCard armoredStego = new
@@ -562,7 +570,7 @@ internal static class Database
             if (card.Controller == wildlifePreserve.Controller) protectionsGranted.ForEach(x => card.Protections.Remove(x));
         }
 
-        wildlifePreserve.OnAddToBase += (battle,  baseAttachedTo) =>
+        wildlifePreserve.OnAddToBase += (battle,  baseSlot) =>
         {
             // Update protections to protect against active opponents
             List<Player> otherPlayers = battle.GetPlayers().Where(x => x != wildlifePreserve.Controller).ToList();
@@ -573,7 +581,7 @@ internal static class Database
 
             /// Only cards from the base this is on are protected
             List<PlayableCard> minionsOnBase = battle.GetBaseSlots()
-                                                      .Single(slot => slot.BaseCard == baseAttachedTo)
+                                                      .Single(slot => slot == baseSlot)
                                                       .Cards
                                                       .Where(x => x.CardType == PlayableCardType.Minion)
                                                       .ToList();
@@ -581,8 +589,8 @@ internal static class Database
             minionsOnBase.ForEach(x => AddProtectionsToCard(battle, x));
 
 
-            baseAttachedTo.OnAddCard += AddProtectionsToCard;
-            baseAttachedTo.OnRemoveCard += RemoveProtectionsFromCard;
+            baseSlot.BaseCard.OnAddCard += AddProtectionsToCard;
+            baseSlot.BaseCard.OnRemoveCard += RemoveProtectionsFromCard;
 
             // Remove any actions from other players on your minions
             foreach (var minion in minionsOnBase)
@@ -600,17 +608,17 @@ internal static class Database
             }            
         };
 
-        wildlifePreserve.OnRemoveFromBase += (battle, cardDetachedFrom) =>
+        wildlifePreserve.OnRemoveFromBase += (battle, baseSlot) =>
         {
             List<PlayableCard> protectedCards = battle.GetBaseSlots()
-                                                      .Single(slot => slot.BaseCard == cardDetachedFrom)
+                                                      .Single(slot => slot == baseSlot)
                                                       .Cards
                                                       .ToList();
 
             protectedCards.ForEach(x => RemoveProtectionsFromCard(battle, x));
 
-            cardDetachedFrom.OnAddCard -= AddProtectionsToCard;
-            cardDetachedFrom.OnRemoveCard -= RemoveProtectionsFromCard;
+            baseSlot.BaseCard.OnAddCard -= AddProtectionsToCard;
+            baseSlot.BaseCard.OnRemoveCard -= RemoveProtectionsFromCard;
         };      
 
         return wildlifePreserve;

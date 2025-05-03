@@ -7,6 +7,8 @@ Other TODOs:
 Misc Tests:
 - Test removing Upgrade from a minion
 - Test removing Upgrade from a minion when it's ApplyPower was protected
+- War Raptor can survive Leprachaun
+- Move a war raptor to a base with a different number of war raptors
 
 
 Event Approach Rules:

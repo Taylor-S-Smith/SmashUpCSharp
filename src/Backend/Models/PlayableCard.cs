@@ -53,10 +53,10 @@ internal class PlayableCard : Card
     public event Action<int> OnPowerChange = delegate { };
     public void TriggerOnPlay(Battle battle, BaseSlot? baseSlot=null) => OnPlay(battle, baseSlot);
     public event Action<Battle, BaseSlot?> OnPlay = delegate { };
-    public void TriggerOnAddToBase(Battle battle, BaseCard baseCard) => OnAddToBase(battle, baseCard);
-    public event Action<Battle, BaseCard> OnAddToBase = delegate { };
-    public void TriggerOnRemoveFromBase(Battle battle, BaseCard baseCard) => OnRemoveFromBase(battle, baseCard);
-    public event Action<Battle, BaseCard> OnRemoveFromBase = delegate { };
+    public void TriggerOnAddToBase(Battle battle, BaseSlot baseSlot) => OnAddToBase(battle, baseSlot);
+    public event Action<Battle, BaseSlot> OnAddToBase = delegate { };
+    public void TriggerOnRemoveFromBase(Battle battle, BaseSlot baseSlot) => OnRemoveFromBase(battle, baseSlot);
+    public event Action<Battle, BaseSlot> OnRemoveFromBase = delegate { };
     public void TriggerOnDiscard(GlobalEventManager eventManager) => OnDiscard(eventManager);
     public event Action<GlobalEventManager> OnDiscard;
     public void TriggerOnProtect(Battle battle) => OnProtect(battle);
