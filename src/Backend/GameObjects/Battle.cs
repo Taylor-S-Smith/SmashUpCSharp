@@ -5,6 +5,7 @@ using SmashUp.Backend.API;
 using FluentResults;
 using LinqKit;
 using SmashUp.Backend.Repositories;
+using System.Numerics;
 
 namespace SmashUp.Backend.GameObjects;
 
@@ -78,14 +79,16 @@ internal class Battle
     }
     private void DrawInitialHand(Player player)
     {
-        player.Draw(5);
+        player.Hand = player.Draw(5);
 
         //Mulligan
         if (!player.Hand.Any(x => x.CardType == PlayableCardType.Minion))
         {
-            bool wantsToMulligan = _userInputHandler.SelectBool(player.Hand.ToList(), $"{player.Name}'s hand contains no minions, would you like to mulligan?");
+            Option yes = new("YES");
+            Option no = new("NO");
+            Guid optionId = _userInputHandler.SelectOption([yes, no], player.Hand.ToList(), $"{player.Name}'s opening hand contains no minions, would you like to mulligan?");
 
-            if (wantsToMulligan)
+            if (optionId == yes.Id)
             {
                 player.ReplaceHand();
             }
@@ -139,7 +142,8 @@ internal class Battle
                 Result result = ValidatePlay(_table.ActivePlayer.Player, cardToPlay);
                 if (result.IsSuccess)
                 {
-                    PlayCard(_table.ActivePlayer.Player, cardToPlay);
+                    _table.ActivePlayer.Player.RemoveFromHand(cardToPlay);
+                    PlayCard(cardToPlay);
                 }
                 else
                 {
@@ -229,7 +233,7 @@ internal class Battle
     /// </summary>
     private void Draw2Cards()
     {
-        _table.ActivePlayer.Player.Draw(2);
+        _table.ActivePlayer.Player.Hand.AddRange(_table.ActivePlayer.Player.Draw(2));
         int numCards = _table.ActivePlayer.Player.Hand.Count;
         if (numCards > 10)
         {
@@ -274,23 +278,28 @@ internal class Battle
 
 
     // PLAY CARDS
-    private void PlayCard(Player player, PlayableCard cardToPlay)
+    public void PlayCard(PlayableCard cardToPlay)
     {
-        RemovePlayResource(player, cardToPlay);
-
-        player.RemoveFromHand(cardToPlay);
-
+        RemovePlayResource(cardToPlay.Controller, cardToPlay);
+        ResolveCardPlay(cardToPlay);
+    }
+    public void PlayExtraCard(PlayableCard cardToPlay)
+    {
+        ResolveCardPlay(cardToPlay);
+    }
+    private void ResolveCardPlay(PlayableCard cardToPlay)
+    {
         if (cardToPlay.PlayLocation == PlayLocation.Base)
         {
             PlayCardToBase(cardToPlay);
         }
         else if (cardToPlay.PlayLocation == PlayLocation.Minion)
         {
-            PlayCardToMinion(player, cardToPlay);
+            PlayCardToMinion(cardToPlay);
         }
         else if(cardToPlay.PlayLocation == PlayLocation.Discard)
         {
-            PlayCardToDiscard(player, cardToPlay);
+            PlayCardToDiscard(cardToPlay);
         }
     }
     private static Result ValidatePlay(Player player, PlayableCard cardToPlay)
@@ -337,15 +346,13 @@ internal class Battle
         // Trigger Base Effects (This includes updating the base's total power)
         chosenBase.TriggerOnAddCard(this, cardToPlay);
     }
-    private void PlayCardToDiscard(Player player, PlayableCard cardToPlay)
+    private void PlayCardToDiscard(PlayableCard cardToPlay)
     {
-        // Activate Card Ability
         cardToPlay.TriggerOnPlay(this);
-
-        // Put card in discard
-        player.DiscardPile.Add(cardToPlay);
+        Discard(cardToPlay);
     }
-    private void PlayCardToMinion(Player player, PlayableCard cardToPlay)
+
+    private void PlayCardToMinion(PlayableCard cardToPlay)
     {
         SelectFieldCardQuery query = new()
         {
@@ -355,14 +362,14 @@ internal class Battle
 
         if (cardToAttachTo != null)
         {
-            if (AttemptToAffect(cardToAttachTo, EffectType.Attach, PlayableCardType.Action, player))
+            if (AttemptToAffect(cardToAttachTo, EffectType.Attach, PlayableCardType.Action, cardToPlay.Controller))
             {
                 cardToAttachTo.Attach(cardToPlay);
                 cardToPlay.TriggerOnAttach(this, cardToAttachTo);
             }
             else
             {
-                player.DiscardPile.Add(cardToPlay);
+                cardToPlay.Owner.DiscardPile.Add(cardToPlay);
             }
         }
     }
@@ -373,16 +380,18 @@ internal class Battle
     {
         if (AttemptToAffect(cardToDestroy, EffectType.Destroy, affector.CardType, affector.Controller))
         {
-            var baseCard = RemoveCardFromBattleField(cardToDestroy, cardToDestroy.Owner.DiscardPile.Add);
+            var baseCard = RemoveCardFromBattleField(cardToDestroy);
+            Discard(cardToDestroy);
             baseCard.TriggerAfterDestroyCard(cardToDestroy);
         }
     }
     /// <summary>
     /// Discarding removes the card from play, but does not count as affecting the card
     /// </summary>
-    public void Discard(PlayableCard cardToDiscard)
+    public void Discard(PlayableCard cardToPlay)
     {
-        var baseCard = RemoveCardFromBattleField(cardToDiscard, cardToDiscard.Owner.DiscardPile.Add);
+        cardToPlay.TriggerOnDiscard(EventManager);
+        cardToPlay.Owner.DiscardPile.Add(cardToPlay);
     }
     /// <summary>
     /// Checks if a card can be affected by a specific effect. 
@@ -415,7 +424,7 @@ internal class Battle
     /// </summary>
     /// <param name="AddFunction">Function that is called after removal, usually determines where the card ends up</param>
     /// <returns>Base the card was removed from</returns>
-    private BaseCard RemoveCardFromBattleField(PlayableCard cardToRemove, Action<PlayableCard> AddFunction)
+    private BaseCard RemoveCardFromBattleField(PlayableCard cardToRemove)
     {
         BaseCard? baseTheCardIsOn = null;
         foreach (BaseSlot slot in _table.GetBaseSlots())
@@ -425,9 +434,6 @@ internal class Battle
                 // Check all played cards on base
                 if (territory.Cards.Remove(cardToRemove))
                 {
-                    // Add card to other location
-                    AddFunction(cardToRemove);
-
                     // Trigger leave of base
                     cardToRemove.TriggerOnRemoveFromBase(this, slot.BaseCard);
                     slot.BaseCard.TriggerOnRemoveCard(this, cardToRemove);
@@ -441,9 +447,6 @@ internal class Battle
                     {
                         if (card.Detach(cardToRemove))
                         {
-                            // Add card to other location
-                            AddFunction(cardToRemove);
-
                             //Trigger on detach
                             cardToRemove.TriggerOnDetach(this, card);
                             baseTheCardIsOn = slot.BaseCard;
@@ -455,15 +458,11 @@ internal class Battle
             if (baseTheCardIsOn != null) break;
         }
 
-
         if(baseTheCardIsOn == null) throw new Exception($"{cardToRemove.Name} with ID {cardToRemove.Id} is not on the battlefield, so can't be removed");
-        cardToRemove.TriggerOnRemoveFromBattleField(EventManager);
-        cardToRemove.ChangeController(this, cardToRemove.Owner);
-
-        return baseTheCardIsOn;        
+        return baseTheCardIsOn;
     }
 
-    // TABLE FUNCTIONS
+    // EXPOSE TABLE FUNCTIONS
     public List<BaseSlot> GetBaseSlots()
     {
         return _table.GetBaseSlots();
@@ -504,7 +503,6 @@ internal class Battle
             result.SelectedCardId != null ? GetBaseCardByFieldCardId((Guid)result.SelectedCardId) : null, 
             result.ActionCanceled);
     }
-
     public record SelectBaseCardResult(BaseCard? SelectedBase, bool ActionCanceled);
     /// <returns>Selected Base Card Result, or null if there are no available targets</returns>
     public SelectBaseCardResult? SelectBaseCard()
@@ -513,12 +511,16 @@ internal class Battle
         Guid chosenBaseId = _userInputHandler.SelectBaseCard(validBaseIds);
         return new(GetBaseCardById(chosenBaseId), false);
     }
-
     public PlayableCard SelectCard(List<PlayableCard> options, string displayText)
     {
         Guid chosenId = _userInputHandler.SelectPlayableCard(options, 1, displayText).Single();
         return options.Where(x => x.Id == chosenId).SingleOrDefault() ?? throw new Exception($"No option with ID: {chosenId}");
     }
+    public Guid SelectOption(List<Option> options, List<PlayableCard> cardsToDisplay, string displayText)
+    {
+       return _userInputHandler.SelectOption(options, cardsToDisplay, displayText);
+    }
+
 
     public List<PlayableCard> GetValidFieldCards(Func<PlayableCard, bool> pred, BaseCard? baseCard = null)
     {

@@ -57,8 +57,8 @@ internal class PlayableCard : Card
     public event Action<Battle, BaseCard> OnAddToBase = delegate { };
     public void TriggerOnRemoveFromBase(Battle battle, BaseCard baseCard) => OnRemoveFromBase(battle, baseCard);
     public event Action<Battle, BaseCard> OnRemoveFromBase = delegate { };
-    public void TriggerOnRemoveFromBattleField(GlobalEventManager eventManager) => OnRemoveFromBattlefield(eventManager);
-    public event Action<GlobalEventManager> OnRemoveFromBattlefield;
+    public void TriggerOnDiscard(GlobalEventManager eventManager) => OnDiscard(eventManager);
+    public event Action<GlobalEventManager> OnDiscard;
     public void TriggerOnProtect(Battle battle) => OnProtect(battle);
     public event Action<Battle> OnProtect = delegate { };
     public void TriggerOnAttach(Battle battle, PlayableCard cardAttachedTo) => OnAttach(battle, cardAttachedTo);
@@ -130,9 +130,10 @@ internal class PlayableCard : Card
         CurrentPower = power;
         PlayLocation = playLocation;
 
-        OnRemoveFromBattlefield = (eventManager) =>
+        OnDiscard = (eventManager) =>
         {
             CurrentPower = PrintedPower;
+            Controller = Owner;
         };
     }
 }

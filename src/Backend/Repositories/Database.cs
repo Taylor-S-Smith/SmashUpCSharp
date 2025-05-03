@@ -2,12 +2,15 @@
 using SmashUp.Backend.GameObjects;
 using static SmashUp.Backend.GameObjects.Battle;
 using static SmashUp.Backend.Models.PlayableCard;
+using System.Diagnostics;
+using System.Numerics;
+using SmashUp.Frontend.Utilities;
 
 namespace SmashUp.Backend.Repositories;
 
 internal static class Database
 {
-    //DINOSAURS
+    // DINOSAURS
 
     public static Func<PlayableCard> WarRaptor = () =>
     {
@@ -15,7 +18,7 @@ internal static class Database
 
         PlayableCard warRaptor = new
         (
-            Faction.dinosuars,
+            Faction.Dinosuars,
             PlayableCardType.Minion,
             WAR_RAPTOR_NAME,
             [
@@ -73,7 +76,7 @@ internal static class Database
     {
         PlayableCard armoredStego = new
         (
-            Faction.dinosuars,
+            Faction.Dinosuars,
             PlayableCardType.Minion,
             "Armored Stego",
             [
@@ -113,7 +116,7 @@ internal static class Database
             battle.EventManager.EndOfTurn += endTurnHandler;
         };
 
-        armoredStego.OnRemoveFromBattlefield += (eventManager) =>
+        armoredStego.OnDiscard += (eventManager) =>
         {
             eventManager.StartOfTurn -= turnStartHandler;
             eventManager.EndOfTurn -= endTurnHandler;
@@ -139,7 +142,7 @@ internal static class Database
     {
         PlayableCard laseratops = new
         (
-            Faction.dinosuars,
+            Faction.Dinosuars,
             PlayableCardType.Minion,
             "Laseratops",
             [
@@ -176,7 +179,7 @@ internal static class Database
     {
         return new
         (
-            Faction.dinosuars,
+            Faction.Dinosuars,
             PlayableCardType.Minion,
             "King Rex",
             [
@@ -197,7 +200,7 @@ internal static class Database
     {
         PlayableCard augmentation = new
         (
-            Faction.dinosuars,
+            Faction.Dinosuars,
             PlayableCardType.Action,
             "Augmentation",
             [
@@ -246,7 +249,7 @@ internal static class Database
     {
         PlayableCard howl = new
         (
-            Faction.dinosuars,
+            Faction.Dinosuars,
             PlayableCardType.Action,
             "Howl",
             [
@@ -293,7 +296,7 @@ internal static class Database
     {
         PlayableCard naturalSelection = new
         (
-            Faction.dinosuars,
+            Faction.Dinosuars,
             PlayableCardType.Action,
             "Natural Selection",
             [
@@ -340,7 +343,7 @@ internal static class Database
     {
         PlayableCard rampage = new
         (
-            Faction.dinosuars,
+            Faction.Dinosuars,
             PlayableCardType.Action,
             "Rampage",
             [
@@ -388,7 +391,7 @@ internal static class Database
     {
         PlayableCard survivalOfTheFittest = new
         (
-            Faction.dinosuars,
+            Faction.Dinosuars,
             PlayableCardType.Action,
             "Survival Of The Fittest",
             [
@@ -434,7 +437,7 @@ internal static class Database
     {
         PlayableCard toothAndClawAndGuns = new
         (
-            Faction.dinosuars,
+            Faction.Dinosuars,
             PlayableCardType.Action,
             "Tooth And Claw...And Guns",
             [
@@ -480,7 +483,7 @@ internal static class Database
     {
         PlayableCard upgrade = new
         (
-            Faction.dinosuars,
+            Faction.Dinosuars,
             PlayableCardType.Action,
             "Upgrade",
             [
@@ -514,7 +517,7 @@ internal static class Database
     {
         PlayableCard wildlifePreserve = new
         (
-            Faction.dinosuars,
+            Faction.Dinosuars,
             PlayableCardType.Action,
             "Wildlife Preserve",
             [
@@ -616,7 +619,7 @@ internal static class Database
     {
         return new
         (
-            Faction.dinosuars,
+            Faction.Dinosuars,
             "Jungle Oasis",
             [
                 "      2      0      0       ",
@@ -636,7 +639,7 @@ internal static class Database
     {
         BaseCard tarPits = new
         (
-            Faction.dinosuars,
+            Faction.Dinosuars,
             "Tar Pits",
             [
                 "      4      3      1       ",
@@ -663,6 +666,67 @@ internal static class Database
     };
 
 
+    // WIZARDS
+
+    public static Func<PlayableCard> Neophyte = () =>
+    {
+        PlayableCard neophyte = new
+        (
+            Faction.Wizards,
+            PlayableCardType.Minion,
+            "Neophyte",
+            [
+                @"2       Neophyte        2",
+                @"          o              ",
+                @"          |- [_]         ",
+                @"         / \ | |         ",
+                @" Reveal the top card of  ",
+                @"your deck. If action, you",
+                @" may put it in your hand ",
+                @" or play it as an action.",
+                @"  Otherwise, return it.  ",
+            ],
+            PlayLocation.Base,
+            2
+        );
+
+        neophyte.OnPlay += (battle, baseSlot) =>
+        {
+            var cardToReveal = neophyte.Controller.Draw();
+
+            Option playIt = new("Play It as Extra Action");
+            Option drawIt = new("Draw It");
+            Option returnIt = new("Return It");
+
+            List<Option> options = [];
+            if (cardToReveal.CardType == PlayableCardType.Action)
+            {
+                options.Add(playIt);
+                options.Add(drawIt);
+            }
+            else
+            {
+                options.Add(returnIt);
+            }
+            Guid chosenOption = battle.SelectOption(options, [cardToReveal], $"Neophyte revealed {cardToReveal.Name}");
+
+            if (playIt.Id == chosenOption)
+            {
+                battle.PlayExtraCard(cardToReveal);
+            }
+            else if (drawIt.Id == chosenOption)
+            {
+                neophyte.Controller.Hand.Add(cardToReveal);
+            }
+            else if (returnIt.Id == chosenOption)
+            {
+                neophyte.Controller.Deck.AddToTop(cardToReveal);
+            }
+        };
+
+        return neophyte;
+    };
+
 
     // GENERAL
     public static Func<PlayableCard> Minion = () =>
@@ -670,7 +734,7 @@ internal static class Database
 
         PlayableCard minion = new
         (
-            Faction.dinosuars,
+            Faction.Dinosuars,
             PlayableCardType.Minion,
             "minion",
             [
@@ -694,12 +758,13 @@ internal static class Database
 
     public static readonly Dictionary<Faction, List<Func<PlayableCard>>> PlayableCardsByFactionDict = new()
     {
-        { Faction.dinosuars, [WarRaptor, WarRaptor, WarRaptor, WarRaptor, ArmoredStego, ArmoredStego, ArmoredStego, Laseratops, Laseratops, KingRex, Augmentation, Augmentation, Howl, Howl, NaturalSelection, Rampage, SurvivalOfTheFittest, ToothAndClawAndGuns, Upgrade, WildlifePreserve] }
-        //{ Faction.dinosuars, [Augmentation, Augmentation, Augmentation, Augmentation, Augmentation, Augmentation, Augmentation, Augmentation, Augmentation, Augmentation, Augmentation, Augmentation] }
+        { Faction.Dinosuars, [WarRaptor, WarRaptor, WarRaptor, WarRaptor, ArmoredStego, ArmoredStego, ArmoredStego, Laseratops, Laseratops, KingRex, Augmentation, Augmentation, Howl, Howl, NaturalSelection, Rampage, SurvivalOfTheFittest, ToothAndClawAndGuns, Upgrade, WildlifePreserve] },
+        { Faction.Wizards, [Neophyte, Neophyte, Neophyte, Neophyte, Neophyte, Neophyte, Augmentation, Augmentation, Augmentation, Augmentation, Augmentation, Augmentation, Augmentation, Augmentation, Augmentation, Augmentation, Augmentation] }
     };
 
     public static readonly Dictionary<Faction, List<Func<BaseCard>>> BaseCardsByFactionDict = new()
     {
-        { Faction.dinosuars, [JungleOasis, TarPits] }
+        { Faction.Dinosuars, [JungleOasis, TarPits] },
+        { Faction.Wizards, [JungleOasis, TarPits] }
     };
 }

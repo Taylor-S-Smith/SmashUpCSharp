@@ -29,6 +29,10 @@ internal class Deck<T> where T : Card
     {
         _cards.Add(card);
     }
+    public void AddToTop(T card)
+    {
+        _cards.Insert(0, card);
+    }
     public void Shuffle()
     {
         Random rng = new();

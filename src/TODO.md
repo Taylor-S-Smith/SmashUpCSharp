@@ -1,14 +1,4 @@
-The next steps are:
-- Implement mulligan
-- Wizards!!!
-- Refactor input field to support a variety of display types, including: hand, single card display, list display
-- Reuse Battle Page, rather than create new instance each time
-- Add ability to cancel a play action
-- Have actions call a method to display the action that happen to the user as they unfold, at least for events that are not obvious (e.g. "X was protected from destruction")
-- Warn user before they perform an action that would not result in any meaningful changes
-
 Other TODOs:
-- Update "Tooth And Claw...And Guns" to erratta
 - Remove duplication in Page.Run() logic
 - Build the Base Deck correctly
 - Choose factions correctly

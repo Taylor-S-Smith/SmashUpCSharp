@@ -2,12 +2,12 @@
 
 internal enum Faction
 {
-    aliens,
-    dinosuars,
-    ninjas,
-    pirates,
-    robots,
-    tricksters,
-    wizards,
-    zombies
+    Aliens,
+    Dinosuars,
+    Ninjas,
+    Pirates,
+    Robots,
+    Tricksters,
+    Wizards,
+    Zombies
 }

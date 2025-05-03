@@ -1,4 +1,7 @@
-﻿namespace SmashUp.Backend.Models;
+﻿using System.Collections.Generic;
+using SmashUp.Backend.GameObjects;
+
+namespace SmashUp.Backend.Models;
 
 /// <summary>
 /// Draw: Deck -> Hand
@@ -14,11 +17,9 @@ internal class Player : Identifiable
     public int VictoryPoints { get; private set; }
     public int MinionPlays { get; set; }
     public int ActionPlays { get; set; }
-
-    private readonly List<PlayableCard> _hand = [];
-    public IReadOnlyList<PlayableCard> Hand => _hand.AsReadOnly();
+    public List<PlayableCard> Hand { get; set; } = [];
     public Deck<PlayableCard> Deck { get; }
-    public List<PlayableCard> DiscardPile { get; } = [];
+    public List<PlayableCard> DiscardPile { get; private set; } = [];
 
     /// <param name="name"></param>
     public Player(string name, List<PlayableCard> cards)
@@ -29,15 +30,6 @@ internal class Player : Identifiable
         Deck = new(cards);
     }
 
-    public List<string> GetDeck()
-    {
-        return Deck.GetCards();
-    }
-    public List<string> GetDiscard()
-    {
-        return DiscardPile.Select(c => c.Name).ToList();
-    }
-
     public void GainVP(int numVPGained)
     {
         VictoryPoints += numVPGained;
@@ -45,18 +37,32 @@ internal class Player : Identifiable
 
     public void Discard(PlayableCard cardToDiscard)
     {
-        if (_hand.Remove(cardToDiscard) != true) throw new Exception($"{Name}'s hand doesn't contain {cardToDiscard.ToString()}");
+        if (Hand.Remove(cardToDiscard) != true) throw new Exception($"{Name}'s hand doesn't contain {cardToDiscard.ToString()}");
         DiscardPile.Add(cardToDiscard);
     }
 
-    public void Draw(int numToDraw)
+    public List<PlayableCard> Draw(int numToDraw)
     {
-        _hand.AddRange(Deck.Draw(numToDraw));
+        List<PlayableCard> cardsToDraw = [];
+        for(int i = 0; i < numToDraw; i++)
+        {
+            cardsToDraw.Add(Draw());
+        }
+
+        return cardsToDraw;
     }
 
-    public void AddToHand(PlayableCard card)
+    public PlayableCard Draw()
     {
-        _hand.Add(card);
+        var cardToDraw = Deck.Draw();
+        if(cardToDraw == null)
+        {
+            Deck.Shuffle(DiscardPile);
+            DiscardPile = [];
+            cardToDraw = Deck.Draw();
+            if (cardToDraw == null) throw new Exception($"Failed to draw card, there are no cards in {Name}'s deck or dicard pile");
+        }
+        return cardToDraw;
     }
 
     /// <summary>
@@ -64,14 +70,14 @@ internal class Player : Identifiable
     /// </summary>
     public void Recard()
     {
-        Deck.AddToBottom(_hand);
+        Deck.AddToBottom(Hand);
         Deck.Shuffle();
-        _hand.Clear();
+        Hand.Clear();
     }
 
     public void RemoveFromHand(PlayableCard cardToPlay)
     {
-        _hand.Remove(cardToPlay);
+        Hand.Remove(cardToPlay);
     }
 
     /// <summary>
@@ -79,8 +85,8 @@ internal class Player : Identifiable
     /// </summary>
     public void ReplaceHand()
     {
-        var cardsToDraw = Deck.Draw(Hand.Count);
+        var cardsToDraw = Draw(Hand.Count);
         Recard();
-        _hand.AddRange(cardsToDraw);
+        Hand.AddRange(cardsToDraw);
     }
 }

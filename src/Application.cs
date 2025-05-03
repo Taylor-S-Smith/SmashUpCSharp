@@ -13,10 +13,10 @@ internal partial class Application()
     private class ConsoleAppBattleUI() : IFrontendBattleAPI
     {
         private Table _table = null!;
-        private static readonly Button _showDiscardButton = new(Guid.NewGuid(), "DISCARD");
-        private static readonly Button _endTurnButton = new(Guid.NewGuid(), "END TURN");
-        private static readonly Button _showDeckButton = new(Guid.NewGuid(), "DECK");
-        private static readonly List<Button> _buttons = [_showDiscardButton, _endTurnButton, _showDeckButton];
+        private static readonly Option _showDiscardButton = new("DISCARD");
+        private static readonly Option _endTurnButton = new("END TURN");
+        private static readonly Option _showDeckButton = new("DECK");
+        private static readonly List<Option> _buttons = [_showDiscardButton, _endTurnButton, _showDeckButton];
         private static readonly List<Guid> _buttonIds = _buttons.Select(x => x.Id).ToList();
 
         public virtual List<(string, List<FactionModel>)> ChooseFactions(List<string> playerNames, List<FactionModel> factionOptions)
@@ -31,17 +31,15 @@ internal partial class Application()
             return names;
         }
 
-        public bool SelectBool(List<PlayableCard> cardsToDisplay, string displayText)
+        public Guid SelectOption(List<Option> buttons, List<PlayableCard> cardsToDisplay, string displayText)
         {
             // Create Targeter
-            Button yes = new(Guid.NewGuid(), "Yes");
-            Button no = new(Guid.NewGuid(), "No");
 
-            var buttonTargeter = new SelectOption([yes.Id, no.Id]);
+            var buttonTargeter = new SelectOption(buttons.Select(x => x.Id).ToList());
 
-            var optionId = new BattlePage(_table != null ? _table.GetBaseSlots() : [], new("Mulligan", []), cardsToDisplay, [yes, no], new Targeter([buttonTargeter]), displayText).Run();
+            var optionId = new BattlePage(_table != null ? _table.GetBaseSlots() : [], new("Mulligan", []), cardsToDisplay, buttons, new Targeter([buttonTargeter]), displayText).Run();
 
-            return optionId == yes.Id;
+            return optionId;
         }
 
         public void InitializeData(Table table)
@@ -140,7 +138,7 @@ internal partial class Application()
     {
         public override List<(string, List<FactionModel>)> ChooseFactions(List<string> playerNames, List<FactionModel> factionOptions)
         {
-            return new([(playerNames[0], [factionOptions[1]]), (playerNames[1], [factionOptions[1]]), (playerNames[2], [factionOptions[1]])]);
+            return new([(playerNames[0], [factionOptions[6]]), (playerNames[1], [factionOptions[6]]), (playerNames[2], [factionOptions[6]])]);
         }
 
         public override List<string> ChoosePlayerNames()
