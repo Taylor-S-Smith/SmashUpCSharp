@@ -1075,6 +1075,39 @@ internal static class Database
 
         return timeLoop;
     };
+    public static Func<PlayableCard> WindsOfChange = () =>
+    {
+        PlayableCard windsOfChange = new
+        (
+            Faction.Wizards,
+            PlayableCardType.Action,
+            "Winds of Change",
+            [
+                @"A    Winds of Change    A",
+                @"~  ~  ~  ~  ~  ~  ~  ~  ~",
+                @"  ~  ~  ~  ~  ~  ~  ~  ~ ",
+                @"~  ~  ~  ~  ~  ~  ~  ~  ~",
+                @"  ~  ~  ~  ~  ~  ~  ~  ~ ",
+                @" Shuffle your hand into  ",
+                @" your deck and draw five ",
+                @" cards. You may play an  ",
+                @"      extra action.      ",
+            ],
+            PlayLocation.Discard
+        );
+
+        windsOfChange.OnPlay += (battle, baseslot) =>
+        {
+            windsOfChange.Controller.Deck.Shuffle(windsOfChange.Controller.Hand);
+            var drawnCards = windsOfChange.Controller.Draw(5);
+            windsOfChange.Controller.Hand = drawnCards;
+
+            windsOfChange.Controller.ActionPlays += 1;
+        };
+
+        return windsOfChange;
+    };
+
     // GENERAL
     public static Func<PlayableCard> Minion = () =>
     {
@@ -1106,8 +1139,8 @@ internal static class Database
     public static readonly Dictionary<Faction, List<Func<PlayableCard>>> PlayableCardsByFactionDict = new()
     {
         { Faction.Dinosuars, [WarRaptor, WarRaptor, WarRaptor, WarRaptor, ArmoredStego, ArmoredStego, ArmoredStego, Laseratops, Laseratops, KingRex, Augmentation, Augmentation, Howl, Howl, NaturalSelection, Rampage, SurvivalOfTheFittest, ToothClawAndGuns, Upgrade, WildlifePreserve] },
-        { Faction.Wizards, [Neophyte, Neophyte, Neophyte, Neophyte, Enchantress, Enchantress, Chronomage, Chronomage, Archmage, MassEnchantment, MysticStudies, MysticStudies, Portal, Sacrifice, Summon, Summon, TimeLoop] }
-        //{ Faction.Wizards, [TimeLoop, Summon, TimeLoop, MysticStudies, MysticStudies, MysticStudies, Summon, TimeLoop, Summon, TimeLoop, Summon, TimeLoop, Summon] }
+        //{ Faction.Wizards, [Neophyte, Neophyte, Neophyte, Neophyte, Enchantress, Enchantress, Chronomage, Chronomage, Archmage, MassEnchantment, MysticStudies, MysticStudies, Portal, Sacrifice, Summon, Summon, TimeLoop, WindsOfChange] }
+        { Faction.Wizards, [WindsOfChange, WindsOfChange, WindsOfChange, WindsOfChange, WindsOfChange, WindsOfChange, WindsOfChange, Neophyte, Neophyte, Neophyte, Neophyte, Neophyte, Neophyte, Neophyte, Neophyte, Neophyte, Neophyte, Summon, TimeLoop, MysticStudies, MysticStudies, MysticStudies, Summon, TimeLoop, Summon, TimeLoop, Summon, TimeLoop, Summon] }
     };
 
     public static readonly Dictionary<Faction, List<Func<BaseCard>>> BaseCardsByFactionDict = new()

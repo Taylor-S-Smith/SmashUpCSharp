@@ -1,6 +1,7 @@
 Cards that need a special:
 - Summon
-- timeLoop
+- TimeLoop
+- Winds of Change
 
 
 Other TODOs:

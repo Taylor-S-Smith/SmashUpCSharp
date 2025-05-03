@@ -290,36 +290,34 @@ namespace SmashUp.Frontend.Pages
         /// <returns></returns>
         private string[] GenerateButtonField(int lineWidth)
         {
-            string[] buttonsGraphic = new string[3];
-            int buttonPadding = (int)Math.Floor((double)((lineWidth - _buttons.Count*10) / (_buttons.Count + 1)));
+            
+            int paddingLength = (int)Math.Floor(((double)lineWidth - _buttons.Sum(x => x.Text.Length + 4)) / (_buttons.Count + 1));
+            string padding = new(' ', paddingLength);
 
-            buttonsGraphic[0] = CreateButtonLine(buttonPadding, "┌────────┐", "╔════════╗");
-            buttonsGraphic[1] = CreateButtonLine(buttonPadding);
-            buttonsGraphic[2] = CreateButtonLine(buttonPadding, "└────────┘", "╚════════╝");
-
-            return buttonsGraphic;
-        }
-
-        private string CreateButtonLine(int buttonPadding, string? graphic=null, string? targetedGraphic=null)
-        {
-            StringBuilder lineBuilder = new();
-
-            lineBuilder.Append(new string(' ', buttonPadding));
-            foreach (var button in _buttons)
-            {
-                if (_targeter.GetTargetId() == button.Id)
-                {
-                    lineBuilder.Append(targetedGraphic ?? $"║{RenderUtil.CenterString(button.Text, 8)}║");
-                }
-                else
-                {
-                    lineBuilder.Append(graphic ?? $"│{RenderUtil.CenterString(button.Text, 8)}│");
-                }
-
-                lineBuilder.Append(new string(' ', buttonPadding));
+            List<string[]> buttonGraphics = [];
+            foreach (var button in _buttons) {
+                buttonGraphics.Add(CreateButtonGraphic(button));
             }
 
-            return lineBuilder.ToString();
+            string[] buttonField = new string[3];
+            for (int i = 0; i < 3; i++)
+            {
+                buttonField[i] = $"{padding}{string.Join(padding, buttonGraphics.Select(x => x[i]).ToList())}{padding}";
+            }
+
+            return buttonField;
+        }
+
+        private string[] CreateButtonGraphic(Option button)
+        {
+            bool isTargeted = _targeter.GetTargetId() == button.Id;
+            int textLength = button.Text.Length;
+            
+            return [
+                isTargeted ? $"╔═{new string('═', textLength)}═╗" : $"┌─{new string('─', textLength)}─┐",
+                isTargeted ? $"║ {button.Text} ║" : $"│ {button.Text} │",
+                isTargeted ? $"╚═{new string('═', textLength)}═╝" : $"└─{new string('─', textLength)}─┘",
+            ];
         }
 
         public override Guid? HandleKeyPress(UserKeyPress keyPress)
