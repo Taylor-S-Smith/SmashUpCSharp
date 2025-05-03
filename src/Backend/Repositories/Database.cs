@@ -1018,7 +1018,46 @@ internal static class Database
 
         return sacrifice;
     };
-    //public static Func<PlayableCard> Scry = () => { }
+    public static Func<PlayableCard> Scry = () =>
+    {
+        PlayableCard scry = new
+        (
+            Faction.Wizards,
+            PlayableCardType.Action,
+            "Scry",
+            [
+                @"A         Scry          A",
+                @"         ______          ",
+                @"        /      \         ",
+                @"       |        |        ",
+                @"        \______/         ",
+                @"       /________\        ",
+                @" Search your deck for an ",
+                @"  action and reveal it.  ",
+                @"  Put it into your hand. ",
+            ],
+            PlayLocation.Discard
+        );
+
+        scry.OnPlay += (battle, baseSlot) =>
+        {
+            string displayText = "Choose an action from your deck to put in your hand:";
+            var deckCards = scry.Controller.Deck.Cards;
+            if (deckCards.Any(isAction))
+            {
+                PlayableCard selectedAction = battle.SelectCard(deckCards, displayText, isAction);
+                if (!scry.Controller.Deck.Draw(selectedAction)) throw new Exception($"{selectedAction.Name} with ID {selectedAction.Id} doesn't exist in {scry.Controller.Name}'s deck");
+                scry.Controller.Hand.Add(selectedAction);
+                scry.Controller.Deck.Shuffle();
+            }
+            else
+            {
+                battle.SelectOption([new("CONTINUE")], deckCards, displayText);
+            }
+        };
+
+        return scry;
+    };
     public static Func<PlayableCard> Summon = () =>
     {
         PlayableCard summon = new
@@ -1139,8 +1178,8 @@ internal static class Database
     public static readonly Dictionary<Faction, List<Func<PlayableCard>>> PlayableCardsByFactionDict = new()
     {
         { Faction.Dinosuars, [WarRaptor, WarRaptor, WarRaptor, WarRaptor, ArmoredStego, ArmoredStego, ArmoredStego, Laseratops, Laseratops, KingRex, Augmentation, Augmentation, Howl, Howl, NaturalSelection, Rampage, SurvivalOfTheFittest, ToothClawAndGuns, Upgrade, WildlifePreserve] },
-        //{ Faction.Wizards, [Neophyte, Neophyte, Neophyte, Neophyte, Enchantress, Enchantress, Chronomage, Chronomage, Archmage, MassEnchantment, MysticStudies, MysticStudies, Portal, Sacrifice, Summon, Summon, TimeLoop, WindsOfChange] }
-        { Faction.Wizards, [WindsOfChange, WindsOfChange, WindsOfChange, WindsOfChange, WindsOfChange, WindsOfChange, WindsOfChange, Neophyte, Neophyte, Neophyte, Neophyte, Neophyte, Neophyte, Neophyte, Neophyte, Neophyte, Neophyte, Summon, TimeLoop, MysticStudies, MysticStudies, MysticStudies, Summon, TimeLoop, Summon, TimeLoop, Summon, TimeLoop, Summon] }
+        //{ Faction.Wizards, [Neophyte, Neophyte, Neophyte, Neophyte, Enchantress, Enchantress, Enchantress, Chronomage, Chronomage, Archmage, MassEnchantment, MysticStudies, MysticStudies, Portal, Sacrifice, Scry, Summon, Summon, TimeLoop, WindsOfChange] }
+        { Faction.Wizards, [Scry, WarRaptor, WarRaptor, WarRaptor, WarRaptor, WarRaptor] }
     };
 
     public static readonly Dictionary<Faction, List<Func<BaseCard>>> BaseCardsByFactionDict = new()

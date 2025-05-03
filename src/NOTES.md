@@ -1,26 +1,17 @@
-Cards that need a special:
-- Summon
-- TimeLoop
-- Winds of Change
 
-
-Other TODOs:
-- When your hand runs out of cards (AKA, when targer has no options), skip to next available targeter. If none exist, stay in same targeter.
-- Remove duplication in Page.Run() logic
-- Build the Base Deck correctly
-- Choose factions correctly
-- "Tooth And Claw And Guns" permanantly negates the effect, it should only until the end of the turn. Probably make a list of functions that are being held off of a minion.
-
+Keep in mind:
 - Madness interacts strangely with mass enchant
-- If you try to play a special card with mass enchant, it will discad without effect if it's condition is not met
+- If you try to play a special card with mass enchant, it will discard without effect if it's condition is not met
 
-Misc Tests:
+Misc Tests to one day write:
 - Test removing Upgrade from a minion
 - Test removing Upgrade from a minion when it's ApplyPower was protected
 - War Raptor can survive Leprachaun
 - Move a war raptor to a base with a different number of war raptors
 - There are two War Raptors on a base, so they are power 4. I move one of them to a base with a Cub Scout also at power 4. Raptor Restroyed.
 - Tooth and Claw And Guns stops a minions own effect (Oponents war raptor won't gain power)
+- Wildlife preserve discards all other players cards currently on your minions
+- Two allow you to choose
 
 Event Approach Rules:
 - Events should only be used for logic that:
@@ -33,6 +24,12 @@ Event Approach Rules:
 - When performing any operation, check the events of all effected objects, and global events
   
 
+Disclaimer:
+- When multiple effects are triggered by a single action, the rules say to let the active player decide the order.
+  To avoid implementing a complex choosing system in an already complex UI, I instead let effects resolve in the 
+  order they entered the battlefield. E.g. A bases "after a minion here is destroyed" effect will always trigger before a minion's
+- Some card text had to change to fit, but still should work as expected
+- Some names had to change to fit
 
 Faction(s) with digital-only Mechanics:
 - Generate random cards (Conjurers+)
@@ -43,18 +40,6 @@ Faction(s) with digital-only Mechanics:
 
 - Keyword: Animate
 - Cultists
-
-Test:
-- Wildlife preserve discards all other players cards currently on your minions
-- Two allow you to choose
-
-
-Disclaimer:
-- When multiple effects are triggered by a single action, the rules say to let the active player decide the order.
-  To avoid implementing a complex choosing system in an already complex UI, I instead let effects resolve in the 
-  order they entered the battlefield. E.g. A bases "after a minion here is destroyed" effect will always trigger before a minion's
-- Some card text had to change to fit, but still should work as expected
-- Some names had to change to fit
 
 Card Ideas:
 - After a card is destroyed, put it in YOUR discard pile.

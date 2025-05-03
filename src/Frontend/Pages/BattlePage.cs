@@ -290,7 +290,7 @@ namespace SmashUp.Frontend.Pages
         /// <returns></returns>
         private string[] GenerateButtonField(int lineWidth)
         {
-            
+            if (_buttons.Count == 0) return [];
             int paddingLength = (int)Math.Floor(((double)lineWidth - _buttons.Sum(x => x.Text.Length + 4)) / (_buttons.Count + 1));
             string padding = new(' ', paddingLength);
 

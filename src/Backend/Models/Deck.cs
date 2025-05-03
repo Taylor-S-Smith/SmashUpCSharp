@@ -1,23 +1,17 @@
-﻿using System.Collections.Generic;
-
-namespace SmashUp.Backend.Models;
+﻿namespace SmashUp.Backend.Models;
 
 internal class Deck<T> where T : Card
 {
-    private List<T> _cards;
+    private readonly List<T> _cards;
+    public List<T> Cards => new(_cards);
 
     public Deck(List<T> cards)
     {
         _cards = cards;
         Shuffle();
     }
-    public Deck()
-    {
-        _cards = [];
-    }
 
-
-    public List<string> GetCards()
+    public List<string> GetCardNames()
     {
         return _cards.Select(c => c.Name).ToList();
     }
@@ -49,6 +43,16 @@ internal class Deck<T> where T : Card
         _cards.AddRange(cards);
         Shuffle();
     }
+
+    public T? Draw()
+    {
+        if (_cards.Count == 0) return null;
+
+        T drawnCard = _cards[0];
+        _cards.Remove(drawnCard);
+
+        return drawnCard;
+    }
     public List<T> Draw(int numCards)
     {
         int drawCount = Math.Min(numCards, _cards.Count);
@@ -59,14 +63,8 @@ internal class Deck<T> where T : Card
 
         return drawnCards;
     }
-    public T? Draw()
+    public bool Draw(T item)
     {
-        if (_cards.Count == 0) return null;
-
-        T drawnCard = _cards[0];
-        _cards.Remove(drawnCard);
-
-        return drawnCard;
+        return _cards.Remove(item);
     }
-
 }

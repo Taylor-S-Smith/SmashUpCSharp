@@ -79,7 +79,7 @@ internal partial class Application()
                 }
                 else if (chosenId == _showDeckButton.Id)
                 {
-                    Console.WriteLine(string.Join(", ", _table.ActivePlayer.Player.Deck.GetCards()));
+                    Console.WriteLine(string.Join(", ", _table.ActivePlayer.Player.Deck.GetCardNames()));
                     Console.ReadLine();
                 }
                 else if (handCards.Select(x => x.Id).Contains(chosenId)) 

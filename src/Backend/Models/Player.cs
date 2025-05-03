@@ -41,6 +41,18 @@ internal class Player : Identifiable
         DiscardPile.Add(cardToDiscard);
     }
 
+    public PlayableCard Draw()
+    {
+        var cardToDraw = Deck.Draw();
+        if (cardToDraw == null)
+        {
+            Deck.Shuffle(DiscardPile);
+            DiscardPile = [];
+            cardToDraw = Deck.Draw();
+            if (cardToDraw == null) throw new Exception($"Failed to draw card, there are no cards in {Name}'s deck or dicard pile");
+        }
+        return cardToDraw;
+    }
     public List<PlayableCard> Draw(int numToDraw)
     {
         List<PlayableCard> cardsToDraw = [];
@@ -52,18 +64,6 @@ internal class Player : Identifiable
         return cardsToDraw;
     }
 
-    public PlayableCard Draw()
-    {
-        var cardToDraw = Deck.Draw();
-        if(cardToDraw == null)
-        {
-            Deck.Shuffle(DiscardPile);
-            DiscardPile = [];
-            cardToDraw = Deck.Draw();
-            if (cardToDraw == null) throw new Exception($"Failed to draw card, there are no cards in {Name}'s deck or dicard pile");
-        }
-        return cardToDraw;
-    }
 
     /// <summary>
     /// Shuffles cards from hand to deck.
