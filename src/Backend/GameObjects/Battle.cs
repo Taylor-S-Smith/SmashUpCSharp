@@ -219,7 +219,10 @@ internal class Battle
             baseToScore.Cards.ForEach(Discard);
 
             // Step 8: Discard the base
+            _table.AddBaseToDiscard(baseToScore.BaseCard);
+
             // Step 9: Replace the base
+            baseToScore.BaseCard = _table.DrawBaseCard();
         }
     }
     /// <summary>
@@ -456,14 +459,6 @@ internal class Battle
         cardToRemove.ChangeController(this, cardToRemove.Owner);
 
         return baseTheCardIsOn;        
-    }
-
-    // MANIPULATE TABLE
-    public void DiscardBase(BaseCard baseCard)
-    {
-        BaseSlot slot = _table.GetBaseSlots().Where(x => x.BaseCard == baseCard).SingleOrDefault() ?? throw new Exception($"{baseCard.Name} with ID {baseCard.Id} is not an active base");
-        _table.AddBaseToDiscard(baseCard);
-        slot.BaseCard = _table.DrawBaseCard();
     }
 
     // TABLE FUNCTIONS
