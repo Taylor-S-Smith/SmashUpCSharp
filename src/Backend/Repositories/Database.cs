@@ -664,6 +664,8 @@ internal static class Database
 
 
     // WIZARDS
+    public static bool isAction(PlayableCard card) => card.CardType == PlayableCardType.Action;
+    public static bool isMinion(PlayableCard card) => card.CardType == PlayableCardType.Minion;
 
     public static Func<PlayableCard> Neophyte = () =>
     {
@@ -712,7 +714,10 @@ internal static class Database
             }
             else if (drawIt.Id == chosenOption)
             {
-                neophyte.Controller.Hand.Add(cardToReveal);
+                // When a card that others can see goes to the hand, deck or discard pile,
+                // it goes to the one belonging to the card’s owner.
+                cardToReveal.ResetController();
+                cardToReveal.Owner.Hand.Add(cardToReveal);
             }
             else if (returnIt.Id == chosenOption)
             {
@@ -873,19 +878,18 @@ internal static class Database
             string displayText = $"You revealed {string.Join(", ", cardNames)}";
 
             // Play one revealed action as an extra action
-            bool isValidChoice(PlayableCard card) => card.CardType == PlayableCardType.Action;
             PlayableCard? chosenCard = null;
-            if (revealedCards.Any(isValidChoice))
+            if (revealedCards.Any(isAction))
             {
-                chosenCard = battle.SelectCard(revealedCards, displayText, isValidChoice);
+                chosenCard = battle.SelectCard(revealedCards, displayText, isAction);
                 chosenCard.ChangeController(battle, massEnchantment.Controller);
                 battle.PlayExtraCard(chosenCard);
-            } 
+            }
             else
             {
                 battle.SelectOption([new("CONTINUE")], revealedCards, displayText);
             }
-            
+
 
             // Return unused cards to the top of their decks
             foreach (var card in revealedCards)
@@ -901,7 +905,7 @@ internal static class Database
         PlayableCard enchantress = new
         (
             Faction.Wizards,
-            PlayableCardType.Minion,
+            PlayableCardType.Action,
             "Mystic Studies",
             [
                 @"A    Mystic Studies     A",
@@ -924,6 +928,54 @@ internal static class Database
         };
 
         return enchantress;
+    };
+    public static Func<PlayableCard> Portal = () =>
+    {
+        PlayableCard portal = new
+        (
+            Faction.Wizards,
+            PlayableCardType.Action,
+            "Portal",
+            [
+                @"A        Portal         A",
+                @"         /****\          ",
+                @"        |******|         ",
+                @"         \****/          ",
+                @"Reveal the top 5 cards of",
+                @"your deck. Place any # of",
+                @"  minions revealed into  ",
+                @" your hand. Return the   ",
+                @"other cards to your deck.",
+            ],
+            PlayLocation.Discard
+        );
+
+        portal.OnPlay += (battle, baseSlot) =>
+        {
+            string displayText = "Choose any number of minions to put in your hand:";
+            var revealedCards = portal.Controller.Draw(5);
+            if (revealedCards.Any(isMinion))
+            {
+                List<PlayableCard> chosenCards = battle.SelectCards(revealedCards, displayText, isMinion);
+
+                foreach (var card in chosenCards)
+                {
+                    // When a card that others can see goes to the hand, deck or discard pile,
+                    // it goes to the one belonging to the card’s owner.
+                    card.ResetController();
+                    card.Owner.Hand.Add(card);
+                }
+            }
+            else
+            {
+                battle.SelectOption([new("CONTINUE")], revealedCards, displayText);
+            }
+
+            
+            
+        };
+
+        return portal;
     };
 
     // GENERAL
@@ -957,8 +1009,8 @@ internal static class Database
     public static readonly Dictionary<Faction, List<Func<PlayableCard>>> PlayableCardsByFactionDict = new()
     {
         { Faction.Dinosuars, [WarRaptor, WarRaptor, WarRaptor, WarRaptor, ArmoredStego, ArmoredStego, ArmoredStego, Laseratops, Laseratops, KingRex, Augmentation, Augmentation, Howl, Howl, NaturalSelection, Rampage, SurvivalOfTheFittest, ToothClawAndGuns, Upgrade, WildlifePreserve] },
-        { Faction.Wizards, [Neophyte, Neophyte, Neophyte, Neophyte, Enchantress, Enchantress, Chronomage, Chronomage, Archmage, MassEnchantment] }
-        //{ Faction.Wizards, [Neophyte, MysticStudies, MysticStudies, MysticStudies, MysticStudies, MysticStudies, MysticStudies, MysticStudies, MysticStudies, MysticStudies] }
+        //{ Faction.Wizards, [Neophyte, Neophyte, Neophyte, Neophyte, Enchantress, Enchantress, Chronomage, Chronomage, Archmage, MassEnchantment, Portal] }
+        { Faction.Wizards, [Portal, Portal, Portal, Portal, Portal, Portal, Portal, Portal, Portal, Portal] }
     };
 
     public static readonly Dictionary<Faction, List<Func<BaseCard>>> BaseCardsByFactionDict = new()

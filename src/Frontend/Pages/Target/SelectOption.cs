@@ -3,12 +3,21 @@ namespace SmashUp.Frontend.Pages.Target;
 
 internal class SelectOption : TargetLogic
 {
-    protected readonly List<Guid> _options;
+    protected List<Guid> _options;
 
     public SelectOption(List<Guid> options)
     {
         _options = options;
         _targetedOption = options.FirstOrDefault();
+    }
+
+    public void RemoveOption(Guid chosenOptionId)
+    {
+        _options.Remove(chosenOptionId);
+        if(_targetedOption == chosenOptionId)
+        {
+            _targetedOption = null;
+        }
     }
 
     protected override Guid? ExtendHandleKeyPress(UserKeyPress keyPress)

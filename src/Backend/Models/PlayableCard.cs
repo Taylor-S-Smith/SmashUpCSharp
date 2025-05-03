@@ -123,6 +123,15 @@ internal class PlayableCard : Card
         Controller = newController;
     }
 
+    /// <summary>
+    /// Reset's the controller to be the same as the owner
+    /// Does NOT count as affecting it, similar to an expired effect
+    /// </summary>
+    internal void ResetController()
+    {
+        Controller = Owner;
+    }
+
     public PlayableCard(Faction faction, PlayableCardType cardType, string name, string[] graphic, PlayLocation playLocation, int? power=null) : base(faction, name, graphic)
     {
         CardType = cardType;
@@ -133,7 +142,7 @@ internal class PlayableCard : Card
         OnDiscard = (eventManager) =>
         {
             CurrentPower = PrintedPower;
-            Controller = Owner;
+            ResetController();
         };
     }
 }

@@ -517,6 +517,11 @@ internal class Battle
         Guid chosenId = _userInputHandler.SelectPlayableCard(new(options), 1, displayText, isValidChoice).Single();
         return options.Where(x => x.Id == chosenId).SingleOrDefault() ?? throw new Exception($"No option with ID: {chosenId}");
     }
+    public List<PlayableCard> SelectCards(List<PlayableCard> options, string displayText, Func<PlayableCard, bool>? isValidChoice = null)
+    {
+        List<Guid> chosenIds = _userInputHandler.SelectPlayableCard(new(options), null, displayText, isValidChoice).ToList();
+        return options.Where(x => chosenIds.Contains(x.Id)).ToList();
+    }
     public Guid SelectOption(List<Option> options, List<PlayableCard> cardsToDisplay, string displayText)
     {
        return _userInputHandler.SelectOption(options, cardsToDisplay, displayText);
