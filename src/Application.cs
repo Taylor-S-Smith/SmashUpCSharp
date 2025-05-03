@@ -1,12 +1,10 @@
-﻿using SmashUp.Backend.Repositories;
-using SmashUp.Backend.GameObjects;
+﻿using SmashUp.Backend.GameObjects;
 using SmashUp.Frontend.Utilities;
 using SmashUp.Backend.Services;
 using SmashUp.Backend.Models;
 using SmashUp.Frontend.Pages;
 using SmashUp.Backend.API;
 using SmashUp.Frontend.Pages.Target;
-using System.Linq;
 
 namespace SmashUp;
 
@@ -57,7 +55,7 @@ internal partial class Application()
             var endButtonTargeter = new SelectOption(_buttonIds);
             targetLogics.Add(endButtonTargeter);
 
-            //Don't forget to handle card displaying
+            
             BattlePage page = new(_table.GetBaseSlots(), _table.ActivePlayer.Player, _table.ActivePlayer.Player.Hand.ToList(), _buttons, new Targeter(targetLogics, handTargeter), displayText);
             while (true)
             {
@@ -121,7 +119,8 @@ internal partial class Application()
 
         public void EndBattle(Player winningPlayer)
         {
-            throw new NotImplementedException();
+            Console.WriteLine($"{winningPlayer.Name} won the game!!!");
+            Console.ReadLine();
         }
 
     }

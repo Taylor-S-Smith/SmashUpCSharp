@@ -1,12 +1,13 @@
 The next steps are:
-- Add clarifications and erratta to dinosaur faction
+- Update display when navigating hand
+- Finish Turn Phase Logic
+- Implement rest of Front-End API
+- Wizards!!!
 - Refactor input field to support a variety of display types, including: hand, single card display, list display
 - Reuse Battle Page, rather than create new instance each time
-- Change trigger functions to be included in the setters when possible, we shouldn't have to call a dedicated trigger if we are also calling a fucntion to preform the action (unless very specific timing is required)
-- Update display when navigating hand
 - Add ability to cancel a play action
 - Have actions call a method to display the action that happen to the user as they unfold, at least for events that are not obvious (e.g. "X was protected from destruction")
-- Warm user before they perform an action that would not result in any meaningful changes
+- Warn user before they perform an action that would not result in any meaningful changes
 
 Other TODOs:
 - Update "Tooth And Claw...And Guns" to erratta

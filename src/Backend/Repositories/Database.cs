@@ -1,10 +1,7 @@
 ﻿using SmashUp.Backend.Models;
 using SmashUp.Backend.GameObjects;
 using static SmashUp.Backend.GameObjects.Battle;
-using System.Reflection;
-using System.Data.Entity.Core.Mapping;
 using static SmashUp.Backend.Models.PlayableCard;
-using System.Security.AccessControl;
 
 namespace SmashUp.Backend.Repositories;
 
@@ -697,8 +694,8 @@ internal static class Database
 
     public static readonly Dictionary<Faction, List<Func<PlayableCard>>> PlayableCardsByFactionDict = new()
     {
-        //{ Faction.dinosuars, [WarRaptor, WarRaptor, WarRaptor, WarRaptor, ArmoredStego, ArmoredStego, ArmoredStego, Laseratops, Laseratops, KingRex, Augmentation, Augmentation, Howl, Howl, NaturalSelection, Rampage, SurvivalOfTheFittest, ToothAndClawAndGuns, Upgrade, WildlifePreserve] }
-        { Faction.dinosuars, [Minion, Laseratops, Augmentation, Augmentation, Augmentation, Augmentation, Augmentation, Augmentation, Augmentation] }
+        { Faction.dinosuars, [WarRaptor, WarRaptor, WarRaptor, WarRaptor, ArmoredStego, ArmoredStego, ArmoredStego, Laseratops, Laseratops, KingRex, Augmentation, Augmentation, Howl, Howl, NaturalSelection, Rampage, SurvivalOfTheFittest, ToothAndClawAndGuns, Upgrade, WildlifePreserve] }
+        //{ Faction.dinosuars, [Minion, Laseratops, Augmentation, Augmentation, Augmentation, Augmentation, Augmentation, Augmentation, Augmentation] }
     };
 
     public static readonly Dictionary<Faction, List<Func<BaseCard>>> BaseCardsByFactionDict = new()
