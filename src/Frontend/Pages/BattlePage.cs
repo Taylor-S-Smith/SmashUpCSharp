@@ -219,6 +219,7 @@ namespace SmashUp.Frontend.Pages
 
                 // Update option display index if the targeter is targeting a card one outside of our view
                 // Ex. Move to other part of hand
+                _optionDisplayIndex = Math.Min(_optionDisplayIndex, _playableCardOptions.Count - numCardsToDisplay);
                 if (_optionDisplayIndex + numCardsToDisplay < _playableCardOptions.Count && _targeter.GetTargetId() == _playableCardOptions[_optionDisplayIndex + numCardsToDisplay].Id)
                 {
                     _optionDisplayIndex++;

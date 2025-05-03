@@ -12,11 +12,10 @@ internal interface IFrontendBattleAPI
     List<(string, List<FactionModel>)> ChooseFactions(List<string> playerNames, List<FactionModel> factionOptions);
     List<string> ChoosePlayerNames();
     bool AskMulligan();
-    List<PlayableCard> DiscardTo10(Player player);
     void InitializeData(Table table);
     Guid? SelectHandCard(List<PlayableCard> handCards, List<List<PlayableCard>> selectableFieldCards, string displayText);
     Guid SelectBaseCard(List<Guid> validBaseIds, PlayableCard? cardToDisplay = null, string displayText = "");
     SelectFieldCardUIResult SelectFieldCard(List<List<Guid>> validCardIds, PlayableCard? cardToDisplay, string? displayText);
-    Guid SelectPlayableCard(List<PlayableCard> options, string displayText);
+    List<Guid> SelectPlayableCard(List<PlayableCard> options, int numToReturn, string displayText);
     void EndBattle(Player winningPlayer);
 }

@@ -184,10 +184,9 @@ internal class Battle
             foreach (Player player in _table.Players)
             {
                 // Must have at least one minion on the base, or at least 1 total power on the base to receive VP
-                // Since powerless actions have null current power, the only time this will be null is if a player does not have a minion, or action with power, at the base
-                int? totalPower = baseToScore.Cards.Where(card => card.Controller == player).Sum(x => x.CurrentPower);
-
-                if(totalPower != null)
+                var playersCards = baseToScore.Cards.Where(card => card.Controller == player);
+                int totalPower = playersCards.Sum(x => x.CurrentPower) ?? 0;
+                if (playersCards.Any(card => card.CardType == PlayableCardType.Minion) || totalPower > 0)
                 {
                     scoreDict.TryGetValue((int)totalPower, out List<Player>? players);
 
@@ -201,7 +200,7 @@ internal class Battle
             int playerPostitionIndex = 0;
             List<int> powerVals = scoreDict.Keys.OrderDescending().ToList();
 
-            while (baseAwardIndex < baseToScore.BaseCard.PointSpread.Length)
+            while (baseAwardIndex < baseToScore.BaseCard.PointSpread.Length && baseAwardIndex < powerVals.Count)
             {
                 List<Player> players = scoreDict[powerVals[playerPostitionIndex]];
                 playerPostitionIndex++;
@@ -231,11 +230,14 @@ internal class Battle
     private void Draw2Cards()
     {
         _table.ActivePlayer.Player.Draw(2);
-        if (_table.ActivePlayer.Player.Hand.Count > 10)
+        int numCards = _table.ActivePlayer.Player.Hand.Count;
+        if (numCards > 10)
         {
-            var cardsToDiscard = _userInputHandler.DiscardTo10(_table.ActivePlayer.Player);
-            foreach (var card in cardsToDiscard)
+            int numToDiscard = numCards - 10;
+            var cardIdsToDiscard = _userInputHandler.SelectPlayableCard(_table.ActivePlayer.Player.Hand.ToList(), numToDiscard, $"Choose {numToDiscard} card{(numToDiscard > 1 ? 's' : null)} to discard");
+            foreach (var cardId in cardIdsToDiscard)
             {
+                var card = GetHandCardById(cardId);
                 _table.ActivePlayer.Player.Discard(card);
             }
         }
@@ -514,7 +516,7 @@ internal class Battle
 
     public PlayableCard SelectCard(List<PlayableCard> options, string displayText)
     {
-        Guid chosenId = _userInputHandler.SelectPlayableCard(options, displayText);
+        Guid chosenId = _userInputHandler.SelectPlayableCard(options, 1, displayText).Single();
         return options.Where(x => x.Id == chosenId).SingleOrDefault() ?? throw new Exception($"No option with ID: {chosenId}");
     }
 
