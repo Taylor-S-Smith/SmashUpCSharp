@@ -8,7 +8,7 @@ internal class BaseCard : Card
     public int PrintedBreakpoint { get; set; }
     public int CurrentBreakpoint { get; set; }
 
-    public (int, int, int) PointSpread { get; }
+    public int[] PointSpread { get; }
 
     public int CurrentPower { get; set; } = 0;
 
@@ -19,7 +19,7 @@ internal class BaseCard : Card
     public void TriggerAfterDestroyCard(PlayableCard card) => AfterMinionDestroyed.Invoke(card);
     public event Action<PlayableCard> AfterMinionDestroyed = delegate { };
 
-    public BaseCard(Faction faction, string name, string[] graphic, int breakpoint, (int, int, int) pointSpread) : base(faction, name, graphic)
+    public BaseCard(Faction faction, string name, string[] graphic, int breakpoint, int[] pointSpread) : base(faction, name, graphic)
     {
         PrintedBreakpoint = breakpoint;
         CurrentBreakpoint = breakpoint;

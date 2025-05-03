@@ -12,7 +12,7 @@ internal class PlayerTerritory(Player player)
 
 internal class BaseSlot
 {
-    public BaseCard BaseCard { get; }
+    public BaseCard BaseCard { get; set; }
     public List<PlayerTerritory> Territories { get; } = [];
     public List<PlayableCard> Cards => Territories.SelectMany(x => x.Cards).ToList();
 
@@ -33,13 +33,13 @@ internal class BaseSlot
 internal class Board
 {
     public Deck<BaseCard> BaseDeck { get; set; }
-    public Deck<BaseCard> BaseDiscard { get; set; }
+    public List<BaseCard> BaseDiscard { get; set; }
     public List<BaseSlot> ActiveBases { get; set; }
 
     public Board(Deck<BaseCard> baseDeck, List<BaseCard> startingBaseCards, List<Player> players)
     {
         BaseDeck = baseDeck;
-        BaseDiscard = new([]);
+        BaseDiscard = [];
         ActiveBases = [];
 
         foreach (BaseCard baseCard in startingBaseCards)

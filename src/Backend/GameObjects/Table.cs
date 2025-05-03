@@ -24,10 +24,6 @@ internal class Table(List<Player> players, ActivePlayer activePlayer, Board boar
     {
         return Players.Select(x => (x, x.VictoryPoints)).ToList();
     }
-    public void DiscardCard(Player player, PlayableCard card)
-    {
-        player.Discard(card);
-    }
 
     public List<BaseSlot> GetBaseSlots()
     {
@@ -41,5 +37,23 @@ internal class Table(List<Player> players, ActivePlayer activePlayer, Board boar
     public List<List<PlayableCard>> GetFieldCards()
     {
         return _board.ActiveBases.Select(x => x.Territories.SelectMany(x => x.Cards).ToList()).Where(x => x.Count > 0).ToList();
+    }
+
+    public void AddBaseToDiscard(BaseCard baseCard)
+    {
+        _board.BaseDiscard.Add(baseCard);
+    }
+
+    public BaseCard DrawBaseCard()
+    {
+        var drawnBase = _board.BaseDeck.Draw();
+        if (drawnBase == null)
+        {
+            _board.BaseDeck.Shuffle(_board.BaseDiscard);
+            _board.BaseDiscard = [];
+            drawnBase = _board.BaseDeck.Draw();
+            if (drawnBase == null) throw new Exception("Failed to draw base card, there are no cards in the deck or discard");
+        }
+        return drawnBase;
     }
 }

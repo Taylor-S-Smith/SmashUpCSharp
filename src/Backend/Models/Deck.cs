@@ -40,7 +40,12 @@ internal class Deck<T> where T : Card
             (_cards[n], _cards[k]) = (_cards[k], _cards[n]);
         }
     }
-    public List<T> Draw(int numCards = 1)
+    public void Shuffle(List<T> cards)
+    {
+        _cards.AddRange(cards);
+        Shuffle();
+    }
+    public List<T> Draw(int numCards)
     {
         int drawCount = Math.Min(numCards, _cards.Count);
         if (drawCount == 0 || _cards.Count == 0) return [];
@@ -49,6 +54,15 @@ internal class Deck<T> where T : Card
         _cards.RemoveRange(0, drawCount);
 
         return drawnCards;
+    }
+    public T? Draw()
+    {
+        if (_cards.Count == 0) return null;
+
+        T drawnCard = _cards[0];
+        _cards.Remove(drawnCard);
+
+        return drawnCard;
     }
 
 }

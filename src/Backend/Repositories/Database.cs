@@ -627,7 +627,7 @@ internal static class Database
                 "                            ",
             ],
             12,
-            (2, 0, 0)
+            [2, 0, 0]
         );
 
 
@@ -649,7 +649,7 @@ internal static class Database
 
             ],
             16,
-            (4, 3, 1)
+            [4, 3, 1]
         );
 
 

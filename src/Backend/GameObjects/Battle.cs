@@ -147,13 +147,80 @@ internal class Battle
                 }
             }
         }
-    }    
+    }
     /// <summary>
     /// Handles logic relating to the "Score Bases" phase of the Smash Up Rule Book
     /// </summary>
     private void ScoreBases()
     {
-        //Not Implemented Yet :(
+        while (true)
+        {
+            // Step 1: Check which bases are ready to score
+            List<BaseSlot> scoringBases = [];
+            foreach (BaseSlot slot in _table.GetBaseSlots())
+            {
+                if (slot.BaseCard.CurrentPower >= slot.BaseCard.CurrentBreakpoint)
+                {
+                    scoringBases.Add(slot);
+                }
+            }
+
+            if (scoringBases.Count == 0) break;
+
+            // Step 2: Choose one base that is ready to score
+            BaseSlot baseToScore;
+            if (scoringBases.Count == 1) baseToScore = scoringBases[0];
+            else
+            {
+                Guid chosenBaseId = _userInputHandler.SelectBaseCard(scoringBases.Select(slot => slot.BaseCard.Id).ToList(), null, "Multiple bases are ready to score. Choose a base to score first:");
+                baseToScore = GetBaseSlotById(chosenBaseId);
+            }
+
+            // Step 3: Play/invoke "before scoring" abilities
+            // Step 4: Award VPs and play/invoke "when scoring" abilities
+
+            // Order players by position
+            Dictionary<int, List<Player>> scoreDict = [];
+            foreach (Player player in _table.Players)
+            {
+                // Must have at least one minion on the base, or at least 1 total power on the base to receive VP
+                // Since powerless actions have null current power, the only time this will be null is if a player does not have a minion, or action with power, at the base
+                int? totalPower = baseToScore.Cards.Where(card => card.Controller == player).Sum(x => x.CurrentPower);
+
+                if(totalPower != null)
+                {
+                    scoreDict.TryGetValue((int)totalPower, out List<Player>? players);
+
+                    if (players != null) players.Add(player);
+                    else scoreDict.Add((int)totalPower, [player]);
+                }
+            }
+
+            // Award points
+            int baseAwardIndex = 0;
+            int playerPostitionIndex = 0;
+            List<int> powerVals = scoreDict.Keys.OrderDescending().ToList();
+
+            while (baseAwardIndex < baseToScore.BaseCard.PointSpread.Length)
+            {
+                List<Player> players = scoreDict[powerVals[playerPostitionIndex]];
+                playerPostitionIndex++;
+                foreach (Player player in players)
+                {
+                    player.GainVP(baseToScore.BaseCard.PointSpread[baseAwardIndex]);
+                }
+
+                baseAwardIndex += players.Count;
+            }
+
+            // Step 5: Award treasures
+            // Step 6: Play/invoke "after scoring" abilities
+            // Step 7: Discard all the cards on the base
+            baseToScore.Cards.ForEach(Discard);
+
+            // Step 8: Discard the base
+            // Step 9: Replace the base
+        }
     }
     /// <summary>
     /// Handles logic relating to the "Draw 2 Cards" phase of the Smash Up Rule Book
@@ -180,16 +247,16 @@ internal class Battle
     }
     private void CheckEndOfGame()
     {
-        List<(Player, int)> playerVpTotals = _table.GetPlayerVP();
+        List<(Player Player, int VP)> playerVpTotals = _table.GetPlayerVP();
 
-        List<int> vpTotals = playerVpTotals.Select(x => x.Item2).ToList();
+        List<int> vpTotals = playerVpTotals.Select(x => x.VP).ToList();
         int vpMax = vpTotals.Max();
 
         //One clear winner, no ties in VP
         if (vpMax >= WINNING_VP && vpTotals.Where(x => x == vpMax).ToList().Count == 1)
         {
             _battleEnd = true;
-            var winningPlayer = playerVpTotals.Single(x => x.Item2 == vpMax).Item1;
+            var winningPlayer = playerVpTotals.Single(x => x.VP == vpMax).Player;
             _userInputHandler.EndBattle(winningPlayer);
         }
     }
@@ -391,6 +458,13 @@ internal class Battle
         return baseTheCardIsOn;        
     }
 
+    // MANIPULATE TABLE
+    public void DiscardBase(BaseCard baseCard)
+    {
+        BaseSlot slot = _table.GetBaseSlots().Where(x => x.BaseCard == baseCard).SingleOrDefault() ?? throw new Exception($"{baseCard.Name} with ID {baseCard.Id} is not an active base");
+        _table.AddBaseToDiscard(baseCard);
+        slot.BaseCard = _table.DrawBaseCard();
+    }
 
     // TABLE FUNCTIONS
     public List<BaseSlot> GetBaseSlots()
@@ -490,6 +564,10 @@ internal class Battle
     private BaseCard GetBaseCardById(Guid chosenBaseId)
     {
         return _table.GetActiveBases().Where(x => x.Id == chosenBaseId).FirstOrDefault() ?? throw new Exception($"No active base exists with ID {chosenBaseId}");
+    }
+    private BaseSlot GetBaseSlotById(Guid chosenBaseId)
+    {
+        return _table.GetBaseSlots().Where(x => x.BaseCard.Id == chosenBaseId).FirstOrDefault() ?? throw new Exception($"No active base exists with ID {chosenBaseId}");
     }
 
 }

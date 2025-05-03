@@ -1,5 +1,4 @@
 The next steps are:
-- Update display when navigating hand
 - Finish Turn Phase Logic
 - Implement rest of Front-End API
 - Wizards!!!
