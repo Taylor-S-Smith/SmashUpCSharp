@@ -5,6 +5,7 @@ using SmashUp.Backend.API;
 using FluentResults;
 using LinqKit;
 using SmashUp.Backend.Repositories;
+using System.Numerics;
 
 namespace SmashUp.Backend.GameObjects;
 
@@ -218,6 +219,7 @@ internal class Battle
             // Step 5: Award treasures
             // Step 6: Play/invoke "after scoring" abilities
             BaseCard? newBase = baseToScore.BaseCard.TriggerAfterAfterBaseScores(this, baseToScore, scoreDict[powerVals[0]]);
+
             // Step 7: Discard all the cards on the base
             baseToScore.Cards.ForEach(x => RemoveCardFromBattleField(x));
             baseToScore.Cards.ForEach(Discard);
@@ -339,22 +341,25 @@ internal class Battle
         // Which happens before add to base effects, which means that it can't be triggered in a
         // more primitive funciton in the table
         BaseSlot slot = _table.GetBaseSlots().Where(x => x.BaseCard == chosenBase).Single();
-        PlayerTerritory territory = slot.Territories.Where(x => x.player == cardToPlay.Controller).Single();
-        territory.Cards.Add(cardToPlay);
+        AddCardToBase(cardToPlay, slot);
 
         // Activate Card Ability
         cardToPlay.TriggerOnPlay(this, slot);
-        cardToPlay.TriggerOnAddToBase(this, slot);
 
         // Trigger Base Effects (This includes updating the base's total power)
         chosenBase.TriggerOnAddCard(this, cardToPlay);
+    }
+    private void AddCardToBase(PlayableCard cardToPlay, BaseSlot slot)
+    {
+        PlayerTerritory territory = slot.Territories.Where(x => x.player == cardToPlay.Controller).Single();
+        territory.Cards.Add(cardToPlay);
+        cardToPlay.TriggerOnAddToBase(this, slot);
     }
     private void PlayCardToDiscard(PlayableCard cardToPlay)
     {
         cardToPlay.TriggerOnPlay(this);
         Discard(cardToPlay);
     }
-
     private void PlayCardToMinion(PlayableCard cardToPlay)
     {
         SelectFieldCardQuery query = new()
@@ -396,6 +401,16 @@ internal class Battle
         cardToPlay.TriggerOnDiscard(EventManager);
         cardToPlay.Owner.DiscardPile.Add(cardToPlay);
     }
+    internal void Move(PlayableCard cardToMove, BaseCard currentBase, BaseCard newBase, PlayableCard affector)
+    {
+        if (AttemptToAffect(cardToMove, EffectType.Move, affector.CardType, affector.Controller))
+        {
+            var currentBaseSlot = GetBaseSlotById(currentBase.Id);
+            if (!RemoveCardFromBase(cardToMove, currentBaseSlot)) throw new Exception($"Attempted to move {cardToMove.Name}, but is was not found on base {currentBase.Name}");
+            var newBaseSlot = GetBaseSlotById(newBase.Id);
+            AddCardToBase(cardToMove, newBaseSlot);
+        }
+    }
     /// <summary>
     /// Checks if a card can be affected by a specific effect. 
     /// If it is protected, this will also resolve the protection triggers
@@ -429,40 +444,43 @@ internal class Battle
     /// <returns>Base the card was removed from</returns>
     private BaseCard RemoveCardFromBattleField(PlayableCard cardToRemove)
     {
-        BaseCard? baseTheCardIsOn = null;
         foreach (BaseSlot slot in _table.GetBaseSlots())
         {
-            foreach (PlayerTerritory territory in slot.Territories)
+            if (RemoveCardFromBase(cardToRemove, slot)) return slot.BaseCard;
+        }
+
+        throw new Exception($"{cardToRemove.Name} with ID {cardToRemove.Id} is not on the battlefield, so can't be removed");
+    }
+
+    private bool RemoveCardFromBase(PlayableCard cardToRemove, BaseSlot slot)
+    {
+        foreach (PlayerTerritory territory in slot.Territories)
+        {
+            // Check all played cards on base
+            if (territory.Cards.Remove(cardToRemove))
             {
-                // Check all played cards on base
-                if (territory.Cards.Remove(cardToRemove))
+                // Trigger leave of base
+                cardToRemove.TriggerOnRemoveFromBase(this, slot);
+                slot.BaseCard.TriggerOnRemoveCard(this, cardToRemove);
+                return true;
+            }
+            else
+            {
+                // Check cards attached to played cards
+                foreach (var card in territory.Cards)
                 {
-                    // Trigger leave of base
-                    cardToRemove.TriggerOnRemoveFromBase(this, slot);
-                    slot.BaseCard.TriggerOnRemoveCard(this, cardToRemove);
-                    baseTheCardIsOn = slot.BaseCard;
-                    break;
-                }
-                else
-                {
-                    // Check cards attached to played cards
-                    foreach(var card in territory.Cards)
+                    if (card.Detach(cardToRemove))
                     {
-                        if (card.Detach(cardToRemove))
-                        {
-                            //Trigger on detach
-                            cardToRemove.TriggerOnDetach(this, card);
-                            baseTheCardIsOn = slot.BaseCard;
-                            break;
-                        }
+                        //Trigger on detach
+                        cardToRemove.TriggerOnDetach(this, card);
+                        slot.BaseCard.TriggerOnRemoveCard(this, cardToRemove);
+                        return true;
                     }
                 }
             }
-            if (baseTheCardIsOn != null) break;
         }
 
-        if(baseTheCardIsOn == null) throw new Exception($"{cardToRemove.Name} with ID {cardToRemove.Id} is not on the battlefield, so can't be removed");
-        return baseTheCardIsOn;
+        return false;
     }
 
     // INTERACT WITH TABLE
@@ -554,7 +572,12 @@ internal class Battle
     {
        return _userInput.SelectOption(options, cardsToDisplay, displayText);
     }
-
+    public bool SelectBool(List<PlayableCard> cardsToDisplay, string displayText)
+    {
+        Option yes = new("YES");
+        Option no = new("NO");
+        return yes.Id == SelectOption([yes, no], cardsToDisplay, displayText);
+    }
 
     public List<PlayableCard> GetValidFieldCards(Func<PlayableCard, bool> pred, BaseCard? baseCard = null)
     {

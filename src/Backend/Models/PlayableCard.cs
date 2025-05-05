@@ -27,9 +27,13 @@ internal class PlayableCard : Card
     public int? CurrentPower { get; private set; }
     public PlayLocation PlayLocation { get; private set; }
 
+    /// <summary>
+    /// Anything that would be considered "Affect"ing a card
+    /// </summary>
     public enum EffectType
     {
         Destroy,
+        Move,
         Return,
         Attach,
         ApplyPower

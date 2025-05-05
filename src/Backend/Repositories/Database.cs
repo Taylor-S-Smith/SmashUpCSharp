@@ -3,6 +3,7 @@ using SmashUp.Backend.GameObjects;
 using static SmashUp.Backend.GameObjects.Battle;
 using static SmashUp.Backend.Models.PlayableCard;
 using System.Linq;
+using System.Diagnostics;
 
 namespace SmashUp.Backend.Repositories;
 
@@ -662,6 +663,54 @@ internal static class Database
         return tarPits;
     }
 
+    // PIRATES
+    public static PlayableCard FirstMate()
+    {
+        PlayableCard firstMate = new
+        (
+            Faction.Pirates,
+            PlayableCardType.Minion,
+            "First Mate",
+            [
+                @"2      First Mate       2",
+                @"           n_            ",
+                @"          ("")            ",
+                @"          -|-            ",
+                @"          / \            ",
+                @"Special: After this base ",
+                @" is scored, you may move ",
+                @" this minion to another  ",
+                @"base instead of discard. ",
+            ],
+            PlayLocation.Base,
+            2
+        );
+
+        BaseCard? MoveToAnotherBase(Battle battle, BaseSlot slot, List<Player> winners)
+        {
+            var currentBase = slot.BaseCard;
+            if (battle.SelectBool([firstMate], $"{firstMate.Controller.Name}, would you like to move First Mate to another base?"))
+            {
+                var validBases = battle.GetBaseSlots().Select(x => x.BaseCard).Where(x => x != currentBase).ToList();
+                BaseCard chosenBase = battle.SelectCard(validBases, $"{firstMate.Controller}, select a base to move First Mate to:");
+                battle.Move(firstMate, currentBase, chosenBase, firstMate);
+            }
+
+            return null;
+        }
+
+        firstMate.OnAddToBase += (battle, baseSlot) => 
+        {
+            baseSlot.BaseCard.AfterBaseScores += MoveToAnotherBase;
+        };
+
+        firstMate.OnRemoveFromBase += (battle, baseSlot) =>
+        {
+            baseSlot.BaseCard.AfterBaseScores -= MoveToAnotherBase;
+        };
+
+        return firstMate;
+    }
 
     // WIZARDS  
     public static PlayableCard Neophyte()
@@ -1215,10 +1264,8 @@ internal static class Database
             var playersWithMinionHere = battle.GetPlayers().Where(player => slot.Cards.Any(card => card.Controller == player && card.CardType == PlayableCardType.Minion));
             foreach (var player in playersWithMinionHere)
             {
-                Option yes = new("YES");
-                Option no = new("NO");
-                bool drawCard = yes.Id == battle.SelectOption([yes, no], [], $"{player.Name}, would you like to draw a card?");
-                if(drawCard)
+                bool drawCard = battle.SelectBool([], $"{player.Name}, would you like to draw a card?");
+                if (drawCard)
                 {
                     player.Hand.Add(player.Draw());
                 }
@@ -1269,7 +1316,8 @@ internal static class Database
     {
         { Faction.Dinosuars, [WarRaptor, WarRaptor, WarRaptor, WarRaptor, ArmoredStego, ArmoredStego, ArmoredStego, Laseratops, Laseratops, KingRex, Augmentation, Augmentation, Howl, Howl, NaturalSelection, Rampage, SurvivalOfTheFittest, ToothClawAndGuns, Upgrade, WildlifePreserve] },
         { Faction.Wizards, [Neophyte, Neophyte, Neophyte, Neophyte, Enchantress, Enchantress, Enchantress, Chronomage, Chronomage, Archmage, MassEnchantment, MysticStudies, MysticStudies, Portal, Sacrifice, Scry, Summon, Summon, TimeLoop, WindsOfChange] }
-        //{ Faction.Wizards, [Portal, Neophyte, Neophyte, Neophyte, Neophyte, Neophyte, Neophyte, Neophyte, Neophyte, Neophyte] }
+        { Faction.Pirates, [FirstMate, FirstMate, FirstMate, FirstMate] }
+        //{ Faction.Wizards, [FirstMate, FirstMate, Summon, Summon, Summon, Summon, Summon, KingRex, KingRex, KingRex, KingRex, KingRex, KingRex, KingRex, KingRex, KingRex] },
     };
 
     public static readonly Dictionary<Faction, List<Func<BaseCard>>> BaseCardsByFactionDict = new()
