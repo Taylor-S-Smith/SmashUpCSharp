@@ -16,6 +16,6 @@ internal interface IFrontendBattleAPI
     Guid SelectBaseCard(List<Guid> validBaseIds, PlayableCard? cardToDisplay = null, string displayText = "");
     SelectFieldCardUIResult SelectFieldCard(List<List<Guid>> validCardIds, PlayableCard? cardToDisplay, string? displayText);
     Guid SelectOption(List<Option> buttons, List<PlayableCard> cardsToDisplay, string displayText);
-    List<Guid> SelectCard(List<Card> validOptions, List<Card> optionsToDisplay, string displayText, int? numToReturn=null);
+    List<Guid> SelectCard(List<Card> optionsToDisplay, List<Card> validOptions, string displayText, int? numToReturn=null);
     void EndBattle(Player winningPlayer);
 }

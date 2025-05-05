@@ -17,8 +17,8 @@ internal class BaseCard : Card
     public event Action<Battle, PlayableCard> OnRemoveCard;
     public void TriggerAfterDestroyCard(PlayableCard card) => AfterMinionDestroyed.Invoke(card);
     public event Action<PlayableCard> AfterMinionDestroyed = delegate { };
-    public BaseCard? TriggerAfterAfterBaseScores(Battle battle, List<Player> winners) => AfterBaseScores.Invoke(battle, winners);
-    public event Func<Battle, List<Player>, BaseCard?> AfterBaseScores = delegate { return null; };
+    public BaseCard? TriggerAfterAfterBaseScores(Battle battle, BaseSlot slot, List<Player> winners) => AfterBaseScores.Invoke(battle, slot, winners);
+    public event Func<Battle, BaseSlot, List<Player>, BaseCard?> AfterBaseScores = delegate { return null; };
 
     public BaseCard(Faction faction, string name, string[] graphic, int breakpoint, int[] pointSpread) : base(faction, name, graphic)
     {

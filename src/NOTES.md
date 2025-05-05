@@ -1,4 +1,3 @@
-
 Keep in mind:
 - Madness interacts strangely with mass enchant
 - If you try to play a special card with mass enchant, it will discard without effect if it's condition is not met

@@ -13,9 +13,9 @@ internal partial class Application()
     private class ConsoleAppBattleUI() : IFrontendBattleAPI
     {
         private Table _table = null!;
-        private static readonly Option _showDiscardButton = new("DISCARD");
+        private static readonly Option _showDiscardButton = new("VIEW DISCARD");
         private static readonly Option _endTurnButton = new("END TURN");
-        private static readonly Option _showDeckButton = new("DECK");
+        private static readonly Option _showDeckButton = new("VIEW DECK");
         private static readonly List<Option> _buttons = [_showDiscardButton, _endTurnButton, _showDeckButton];
         private static readonly List<Guid> _buttonIds = _buttons.Select(x => x.Id).ToList();
 
@@ -74,8 +74,7 @@ internal partial class Application()
                 }
                 else if (chosenId == _showDiscardButton.Id)
                 {
-                    Console.WriteLine(string.Join(", ", _table.ActivePlayer.Player.DiscardPile.Select(x => x.Name)));
-                    Console.ReadLine();
+                    ViewCards(_table.ActivePlayer.Player.DiscardPile.AsCards());
                 }
                 else if (chosenId == _showDeckButton.Id)
                 {
@@ -112,7 +111,7 @@ internal partial class Application()
             return new BattlePage(_table.GetBaseSlots(), _table.ActivePlayer.Player, cardsToDisplay.ConvertAll(x => (Card)x), _buttons, new Targeter([new SelectOption(validBaseIds)]), displayText).Run();
         }
 
-        public List<Guid> SelectCard(List<Card> validOptions, List<Card> optionsToDisplay, string displayText, int? numToReturn)
+        public List<Guid> SelectCard(List<Card> optionsToDisplay, List<Card> validOptions, string displayText, int? numToReturn)
         {
             List<Guid> selectedOptions = [];
             Option done = new("I AM DONE");
@@ -129,7 +128,7 @@ internal partial class Application()
 
             var page = new BattlePage(_table.GetBaseSlots(), _table.ActivePlayer.Player, optionsToDisplay, buttons, new Targeter(targetLogics), displayText);
 
-            while(numToReturn == null || selectedOptions.Count < numToReturn)
+            while(optionsToDisplay.Count > 0 && (numToReturn == null || selectedOptions.Count < numToReturn))
             {
                 Guid chosenOptionId = page.Run();
                 if (chosenOptionId == done.Id) break;
@@ -145,6 +144,22 @@ internal partial class Application()
             }
 
             return selectedOptions;
+        }
+        
+        public void ViewCards(List<Card> cardsToDisplay)
+        {
+            Option returnButton = new("RETURN");
+            SelectOption optionsTargeter = new (cardsToDisplay.Select(x => x.Id).ToList());
+            SelectOption endButtonTargeter = new ([returnButton.Id]);
+            List<TargetLogic> targetLogics = [optionsTargeter, endButtonTargeter];
+
+            var page = new BattlePage(_table.GetBaseSlots(), _table.ActivePlayer.Player, cardsToDisplay, [returnButton], new Targeter(targetLogics));
+
+            Guid? chosenId = null;
+            while (chosenId != returnButton.Id)
+            {
+                chosenId = page.Run();
+            }
         }
 
         public void EndBattle(Player winningPlayer)

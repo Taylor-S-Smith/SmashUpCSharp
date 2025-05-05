@@ -217,7 +217,7 @@ internal class Battle
 
             // Step 5: Award treasures
             // Step 6: Play/invoke "after scoring" abilities
-            BaseCard? newBase = baseToScore.BaseCard.TriggerAfterAfterBaseScores(this, scoreDict[powerVals[0]]);
+            BaseCard? newBase = baseToScore.BaseCard.TriggerAfterAfterBaseScores(this, baseToScore, scoreDict[powerVals[0]]);
             // Step 7: Discard all the cards on the base
             baseToScore.Cards.ForEach(x => RemoveCardFromBattleField(x));
             baseToScore.Cards.ForEach(Discard);
@@ -415,8 +415,7 @@ internal class Battle
             }
             else
             {
-                var cardsThatGrantProtection = protections.Select(x => x.GrantedBy).ToList().ConvertAll(x => (Card)x);
-                protector = (PlayableCard)SelectCard(cardsThatGrantProtection, $"{cardToAffect.Controller.Name}, {cardToAffect.Name} is being protected by multiple cards, choose which one to recieve protection from:");
+                protector = SelectCard(protections.Select(x => x.GrantedBy).ToList(), $"{cardToAffect.Controller.Name}, {cardToAffect.Name} is being protected by multiple cards, choose which one to recieve protection from:");
             }
 
             protector.TriggerOnProtect(this);
@@ -534,7 +533,9 @@ internal class Battle
         return options.Where(x => x.Id == chosenId).SingleOrDefault() ?? throw new Exception($"No option with ID: {chosenId}");
     }
     /// <summary>
-    /// Accesses UI to allow player to select a card from options
+    /// Accesses UI to allow player to select a card from options. 
+    /// The order of the returned list will be reverse the order they were selected.
+    /// That is, the last card of the list was chosen first by the player.
     /// </summary>
     /// <param name="numToSelect">The num to return, or null if any number works</param>
     /// <param name="isValidChoice">Determins which options are selectable</param>
@@ -545,7 +546,9 @@ internal class Battle
         // We use new(options) to pass a new list, rather than a reference to the existing one
         var validChoices = options.Where(isValidChoice).ToList().ConvertAll(x => (Card)x);
         List<Guid> chosenIds = _userInput.SelectCard(options.ConvertAll(x => (Card)x), validChoices, displayText, numToSelect).ToList();
-        return options.Where(x => chosenIds.Contains(x.Id)).ToList();
+        
+        // We get the result based on a select on chosenIds because order matters
+        return chosenIds.Select(id => options.Where(option => option.Id == id).Single()).ToList();
     }
     public Guid SelectOption(List<Option> options, List<PlayableCard> cardsToDisplay, string displayText)
     {

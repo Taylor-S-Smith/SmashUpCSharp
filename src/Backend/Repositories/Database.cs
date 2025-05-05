@@ -2,13 +2,14 @@
 using SmashUp.Backend.GameObjects;
 using static SmashUp.Backend.GameObjects.Battle;
 using static SmashUp.Backend.Models.PlayableCard;
+using System.Linq;
 
 namespace SmashUp.Backend.Repositories;
 
 internal static class Database
 {
     // DINOSAURS
-    public static Func<PlayableCard> WarRaptor = () =>
+    public static PlayableCard WarRaptor()
     {
         string WAR_RAPTOR_NAME = "War Raptor";
 
@@ -67,8 +68,8 @@ internal static class Database
         };
 
         return warRaptor;
-    };
-    public static Func<PlayableCard> ArmoredStego = () =>
+    }
+    public static PlayableCard ArmoredStego()
     {
         PlayableCard armoredStego = new
         (
@@ -133,8 +134,8 @@ internal static class Database
 
 
         return armoredStego;
-    };
-    public static Func<PlayableCard> Laseratops = () =>
+    }
+    public static PlayableCard Laseratops()
     {
         PlayableCard laseratops = new
         (
@@ -170,8 +171,8 @@ internal static class Database
         };
 
         return laseratops;
-    };
-    public static Func<PlayableCard> KingRex = () =>
+    }
+    public static PlayableCard KingRex()
     {
         return new
         (
@@ -191,8 +192,8 @@ internal static class Database
             PlayLocation.Base, 
             7
         );
-    };
-    public static Func<PlayableCard> Augmentation = () =>
+    }
+    public static PlayableCard Augmentation()
     {
         PlayableCard augmentation = new
         (
@@ -240,8 +241,8 @@ internal static class Database
         };
 
         return augmentation;
-    };
-    public static Func<PlayableCard> Howl = () =>
+    }
+    public static PlayableCard Howl()
     {
         PlayableCard howl = new
         (
@@ -287,8 +288,8 @@ internal static class Database
         };
 
         return howl;
-    };
-    public static Func<PlayableCard> NaturalSelection = () =>
+    }
+    public static PlayableCard NaturalSelection()
     {
         PlayableCard naturalSelection = new
         (
@@ -334,8 +335,8 @@ internal static class Database
         };
 
         return naturalSelection;
-    };
-    public static Func<PlayableCard> Rampage = () =>
+    }
+    public static PlayableCard Rampage()
     {
         PlayableCard rampage = new
         (
@@ -382,8 +383,8 @@ internal static class Database
         };
 
         return rampage;
-    };
-    public static Func<PlayableCard> SurvivalOfTheFittest = () =>
+    }
+    public static PlayableCard SurvivalOfTheFittest()
     {
         PlayableCard survivalOfTheFittest = new
         (
@@ -428,8 +429,8 @@ internal static class Database
         };
 
         return survivalOfTheFittest;
-    };
-    public static Func<PlayableCard> ToothClawAndGuns = () =>
+    }
+    public static PlayableCard ToothClawAndGuns()
     {
         PlayableCard toothAndClawAndGuns = new
         (
@@ -474,8 +475,8 @@ internal static class Database
         };
 
         return toothAndClawAndGuns;
-    };
-    public static Func<PlayableCard> Upgrade = () =>
+    }
+    public static PlayableCard Upgrade()
     {
         PlayableCard upgrade = new
         (
@@ -508,8 +509,8 @@ internal static class Database
         };
 
         return upgrade;
-    };
-    public static Func<PlayableCard> WildlifePreserve = () =>
+    }
+    public static PlayableCard WildlifePreserve()
     {
         PlayableCard wildlifePreserve = new
         (
@@ -609,9 +610,9 @@ internal static class Database
         };      
 
         return wildlifePreserve;
-    };
+    }
 
-    public static Func<BaseCard> JungleOasis = () =>
+    public static BaseCard JungleOasis()
     {
         return new
         (
@@ -630,8 +631,8 @@ internal static class Database
         );
 
 
-    };
-    public static Func<BaseCard> TarPits = () =>
+    }
+    public static BaseCard TarPits()
     {
         BaseCard tarPits = new
         (
@@ -659,11 +660,11 @@ internal static class Database
         };
 
         return tarPits;
-    };
+    }
 
 
     // WIZARDS  
-    public static Func<PlayableCard> Neophyte = () =>
+    public static PlayableCard Neophyte()
     {
         PlayableCard neophyte = new
         (
@@ -722,8 +723,8 @@ internal static class Database
         };
 
         return neophyte;
-    };
-    public static Func<PlayableCard> Enchantress = () =>
+    }
+    public static PlayableCard Enchantress()
     {
         PlayableCard enchantress = new
         (
@@ -751,8 +752,8 @@ internal static class Database
         };
 
         return enchantress;
-    };
-    public static Func<PlayableCard> Chronomage = () =>
+    }
+    public static PlayableCard Chronomage()
     {
         PlayableCard chronomage = new
         (
@@ -781,8 +782,8 @@ internal static class Database
         };
 
         return chronomage;
-    };
-    public static Func<PlayableCard> Archmage = () =>
+    }
+    public static PlayableCard Archmage()
     {
         PlayableCard archmage = new
         (
@@ -834,8 +835,8 @@ internal static class Database
 
 
         return archmage;
-    };
-    public static Func<PlayableCard> MassEnchantment = () =>
+    }
+    public static PlayableCard MassEnchantment()
     {
         PlayableCard massEnchantment = new
         (
@@ -895,8 +896,8 @@ internal static class Database
         };
 
         return massEnchantment;
-    };
-    public static Func<PlayableCard> MysticStudies = () =>
+    }
+    public static PlayableCard MysticStudies()
     {
         PlayableCard mysticStudies = new
         (
@@ -924,8 +925,8 @@ internal static class Database
         };
 
         return mysticStudies;
-    };
-    public static Func<PlayableCard> Portal = () =>
+    }
+    public static PlayableCard Portal()
     {
         PlayableCard portal = new
         (
@@ -960,6 +961,16 @@ internal static class Database
                     // it goes to the one belonging to the card’s owner.
                     card.ResetController();
                     card.Owner.Hand.Add(card);
+                    revealedCards.Remove(card);
+                }
+
+                revealedCards = battle.SelectCards(revealedCards, "Choose the order these cards they should put back on your deck (e.i. the last one chosen will be the next one drawn).", revealedCards.Count);
+                foreach (var card in revealedCards)
+                {
+                    // When a card that others can see goes to the hand, deck or discard pile,
+                    // it goes to the one belonging to the card’s owner.
+                    card.ResetController();
+                    card.Owner.Deck.AddToTop(card);
                 }
             }
             else
@@ -972,8 +983,8 @@ internal static class Database
         };
 
         return portal;
-    };
-    public static Func<PlayableCard> Sacrifice = () =>
+    }
+    public static PlayableCard Sacrifice()
     {
         PlayableCard sacrifice = new
         (
@@ -1013,8 +1024,8 @@ internal static class Database
 
 
         return sacrifice;
-    };
-    public static Func<PlayableCard> Scry = () =>
+    }
+    public static PlayableCard Scry()
     {
         PlayableCard scry = new
         (
@@ -1053,8 +1064,8 @@ internal static class Database
         };
 
         return scry;
-    };
-    public static Func<PlayableCard> Summon = () =>
+    }
+    public static PlayableCard Summon()
     {
         PlayableCard summon = new
         (
@@ -1081,8 +1092,8 @@ internal static class Database
         };
 
         return summon;
-    };
-    public static Func<PlayableCard> TimeLoop = () =>
+    }
+    public static PlayableCard TimeLoop()
     {
         PlayableCard timeLoop = new
         (
@@ -1109,8 +1120,8 @@ internal static class Database
         };
 
         return timeLoop;
-    };
-    public static Func<PlayableCard> WindsOfChange = () =>
+    }
+    public static PlayableCard WindsOfChange()
     {
         PlayableCard windsOfChange = new
         (
@@ -1141,9 +1152,9 @@ internal static class Database
         };
 
         return windsOfChange;
-    };
+    }
 
-    public static Func<BaseCard> SchoolOfWizardry = () =>
+    public static BaseCard SchoolOfWizardry()
     {
         BaseCard schoolOfWizardry = new
         (
@@ -1161,12 +1172,12 @@ internal static class Database
             [3, 2, 1]
         );
 
-        schoolOfWizardry.AfterBaseScores += (battle, winners) =>
+        schoolOfWizardry.AfterBaseScores += (battle, slot, winners) =>
         {
             List<BaseCard> bases = battle.DrawBases(3);
             BaseCard chosenBase = battle.SelectCard(bases, $"{string.Join(" and ", winners.Select(x => x.Name))}, choose a base to replace School of Wizardry");
             bases.Remove(chosenBase);
-            if(bases.Count > 1)
+            if (bases.Count > 1)
             {
                 // This wil reorder them according to selection
                 bases = battle.SelectCards(bases, $"{string.Join(" and ", winners.Select(x => x.Name))}, choose bases in the order they should put back on the deck (e.i. the last one chosen will be the next one drawn).", bases.Count);
@@ -1177,7 +1188,47 @@ internal static class Database
         };
 
         return schoolOfWizardry;
-    };
+    }
+    public static BaseCard TheGreatLibrary()
+    {
+        BaseCard theGreatLibrary = new
+        (
+            Faction.Wizards,
+            "The Great Library",
+            [
+
+
+                "      4      2      1       ",
+                "                            ",
+                "                            ",
+                "After this base scores, all ",
+                " players with minions here  ",
+                "     may draw one card.     ",
+
+            ],
+            22,
+            [4, 2, 1]
+        );
+
+        theGreatLibrary.AfterBaseScores += (battle, slot, winners) =>
+        {
+            var playersWithMinionHere = battle.GetPlayers().Where(player => slot.Cards.Any(card => card.Controller == player && card.CardType == PlayableCardType.Minion));
+            foreach (var player in playersWithMinionHere)
+            {
+                Option yes = new("YES");
+                Option no = new("NO");
+                bool drawCard = yes.Id == battle.SelectOption([yes, no], [], $"{player.Name}, would you like to draw a card?");
+                if(drawCard)
+                {
+                    player.Hand.Add(player.Draw());
+                }
+            }
+
+            return null;
+        };
+
+        return theGreatLibrary;
+    }
 
 
     // GENERAL
@@ -1187,7 +1238,7 @@ internal static class Database
         public static bool IsMinion(PlayableCard card) => card.CardType == PlayableCardType.Minion;
     }
 
-    public static Func<PlayableCard> Minion = () =>
+    public static PlayableCard Minion()
     {
 
         PlayableCard minion = new
@@ -1211,19 +1262,19 @@ internal static class Database
 
 
         return minion;
-    };
+    }
 
 
     public static readonly Dictionary<Faction, List<Func<PlayableCard>>> PlayableCardsByFactionDict = new()
     {
         { Faction.Dinosuars, [WarRaptor, WarRaptor, WarRaptor, WarRaptor, ArmoredStego, ArmoredStego, ArmoredStego, Laseratops, Laseratops, KingRex, Augmentation, Augmentation, Howl, Howl, NaturalSelection, Rampage, SurvivalOfTheFittest, ToothClawAndGuns, Upgrade, WildlifePreserve] },
-        //{ Faction.Wizards, [Neophyte, Neophyte, Neophyte, Neophyte, Enchantress, Enchantress, Enchantress, Chronomage, Chronomage, Archmage, MassEnchantment, MysticStudies, MysticStudies, Portal, Sacrifice, Scry, Summon, Summon, TimeLoop, WindsOfChange] }
-        { Faction.Wizards, [Summon, WarRaptor, WarRaptor, MysticStudies, TimeLoop, Summon, WarRaptor, WarRaptor, MysticStudies, TimeLoop, Summon, WarRaptor, WarRaptor, MysticStudies, TimeLoop, Summon, WarRaptor, WarRaptor, MysticStudies, TimeLoop] }
+        { Faction.Wizards, [Neophyte, Neophyte, Neophyte, Neophyte, Enchantress, Enchantress, Enchantress, Chronomage, Chronomage, Archmage, MassEnchantment, MysticStudies, MysticStudies, Portal, Sacrifice, Scry, Summon, Summon, TimeLoop, WindsOfChange] }
+        //{ Faction.Wizards, [Portal, Neophyte, Neophyte, Neophyte, Neophyte, Neophyte, Neophyte, Neophyte, Neophyte, Neophyte] }
     };
 
     public static readonly Dictionary<Faction, List<Func<BaseCard>>> BaseCardsByFactionDict = new()
     {
         { Faction.Dinosuars, [JungleOasis, TarPits] },
-        { Faction.Wizards, [SchoolOfWizardry, TarPits, JungleOasis] }
+        { Faction.Wizards, [SchoolOfWizardry, TheGreatLibrary] }
     };
 }
