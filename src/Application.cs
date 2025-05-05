@@ -37,7 +37,7 @@ internal partial class Application()
 
             var buttonTargeter = new SelectOption(buttons.Select(x => x.Id).ToList());
 
-            var optionId = new BattlePage(_table != null ? _table.GetBaseSlots() : [], new("Mulligan", []), cardsToDisplay, buttons, new Targeter([buttonTargeter]), displayText).Run();
+            var optionId = new BattlePage(_table != null ? _table.GetBaseSlots() : [], new("Mulligan", []), cardsToDisplay.ConvertAll(x => (Card)x), buttons, new Targeter([buttonTargeter]), displayText).Run();
 
             return optionId;
         }
@@ -47,7 +47,7 @@ internal partial class Application()
             _table = table;
         }
 
-        public Guid? SelectHandCard(List<PlayableCard> handCards, List<List<PlayableCard>> selectableFieldCards, string displayText = "")
+        public Guid? SelectCardFromHand(List<PlayableCard> handCards, List<List<PlayableCard>> selectableFieldCards, string displayText = "")
         {
             // Create Targeter
             List<TargetLogic> targetLogics = [];
@@ -62,7 +62,7 @@ internal partial class Application()
             targetLogics.Add(endButtonTargeter);
 
             
-            BattlePage page = new(_table.GetBaseSlots(), _table.ActivePlayer.Player, _table.ActivePlayer.Player.Hand.ToList(), _buttons, new Targeter(targetLogics, handTargeter), displayText);
+            BattlePage page = new(_table.GetBaseSlots(), _table.ActivePlayer.Player, _table.ActivePlayer.Player.Hand.ToList().ConvertAll(x => (Card)x), _buttons, new Targeter(targetLogics, handTargeter), displayText);
             while (true)
             {
                 var chosenId = page.Run();
@@ -109,15 +109,15 @@ internal partial class Application()
         {
             List<PlayableCard> cardsToDisplay = [];
             if (cardToDisplay != null) cardsToDisplay.Add(cardToDisplay);
-            return new BattlePage(_table.GetBaseSlots(), _table.ActivePlayer.Player, cardsToDisplay, _buttons, new Targeter([new SelectOption(validBaseIds)]), displayText).Run();
+            return new BattlePage(_table.GetBaseSlots(), _table.ActivePlayer.Player, cardsToDisplay.ConvertAll(x => (Card)x), _buttons, new Targeter([new SelectOption(validBaseIds)]), displayText).Run();
         }
 
-        public List<Guid> SelectPlayableCard(List<PlayableCard> options, int? numToReturn, string displayText, Func<PlayableCard, bool>? isValidOption)
+        public List<Guid> SelectCard(List<Card> validOptions, List<Card> optionsToDisplay, string displayText, int? numToReturn)
         {
             List<Guid> selectedOptions = [];
             Option done = new("I AM DONE");
             List<Option> buttons = [];
-            SelectOption optionsTargeter = new(options.Select(x => x.Id).ToList());
+            SelectOption optionsTargeter = new(optionsToDisplay.Select(x => x.Id).ToList());
             List<TargetLogic> targetLogics = [optionsTargeter];
                         
             if (numToReturn == null) // User can click on any number of valid targets, they break the loop on button
@@ -127,18 +127,18 @@ internal partial class Application()
                 targetLogics.Add(endButtonTargeter);
             }
 
-            var page = new BattlePage(_table.GetBaseSlots(), _table.ActivePlayer.Player, options, buttons, new Targeter(targetLogics), displayText);
+            var page = new BattlePage(_table.GetBaseSlots(), _table.ActivePlayer.Player, optionsToDisplay, buttons, new Targeter(targetLogics), displayText);
 
             while(numToReturn == null || selectedOptions.Count < numToReturn)
             {
                 Guid chosenOptionId = page.Run();
                 if (chosenOptionId == done.Id) break;
-                if(isValidOption == null || isValidOption(options.Where(x => x.Id == chosenOptionId).Single()))
+                if(validOptions.Where(x => x.Id == chosenOptionId).Count() != 0)
                 {
                     selectedOptions.Add(chosenOptionId);
 
                     // Remove from list so graphic doesn't appear
-                    options.Remove(options.Where(x => x.Id == chosenOptionId).Single());
+                    optionsToDisplay.Remove(optionsToDisplay.Where(x => x.Id == chosenOptionId).Single());
                     // Remove from targeter so the targetIndex doesn't overflow
                     optionsTargeter.RemoveOption(chosenOptionId);
                 }

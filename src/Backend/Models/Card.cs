@@ -5,4 +5,5 @@ internal abstract class Card(Faction faction, string name, string[] graphic) : I
     public Faction Faction { get; set; } = faction;
     public string Name { get; set; } = name;
     public string[] Graphic { get; set; } = graphic;
+    public List<PlayableCard> Attachments { get; private set; } = [];
 }

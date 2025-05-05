@@ -25,7 +25,6 @@ internal class PlayableCard : Card
     public PlayableCardType CardType { get; }
     public int? PrintedPower { get; set; }
     public int? CurrentPower { get; private set; }
-    public List<PlayableCard> Attachments { get; private set; } = [];
     public PlayLocation PlayLocation { get; private set; }
 
     public enum EffectType

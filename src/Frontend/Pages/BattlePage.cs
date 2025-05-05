@@ -23,12 +23,12 @@ namespace SmashUp.Frontend.Pages
     /// <summary>
     /// Handles all rendering the Battle page
     /// </summary>
-    internal class BattlePage(List<BaseSlot> baseSlots, Player activePlayer, List<PlayableCard> playableCardsToDisplay, List<Option> buttons, Targeter targeter, string displayText = "") : ValuePage<Guid>
+    internal class BattlePage(List<BaseSlot> baseSlots, Player activePlayer, List<Card> inputFieldCards, List<Option> buttons, Targeter targeter, string displayText = "") : ValuePage<Guid>
     {
         private readonly Targeter _targeter = targeter;
         private readonly List<BaseSlot> _baseSlots = baseSlots;
         private readonly Player _activePlayer = activePlayer;
-        private readonly List<PlayableCard> _playableCardsToDisplay = playableCardsToDisplay;
+        private readonly List<Card> _inputFieldCards = inputFieldCards;
         private int _optionDisplayIndex = 0;
         private readonly List<Option> _buttons = buttons;
 
@@ -124,7 +124,7 @@ namespace SmashUp.Frontend.Pages
 
             // Get Active Bases Graphics
             string[][] activeBasesGraphics = activeBases
-                .Select(GenerateBaseGraphic)
+                .Select(GenerateCardGraphic)
                 .ToArray();
 
             // Get Attached Cards Graphics
@@ -137,7 +137,7 @@ namespace SmashUp.Frontend.Pages
             // Calculate array size
             int baseGraphicHeight = activeBasesGraphics.Length > 0 ? activeBasesGraphics.Max(baseGraphic => baseGraphic.Length) : 0;
             int paddingHeight = 1;
-            int numCardFieldLines = Math.Max(attachedCardGraphics.Length > 0 ? attachedCardGraphics.Max(x => x.Length): 0, CARD_FIELD_SIZE);
+            int numCardFieldLines = Math.Max(attachedCardGraphics.Length > 0 ? attachedCardGraphics.Max(x => x.Length) : 0, CARD_FIELD_SIZE);
             var baseField = new string[baseGraphicHeight + paddingHeight + numCardFieldLines];
 
             // Calculate padding
@@ -183,18 +183,6 @@ namespace SmashUp.Frontend.Pages
 
             return baseField;
         }
-
-        private string[] GetBaseAttachmentGraphics(BaseSlot baseSlot)
-        {
-            return CardGraphicUtil.GetAttachedCardsGraphic(baseSlot, _targeter.GetTargetId());
-        }
-
-        private string[] GenerateBaseGraphic(BaseCard baseCard)
-        {
-            bool isHighlighted = baseCard.Id == _targeter.GetTargetId();
-            return CardGraphicUtil.GenerateBaseCardGraphic(baseCard.Graphic, baseCard.Name, baseCard.CurrentPower, baseCard.CurrentBreakpoint, isHighlighted);
-        }
-
         /// <summary>
         /// Generates the field that lists the game statistics
         /// </summary>
@@ -216,7 +204,6 @@ namespace SmashUp.Frontend.Pages
             //Return as array
             return [paddedStatField];
         }
-
         /// <summary>
         /// Generates the field that displays the result of user input. Usually will be their hand, but is also how they view their decks
         /// </summary>
@@ -225,21 +212,31 @@ namespace SmashUp.Frontend.Pages
             string[][] CardGraphicsToDisplay = [];
 
             // Hand/Option Display
-            if (_playableCardsToDisplay.Count > 0)
+            if (_inputFieldCards.Count > 0)
             {
-                string[][] allGraphics = _playableCardsToDisplay.Select(GeneratePlayableCardGraphic).ToArray();
+                string[][] allGraphics = _inputFieldCards
+                    .Select(card =>
+                    {
+                        return card switch
+                        {
+                            PlayableCard playable => GenerateCardGraphic(playable),
+                            BaseCard baseCard => GenerateCardGraphic(baseCard),
+                            _ => throw new InvalidOperationException($"Unsupported card type: {card.GetType()}")
+                        };
+                    })
+                    .ToArray();
 
                 int cardLength = allGraphics.Max(graphic => graphic.Max(line => line.Length));
-                int numCardsToDisplay = Math.Min(fieldWidth / (cardLength + 1), _playableCardsToDisplay.Count);
+                int numCardsToDisplay = Math.Min(fieldWidth / (cardLength + 1), _inputFieldCards.Count);
 
                 // Update option display index if the targeter is targeting a card one outside of our view
                 // Ex. Move to other part of hand
-                _optionDisplayIndex = Math.Min(_optionDisplayIndex, _playableCardsToDisplay.Count - numCardsToDisplay);
-                if (_optionDisplayIndex + numCardsToDisplay < _playableCardsToDisplay.Count && _targeter.GetTargetId() == _playableCardsToDisplay[_optionDisplayIndex + numCardsToDisplay].Id)
+                _optionDisplayIndex = Math.Min(_optionDisplayIndex, _inputFieldCards.Count - numCardsToDisplay);
+                if (_optionDisplayIndex + numCardsToDisplay < _inputFieldCards.Count && _targeter.GetTargetId() == _inputFieldCards[_optionDisplayIndex + numCardsToDisplay].Id)
                 {
                     _optionDisplayIndex++;
                 }
-                else if (_optionDisplayIndex > 0 && _targeter.GetTargetId() == _playableCardsToDisplay[_optionDisplayIndex - 1].Id)
+                else if (_optionDisplayIndex > 0 && _targeter.GetTargetId() == _inputFieldCards[_optionDisplayIndex - 1].Id)
                 {
                     _optionDisplayIndex--;
                 }
@@ -247,12 +244,12 @@ namespace SmashUp.Frontend.Pages
                 CardGraphicsToDisplay = allGraphics[_optionDisplayIndex..(numCardsToDisplay + _optionDisplayIndex)];
 
                 // If one one was passsed in, assume that this is card display mode
-                if(_playableCardsToDisplay.Count == 1 && _playableCardsToDisplay.Single().Attachments.Count > 0)
+                if (_inputFieldCards.Count == 1 && _inputFieldCards.Single().Attachments.Count > 0)
                 {
                     CardGraphicsToDisplay[0][0] += "  Attached Cards:";
-                    for (int i = 1; i < Math.Min(CardGraphicsToDisplay[0].Length, _playableCardsToDisplay.Single().Attachments.Count + 1); i++)
+                    for (int i = 1; i < Math.Min(CardGraphicsToDisplay[0].Length, _inputFieldCards.Single().Attachments.Count + 1); i++)
                     {
-                        CardGraphicsToDisplay[0][i] += $"  {i}. {_playableCardsToDisplay.Single().Attachments[i - 1].Name}";
+                        CardGraphicsToDisplay[0][i] += $"  {i}. {_inputFieldCards.Single().Attachments[i - 1].Name}";
                     }
                 }
             }
@@ -279,11 +276,6 @@ namespace SmashUp.Frontend.Pages
 
             return inputField;
         }
-        private string[] GeneratePlayableCardGraphic(PlayableCard card)
-        {
-            return CardGraphicUtil.GeneratePlayableCardGraphic(card.Graphic, card.Name, card.CurrentPower, card.Id == _targeter.GetTargetId());
-        }
-
         /// <summary>
         /// Generates the end turn button
         /// </summary>
@@ -295,7 +287,8 @@ namespace SmashUp.Frontend.Pages
             string padding = new(' ', paddingLength);
 
             List<string[]> buttonGraphics = [];
-            foreach (var button in _buttons) {
+            foreach (var button in _buttons)
+            {
                 buttonGraphics.Add(CreateButtonGraphic(button));
             }
 
@@ -307,22 +300,34 @@ namespace SmashUp.Frontend.Pages
 
             return buttonField;
         }
+        public override Guid? HandleKeyPress(UserKeyPress keyPress)
+        {
+            return _targeter.HandleKeyPress(keyPress);
+        }
 
+        private string[] GenerateCardGraphic(PlayableCard card)
+        {
+            return CardGraphicUtil.GeneratePlayableCardGraphic(card.Graphic, card.Name, card.CurrentPower, card.Id == _targeter.GetTargetId());
+        }
+        private string[] GenerateCardGraphic(BaseCard baseCard)
+        {
+            bool isHighlighted = baseCard.Id == _targeter.GetTargetId();
+            return CardGraphicUtil.GenerateBaseCardGraphic(baseCard.Graphic, baseCard.Name, baseCard.CurrentPower, baseCard.CurrentBreakpoint, isHighlighted);
+        }
+        private string[] GetBaseAttachmentGraphics(BaseSlot baseSlot)
+        {
+            return CardGraphicUtil.GetAttachedCardsGraphic(baseSlot, _targeter.GetTargetId());
+        }
         private string[] CreateButtonGraphic(Option button)
         {
             bool isTargeted = _targeter.GetTargetId() == button.Id;
             int textLength = button.Text.Length;
-            
+
             return [
                 isTargeted ? $"╔═{new string('═', textLength)}═╗" : $"┌─{new string('─', textLength)}─┐",
                 isTargeted ? $"║ {button.Text} ║" : $"│ {button.Text} │",
                 isTargeted ? $"╚═{new string('═', textLength)}═╝" : $"└─{new string('─', textLength)}─┘",
             ];
-        }
-
-        public override Guid? HandleKeyPress(UserKeyPress keyPress)
-        {
-            return _targeter.HandleKeyPress(keyPress);
         }
     }
 }

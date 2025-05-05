@@ -8,7 +8,6 @@ namespace SmashUp.Backend.Repositories;
 internal static class Database
 {
     // DINOSAURS
-
     public static Func<PlayableCard> WarRaptor = () =>
     {
         string WAR_RAPTOR_NAME = "War Raptor";
@@ -663,10 +662,7 @@ internal static class Database
     };
 
 
-    // WIZARDS
-    public static bool isAction(PlayableCard card) => card.CardType == PlayableCardType.Action;
-    public static bool isMinion(PlayableCard card) => card.CardType == PlayableCardType.Minion;
-
+    // WIZARDS  
     public static Func<PlayableCard> Neophyte = () =>
     {
         PlayableCard neophyte = new
@@ -879,9 +875,9 @@ internal static class Database
 
             // Play one revealed action as an extra action
             PlayableCard? chosenCard = null;
-            if (revealedCards.Any(isAction))
+            if (revealedCards.Any(PlayableCardPredicates.IsAction))
             {
-                chosenCard = battle.SelectCard(revealedCards, displayText, isAction);
+                chosenCard = battle.SelectCard(revealedCards, displayText, PlayableCardPredicates.IsAction);
                 chosenCard.ChangeController(battle, massEnchantment.Controller);
                 battle.PlayExtraCard(chosenCard);
             }
@@ -954,9 +950,9 @@ internal static class Database
         {
             string displayText = "Choose any number of minions to put in your hand:";
             var revealedCards = portal.Controller.Draw(5);
-            if (revealedCards.Any(isMinion))
+            if (revealedCards.Any(PlayableCardPredicates.IsMinion))
             {
-                List<PlayableCard> chosenCards = battle.SelectCards(revealedCards, displayText, isMinion);
+                List<PlayableCard> chosenCards = battle.SelectCards(revealedCards, displayText, null, PlayableCardPredicates.IsMinion);
 
                 foreach (var card in chosenCards)
                 {
@@ -1043,9 +1039,9 @@ internal static class Database
         {
             string displayText = "Choose an action from your deck to put in your hand:";
             var deckCards = scry.Controller.Deck.Cards;
-            if (deckCards.Any(isAction))
+            if (deckCards.Any(PlayableCardPredicates.IsAction))
             {
-                PlayableCard selectedAction = battle.SelectCard(deckCards, displayText, isAction);
+                PlayableCard selectedAction = battle.SelectCard(deckCards, displayText, PlayableCardPredicates.IsAction);
                 if (!scry.Controller.Deck.Draw(selectedAction)) throw new Exception($"{selectedAction.Name} with ID {selectedAction.Id} doesn't exist in {scry.Controller.Name}'s deck");
                 scry.Controller.Hand.Add(selectedAction);
                 scry.Controller.Deck.Shuffle();
@@ -1147,7 +1143,50 @@ internal static class Database
         return windsOfChange;
     };
 
+    public static Func<BaseCard> SchoolOfWizardry = () =>
+    {
+        BaseCard schoolOfWizardry = new
+        (
+            Faction.Wizards,
+            "School of Wizardry",
+            [
+                "      3      2      1       ",
+                "After this base scores, the ",
+                "  winner looks at the top   ",
+                "  cards of the base deck,   ",
+                "chooses one to replace this ",
+                "base, and returns the others",
+            ],
+            20,
+            [3, 2, 1]
+        );
+
+        schoolOfWizardry.AfterBaseScores += (battle, winners) =>
+        {
+            List<BaseCard> bases = battle.DrawBases(3);
+            BaseCard chosenBase = battle.SelectCard(bases, $"{string.Join(" and ", winners.Select(x => x.Name))}, choose a base to replace School of Wizardry");
+            bases.Remove(chosenBase);
+            if(bases.Count > 1)
+            {
+                // This wil reorder them according to selection
+                bases = battle.SelectCards(bases, $"{string.Join(" and ", winners.Select(x => x.Name))}, choose bases in the order they should put back on the deck (e.i. the last one chosen will be the next one drawn).", bases.Count);
+            }
+            battle.PutBasesToTop(bases);
+
+            return chosenBase;
+        };
+
+        return schoolOfWizardry;
+    };
+
+
     // GENERAL
+    internal static class PlayableCardPredicates
+    {
+        public static bool IsAction(PlayableCard card) => card.CardType == PlayableCardType.Action;
+        public static bool IsMinion(PlayableCard card) => card.CardType == PlayableCardType.Minion;
+    }
+
     public static Func<PlayableCard> Minion = () =>
     {
 
@@ -1179,12 +1218,12 @@ internal static class Database
     {
         { Faction.Dinosuars, [WarRaptor, WarRaptor, WarRaptor, WarRaptor, ArmoredStego, ArmoredStego, ArmoredStego, Laseratops, Laseratops, KingRex, Augmentation, Augmentation, Howl, Howl, NaturalSelection, Rampage, SurvivalOfTheFittest, ToothClawAndGuns, Upgrade, WildlifePreserve] },
         //{ Faction.Wizards, [Neophyte, Neophyte, Neophyte, Neophyte, Enchantress, Enchantress, Enchantress, Chronomage, Chronomage, Archmage, MassEnchantment, MysticStudies, MysticStudies, Portal, Sacrifice, Scry, Summon, Summon, TimeLoop, WindsOfChange] }
-        { Faction.Wizards, [Scry, WarRaptor, WarRaptor, WarRaptor, WarRaptor, WarRaptor] }
+        { Faction.Wizards, [Summon, WarRaptor, WarRaptor, MysticStudies, TimeLoop, Summon, WarRaptor, WarRaptor, MysticStudies, TimeLoop, Summon, WarRaptor, WarRaptor, MysticStudies, TimeLoop, Summon, WarRaptor, WarRaptor, MysticStudies, TimeLoop] }
     };
 
     public static readonly Dictionary<Faction, List<Func<BaseCard>>> BaseCardsByFactionDict = new()
     {
         { Faction.Dinosuars, [JungleOasis, TarPits] },
-        { Faction.Wizards, [JungleOasis, TarPits] }
+        { Faction.Wizards, [SchoolOfWizardry, TarPits, JungleOasis] }
     };
 }

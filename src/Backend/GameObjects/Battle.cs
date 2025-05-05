@@ -5,7 +5,6 @@ using SmashUp.Backend.API;
 using FluentResults;
 using LinqKit;
 using SmashUp.Backend.Repositories;
-using System.Numerics;
 
 namespace SmashUp.Backend.GameObjects;
 
@@ -14,7 +13,7 @@ namespace SmashUp.Backend.GameObjects;
 /// </summary>
 internal class Battle
 {
-    private readonly IFrontendBattleAPI _userInputHandler;
+    private readonly IFrontendBattleAPI _userInput;
     private readonly Random _random;
     public readonly GlobalEventManager EventManager;
 
@@ -25,14 +24,14 @@ internal class Battle
 
     public Battle(IFrontendBattleAPI userInputHandler, GlobalEventManager eventManager, Random random)
     {
-        _userInputHandler = userInputHandler;
+        _userInput = userInputHandler;
 
         EventManager = eventManager;
         _random = random;
 
         _table = SetUp();
 
-        _userInputHandler.InitializeData(_table);
+        _userInput.InitializeData(_table);
     }
 
     // TURN STRUCTURE & CONTROL FLOW 
@@ -43,11 +42,11 @@ internal class Battle
     private Table SetUp()
     {
         //Invite Players
-        List<string> playerNames = _userInputHandler.ChoosePlayerNames();
+        List<string> playerNames = _userInput.ChoosePlayerNames();
         List<Player> players = [];
 
         //Choose 2 Factions
-        List<(string, List<FactionModel>)> factionChoices = _userInputHandler.ChooseFactions(playerNames, FactionService.GetFactionModels());
+        List<(string, List<FactionModel>)> factionChoices = _userInput.ChooseFactions(playerNames, FactionService.GetFactionModels());
 
         //Build Player Decks
         foreach (var choice in factionChoices)
@@ -86,7 +85,7 @@ internal class Battle
         {
             Option yes = new("YES");
             Option no = new("NO");
-            Guid optionId = _userInputHandler.SelectOption([yes, no], player.Hand.ToList(), $"{player.Name}'s opening hand contains no minions, would you like to mulligan?");
+            Guid optionId = _userInput.SelectOption([yes, no], player.Hand.ToList(), $"{player.Name}'s opening hand contains no minions, would you like to mulligan?");
 
             if (optionId == yes.Id)
             {
@@ -131,7 +130,7 @@ internal class Battle
             //Use plays
 
             // Select Card From Hand
-            Guid? chosenCardId = _userInputHandler.SelectHandCard(_table.ActivePlayer.Player.Hand.ToList(), _table.GetFieldCards(), displayMessage);
+            Guid? chosenCardId = _userInput.SelectCardFromHand(_table.ActivePlayer.Player.Hand.ToList(), _table.GetFieldCards(), displayMessage);
             displayMessage = "";
             if (chosenCardId == null) break;
 
@@ -176,7 +175,7 @@ internal class Battle
             if (scoringBases.Count == 1) baseToScore = scoringBases[0];
             else
             {
-                Guid chosenBaseId = _userInputHandler.SelectBaseCard(scoringBases.Select(slot => slot.BaseCard.Id).ToList(), null, "Multiple bases are ready to score. Choose a base to score first:");
+                Guid chosenBaseId = _userInput.SelectBaseCard(scoringBases.Select(slot => slot.BaseCard.Id).ToList(), null, "Multiple bases are ready to score. Choose a base to score first:");
                 baseToScore = GetBaseSlotById(chosenBaseId);
             }
 
@@ -218,6 +217,7 @@ internal class Battle
 
             // Step 5: Award treasures
             // Step 6: Play/invoke "after scoring" abilities
+            BaseCard? newBase = baseToScore.BaseCard.TriggerAfterAfterBaseScores(this, scoreDict[powerVals[0]]);
             // Step 7: Discard all the cards on the base
             baseToScore.Cards.ForEach(x => RemoveCardFromBattleField(x));
             baseToScore.Cards.ForEach(Discard);
@@ -226,7 +226,8 @@ internal class Battle
             _table.AddBaseToDiscard(baseToScore.BaseCard);
 
             // Step 9: Replace the base
-            baseToScore.BaseCard = _table.DrawBaseCard();
+            if (newBase != null) baseToScore.BaseCard = newBase;
+            else baseToScore.BaseCard = _table.DrawBaseCard();
         }
     }
     /// <summary>
@@ -239,7 +240,8 @@ internal class Battle
         if (numCards > 10)
         {
             int numToDiscard = numCards - 10;
-            var cardIdsToDiscard = _userInputHandler.SelectPlayableCard(_table.ActivePlayer.Player.Hand.ToList(), numToDiscard, $"Choose {numToDiscard} card{(numToDiscard > 1 ? 's' : null)} to discard");
+            var handCards = _table.ActivePlayer.Player.Hand.ToList().ConvertAll(x => (Card)x);
+            var cardIdsToDiscard = _userInput.SelectCard(handCards, handCards, $"Choose {numToDiscard} card{(numToDiscard > 1 ? 's' : null)} to discard", numToDiscard);
             foreach (var cardId in cardIdsToDiscard)
             {
                 var card = GetHandCardById(cardId);
@@ -267,7 +269,7 @@ internal class Battle
         {
             _battleEnd = true;
             var winningPlayer = playerVpTotals.Single(x => x.VP == vpMax).Player;
-            _userInputHandler.EndBattle(winningPlayer);
+            _userInput.EndBattle(winningPlayer);
         }
     }
     private void SwitchActivePlayer()
@@ -329,7 +331,7 @@ internal class Battle
     private void PlayCardToBase(PlayableCard cardToPlay)
     {
         List<Guid> validBaseIds = _table.GetActiveBases().Select(x => x.Id).ToList();
-        Guid chosenBaseId = _userInputHandler.SelectBaseCard(validBaseIds, cardToPlay, $"Choose a base to play {cardToPlay.Name} on");
+        Guid chosenBaseId = _userInput.SelectBaseCard(validBaseIds, cardToPlay, $"Choose a base to play {cardToPlay.Name} on");
         BaseCard chosenBase = GetBaseCardById(chosenBaseId);
 
         // Add Card to territory
@@ -413,7 +415,8 @@ internal class Battle
             }
             else
             {
-                protector = SelectCard(protections.Select(x => x.GrantedBy).ToList(), $"{cardToAffect.Controller.Name}, {cardToAffect.Name} is being protected by multiple cards, choose which one to recieve protection from:");
+                var cardsThatGrantProtection = protections.Select(x => x.GrantedBy).ToList().ConvertAll(x => (Card)x);
+                protector = (PlayableCard)SelectCard(cardsThatGrantProtection, $"{cardToAffect.Controller.Name}, {cardToAffect.Name} is being protected by multiple cards, choose which one to recieve protection from:");
             }
 
             protector.TriggerOnProtect(this);
@@ -463,7 +466,7 @@ internal class Battle
         return baseTheCardIsOn;
     }
 
-    // EXPOSE TABLE FUNCTIONS
+    // INTERACT WITH TABLE
     public List<BaseSlot> GetBaseSlots()
     {
         return _table.GetBaseSlots();
@@ -476,7 +479,17 @@ internal class Battle
     {
         return _table.ActivePlayer.Player;
     }
-
+    public List<BaseCard> DrawBases(int numToDraw)
+    {
+        return _table.Board.BaseDeck.Draw(numToDraw);
+    }
+    internal void PutBasesToTop(List<BaseCard> chosenOrder)
+    {
+        foreach(var baseCard in chosenOrder)
+        {
+            _table.Board.BaseDeck.AddToTop(baseCard);
+        }
+    }
 
     // INTERACTING WITH UI
     public class SelectFieldCardQuery
@@ -498,7 +511,7 @@ internal class Battle
         List<List<Guid>> validFieldCardIds = GetValidFieldCardIds(cardPred, query.BaseCard);
         if (validFieldCardIds.Count == 0) return null;
 
-        var result = _userInputHandler.SelectFieldCard(validFieldCardIds, cardToDisplay, displaytext);
+        var result = _userInput.SelectFieldCard(validFieldCardIds, cardToDisplay, displaytext);
         return new(
             result.SelectedCardId != null ? GetFieldCardById((Guid)result.SelectedCardId) : null,
             result.SelectedCardId != null ? GetBaseCardByFieldCardId((Guid)result.SelectedCardId) : null, 
@@ -509,22 +522,34 @@ internal class Battle
     public SelectBaseCardResult? SelectBaseCard()
     {
         List<Guid> validBaseIds = _table.GetActiveBases().Select(x => x.Id).ToList();
-        Guid chosenBaseId = _userInputHandler.SelectBaseCard(validBaseIds);
+        Guid chosenBaseId = _userInput.SelectBaseCard(validBaseIds);
         return new(GetBaseCardById(chosenBaseId), false);
     }
-    public PlayableCard SelectCard(List<PlayableCard> options, string displayText, Func<PlayableCard, bool>? isValidChoice=null)
+    public T SelectCard<T>(List<T> options, string displayText, Func<T, bool>? isValidChoice = null)
+        where T : Card
     {
-        Guid chosenId = _userInputHandler.SelectPlayableCard(new(options), 1, displayText, isValidChoice).Single();
+        isValidChoice ??= _ => true;
+        // We use new(options) to pass a new list, rather than a reference to the existing one
+        Guid chosenId = _userInput.SelectCard(options.ConvertAll(x => (Card)x), options.Where(isValidChoice).ToList().ConvertAll(x => (Card)x), displayText, 1).Single();
         return options.Where(x => x.Id == chosenId).SingleOrDefault() ?? throw new Exception($"No option with ID: {chosenId}");
     }
-    public List<PlayableCard> SelectCards(List<PlayableCard> options, string displayText, Func<PlayableCard, bool>? isValidChoice = null)
+    /// <summary>
+    /// Accesses UI to allow player to select a card from options
+    /// </summary>
+    /// <param name="numToSelect">The num to return, or null if any number works</param>
+    /// <param name="isValidChoice">Determins which options are selectable</param>
+    public List<T> SelectCards<T>(List<T> options, string displayText, int? numToSelect=null, Func<T, bool>? isValidChoice = null)
+        where T : Card
     {
-        List<Guid> chosenIds = _userInputHandler.SelectPlayableCard(new(options), null, displayText, isValidChoice).ToList();
+        isValidChoice ??= _ => true;
+        // We use new(options) to pass a new list, rather than a reference to the existing one
+        var validChoices = options.Where(isValidChoice).ToList().ConvertAll(x => (Card)x);
+        List<Guid> chosenIds = _userInput.SelectCard(options.ConvertAll(x => (Card)x), validChoices, displayText, numToSelect).ToList();
         return options.Where(x => chosenIds.Contains(x.Id)).ToList();
     }
     public Guid SelectOption(List<Option> options, List<PlayableCard> cardsToDisplay, string displayText)
     {
-       return _userInputHandler.SelectOption(options, cardsToDisplay, displayText);
+       return _userInput.SelectOption(options, cardsToDisplay, displayText);
     }
 
 
@@ -574,5 +599,4 @@ internal class Battle
     {
         return _table.GetBaseSlots().Where(x => x.BaseCard.Id == chosenBaseId).FirstOrDefault() ?? throw new Exception($"No active base exists with ID {chosenBaseId}");
     }
-
 }

@@ -18,7 +18,7 @@ internal class Table(List<Player> players, ActivePlayer activePlayer, Board boar
 {
     public readonly List<Player> Players = players;
     public readonly ActivePlayer ActivePlayer = activePlayer;
-    private readonly Board _board = board;
+    public readonly Board Board = board;
 
     public List<(Player, int)> GetPlayerVP()
     {
@@ -27,31 +27,31 @@ internal class Table(List<Player> players, ActivePlayer activePlayer, Board boar
 
     public List<BaseSlot> GetBaseSlots()
     {
-        return _board.ActiveBases;
+        return Board.ActiveBases;
     }
     public List<BaseCard> GetActiveBases()
     {
-        return _board.ActiveBases.Select(x => x.BaseCard).ToList();
+        return Board.ActiveBases.Select(x => x.BaseCard).ToList();
     }
 
     public List<List<PlayableCard>> GetFieldCards()
     {
-        return _board.ActiveBases.Select(x => x.Territories.SelectMany(x => x.Cards).ToList()).Where(x => x.Count > 0).ToList();
+        return Board.ActiveBases.Select(x => x.Territories.SelectMany(x => x.Cards).ToList()).Where(x => x.Count > 0).ToList();
     }
 
     public void AddBaseToDiscard(BaseCard baseCard)
     {
-        _board.BaseDiscard.Add(baseCard);
+        Board.BaseDiscard.Add(baseCard);
     }
 
     public BaseCard DrawBaseCard()
     {
-        var drawnBase = _board.BaseDeck.Draw();
+        var drawnBase = Board.BaseDeck.Draw();
         if (drawnBase == null)
         {
-            _board.BaseDeck.Shuffle(_board.BaseDiscard);
-            _board.BaseDiscard = [];
-            drawnBase = _board.BaseDeck.Draw();
+            Board.BaseDeck.Shuffle(Board.BaseDiscard);
+            Board.BaseDiscard = [];
+            drawnBase = Board.BaseDeck.Draw();
             if (drawnBase == null) throw new Exception("Failed to draw base card, there are no cards in the deck or discard");
         }
         return drawnBase;

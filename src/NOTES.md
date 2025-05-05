@@ -12,6 +12,7 @@ Misc Tests to one day write:
 - Tooth and Claw And Guns stops a minions own effect (Oponents war raptor won't gain power)
 - Wildlife preserve discards all other players cards currently on your minions
 - Two allow you to choose
+- Wizard base puts cards on top of base deck in correct order
 
 Event Approach Rules:
 - Events should only be used for logic that:
