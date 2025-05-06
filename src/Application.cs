@@ -146,14 +146,14 @@ internal partial class Application()
             return selectedOptions;
         }
         
-        public void ViewCards(List<Card> cardsToDisplay)
+        public void ViewCards(List<Card> cardsToDisplay, string displayText = "", string buttonText="RETURN")
         {
-            Option returnButton = new("RETURN");
+            Option returnButton = new(buttonText);
             SelectOption optionsTargeter = new (cardsToDisplay.Select(x => x.Id).ToList());
-            SelectOption endButtonTargeter = new ([returnButton.Id]);
-            List<TargetLogic> targetLogics = [optionsTargeter, endButtonTargeter];
+            SelectOption returnButtonTargeter = new ([returnButton.Id]);
+            List<TargetLogic> targetLogics = [optionsTargeter, returnButtonTargeter];
 
-            var page = new BattlePage(_table.GetBaseSlots(), _table.ActivePlayer.Player, cardsToDisplay, [returnButton], new Targeter(targetLogics));
+            var page = new BattlePage(_table.GetBaseSlots(), _table.ActivePlayer.Player, cardsToDisplay, [returnButton], new Targeter(targetLogics, returnButtonTargeter), displayText);
 
             Guid? chosenId = null;
             while (chosenId != returnButton.Id)

@@ -776,7 +776,7 @@ internal static class Database
 
         buccaneer.OnProtect += (battle) =>
         {
-            BaseCard currentBase = battle.GetBaseCardByPlayableCard(buccaneer);
+            BaseCard currentBase = battle.GetBaseCard(buccaneer);
             var validBases = battle.GetBaseSlots().Select(x => x.BaseCard).Where(x => x != currentBase).ToList();
             BaseCard chosenBase = battle.SelectCard(validBases, $"{buccaneer.Controller.Name}, select a base to move {buccaneer.Name} to:");
             battle.Move(buccaneer, chosenBase, buccaneer);
@@ -810,7 +810,7 @@ internal static class Database
             var baseAboutToScore = slot.BaseCard;
             if (battle.SelectBool([pirateKing], $"{pirateKing.Controller.Name}, would you like to move {pirateKing.Name} to {slot.BaseCard.Name} before it scores?"))
             {
-                BaseCard currBase = battle.GetBaseCardByPlayableCard(pirateKing);
+                BaseCard currBase = battle.GetBaseCard(pirateKing);
                 battle.Move(pirateKing, baseAboutToScore, pirateKing);
             }
         }
@@ -828,6 +828,42 @@ internal static class Database
         };
 
         return pirateKing;
+    }
+    public static PlayableCard Broadside()
+    {
+        PlayableCard broadside = new
+        (
+            Faction.Pirates,
+            PlayableCardType.Action,
+            "Broadside",
+            [
+                @"   ________| |________   ",
+                @"  |  _   _    _   _   |  ",
+                @"  | (O) (O)  (O) (O)  |  ",
+                @"   \_________________/   ",
+                @"   Destroy all of one    ",
+                @"player's minions of power",
+                @"2 or less at a base where",
+                @"   you have a minion.    ",
+            ],
+            PlayLocation.Discard
+        );
+
+        broadside.OnPlay += (battle, baseSlot) =>
+        {
+            List<BaseCard> validBases = battle.GetBaseSlots().Where(slot => slot.Territories.SelectMany(terr => terr.Cards).Any(card => card.Controller == broadside.Controller)).Select(slot => slot.BaseCard).ToList();
+            if (validBases.Count == 0) return;
+
+            BaseCard baseCard = battle.SelectBaseCard(validBases, broadside, "Choose a base with one of your minions.");
+            BaseSlot slot = battle.GetBaseSlot(baseCard);
+
+            foreach (PlayableCard card in slot.Cards)
+            {
+                if (card.CardType == PlayableCardType.Minion && card.CurrentPower <= 2) battle.Destroy(card, broadside);
+            }
+        };
+
+        return broadside;
     }
 
     // WIZARDS  
@@ -1433,9 +1469,9 @@ internal static class Database
     public static readonly Dictionary<Faction, List<Func<PlayableCard>>> PlayableCardsByFactionDict = new()
     {
         { Faction.Dinosuars, [WarRaptor, WarRaptor, WarRaptor, WarRaptor, ArmoredStego, ArmoredStego, ArmoredStego, Laseratops, Laseratops, KingRex, Augmentation, Augmentation, Howl, Howl, NaturalSelection, Rampage, SurvivalOfTheFittest, ToothClawAndGuns, Upgrade, WildlifePreserve] },
-        { Faction.Wizards, [Neophyte, Neophyte, Neophyte, Neophyte, Enchantress, Enchantress, Enchantress, Chronomage, Chronomage, Archmage, MassEnchantment, MysticStudies, MysticStudies, Portal, Sacrifice, Scry, Summon, Summon, TimeLoop, WindsOfChange] },
-        { Faction.Pirates, [FirstMate, FirstMate, FirstMate, FirstMate, SaucyWench, SaucyWench, SaucyWench, Buccaneer, Buccaneer, PirateKing] }
-        //{ Faction.Wizards, [PirateKing, PirateKing, PirateKing, PirateKing, PirateKing, PirateKing, Summon, Summon, Summon, Summon] },
+        //{ Faction.Wizards, [Neophyte, Neophyte, Neophyte, Neophyte, Enchantress, Enchantress, Enchantress, Chronomage, Chronomage, Archmage, MassEnchantment, MysticStudies, MysticStudies, Portal, Sacrifice, Scry, Summon, Summon, TimeLoop, WindsOfChange] },
+        //{ Faction.Pirates, [FirstMate, FirstMate, FirstMate, FirstMate, SaucyWench, SaucyWench, SaucyWench, Buccaneer, Buccaneer, PirateKing] }
+        { Faction.Wizards, [FirstMate, FirstMate, FirstMate, PirateKing, PirateKing, PirateKing, Broadside, Broadside, Broadside] },
 
     };
 

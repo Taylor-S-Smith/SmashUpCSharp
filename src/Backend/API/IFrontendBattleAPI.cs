@@ -17,5 +17,7 @@ internal interface IFrontendBattleAPI
     SelectFieldCardUIResult SelectFieldCard(List<List<Guid>> validCardIds, PlayableCard? cardToDisplay, string? displayText);
     Guid SelectOption(List<Option> buttons, List<PlayableCard> cardsToDisplay, string displayText);
     List<Guid> SelectCard(List<Card> optionsToDisplay, List<Card> validOptions, string displayText, int? numToReturn=null);
+    void ViewCards(List<Card> cardsToDisplay, string displayText="", string buttonText = "RETURN");
     void EndBattle(Player winningPlayer);
+
 }

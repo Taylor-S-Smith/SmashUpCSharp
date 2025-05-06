@@ -239,7 +239,10 @@ internal class Battle
     /// </summary>
     private void Draw2Cards()
     {
-        _table.ActivePlayer.Player.Hand.AddRange(_table.ActivePlayer.Player.Draw(2));
+        var cardsDrawn = _table.ActivePlayer.Player.Draw(2);
+        _table.ActivePlayer.Player.Hand.AddRange(cardsDrawn);
+        _userInput.ViewCards(cardsDrawn.ConvertAll(x => (Card)x), "You drew the following:", "CONTINUE");
+
         int numCards = _table.ActivePlayer.Player.Hand.Count;
         if (numCards > 10)
         {
@@ -408,7 +411,7 @@ internal class Battle
         if (AttemptToAffect(cardToMove, EffectType.Move, affector.CardType, affector.Controller))
         {
             // We don't replace the two methods with a call RemoveCardFromBattleField() since we don't want to tigger any leave battlefield effects
-            BaseSlot baseSlot = GetBaseSlotByPlayableCard(cardToMove);
+            BaseSlot baseSlot = GetBaseSlot(cardToMove);
             RemoveCardFromBase(cardToMove, baseSlot);
             var newBaseSlot = GetBaseSlotById(newBase.Id);
             AddCardToBase(cardToMove, newBaseSlot);
@@ -491,12 +494,11 @@ internal class Battle
     {
         return _table.GetBaseSlots();
     }
-    public BaseCard GetBaseCardByPlayableCard(PlayableCard cardToFind)
+    public BaseSlot GetBaseSlot(BaseCard baseCard)
     {
-
-        return GetBaseSlotByPlayableCard(cardToFind).BaseCard;
+        return _table.GetBaseSlots().Where(x => x.BaseCard == baseCard).SingleOrDefault() ?? throw new Exception($"No slot exists for {baseCard.Name} with ID: {baseCard.Id}");
     }
-    private BaseSlot GetBaseSlotByPlayableCard(PlayableCard cardToFind)
+    private BaseSlot GetBaseSlot(PlayableCard cardToFind)
     {
         foreach (BaseSlot slot in _table.GetBaseSlots())
         {
@@ -521,6 +523,10 @@ internal class Battle
             }
         }
         throw new Exception($"No base contains {cardToFind.Name} with ID {cardToFind.Id}");
+    }
+    public BaseCard GetBaseCard(PlayableCard cardToFind)
+    {
+        return GetBaseSlot(cardToFind).BaseCard;
     }
     public List<Player> GetPlayers()
     {
@@ -568,13 +574,10 @@ internal class Battle
             result.SelectedCardId != null ? GetBaseCardByFieldCardId((Guid)result.SelectedCardId) : null, 
             result.ActionCanceled);
     }
-    public record SelectBaseCardResult(BaseCard? SelectedBase, bool ActionCanceled);
-    /// <returns>Selected Base Card Result, or null if there are no available targets</returns>
-    public SelectBaseCardResult? SelectBaseCard()
+    public BaseCard SelectBaseCard(List<BaseCard> validBases, PlayableCard cardToDisplay, string displayText)
     {
-        List<Guid> validBaseIds = _table.GetActiveBases().Select(x => x.Id).ToList();
-        Guid chosenBaseId = _userInput.SelectBaseCard(validBaseIds);
-        return new(GetBaseCardById(chosenBaseId), false);
+        Guid chosenId = _userInput.SelectBaseCard(validBases.Select(x => x.Id).ToList(), cardToDisplay, displayText);
+        return validBases.Where(x => x.Id == chosenId).SingleOrDefault() ?? throw new Exception($"No option with ID: {chosenId}");
     }
     public T SelectCard<T>(List<T> options, string displayText, Func<T, bool>? isValidChoice = null)
         where T : Card
