@@ -733,7 +733,7 @@ internal static class Database
         {
             if (baseSlot == null) throw new Exception("No base passed in for Saucy Wench");
             bool validTargetExist = battle.GetValidFieldCards((card) => card.CardType == PlayableCardType.Minion && card.CurrentPower <= 2, baseSlot.BaseCard).Count > 0;
-            
+
             if (validTargetExist && battle.SelectBool([saucyWench], $"Would you like to destroy a minion of power or two or less on {baseSlot.BaseCard.Name}?"))
             {
                 SelectFieldCardQuery query = new()
@@ -745,11 +745,45 @@ internal static class Database
                 PlayableCard? cardToDestroy = battle.SelectFieldCard(saucyWench, "Select a card for Saucy Wench to destroy", query)?.SelectedCard;
 
                 if (cardToDestroy != null) battle.Destroy(cardToDestroy, saucyWench);
-            }            
+            }
         };
 
         return saucyWench;
     }
+    public static PlayableCard Buccaneer()
+    {
+        PlayableCard buccaneer = new
+        (
+            Faction.Pirates,
+            PlayableCardType.Minion,
+            "Buccaneer",
+            [
+                @"          /v\            ",
+                @"          ("") |          ",
+                @"          -|-|===>       ",
+                @"          / \            ",
+                @"                         ",
+                @" Special: If this minion ",
+                @"would be destroyed, move ",
+                @"   it to another base.   ",
+            ],
+            PlayLocation.Base,
+            4
+        );
+
+        buccaneer.Protections.Add(new(EffectType.Destroy, buccaneer));
+
+        buccaneer.OnProtect += (battle) =>
+        {
+            BaseCard currentBase = battle.GetBaseCardByPlayableCard(buccaneer) ?? throw new Exception($"No base contains {buccaneer.Name} with ID {buccaneer.Id}");
+            var validBases = battle.GetBaseSlots().Select(x => x.BaseCard).Where(x => x != currentBase).ToList();
+            BaseCard chosenBase = battle.SelectCard(validBases, $"{buccaneer.Controller}, select a base to move {buccaneer.Name} to:");
+            battle.Move(buccaneer, currentBase, chosenBase, buccaneer);
+        };
+
+        return buccaneer;
+    }
+
 
     // WIZARDS  
     public static PlayableCard Neophyte()
@@ -1355,8 +1389,8 @@ internal static class Database
     {
         { Faction.Dinosuars, [WarRaptor, WarRaptor, WarRaptor, WarRaptor, ArmoredStego, ArmoredStego, ArmoredStego, Laseratops, Laseratops, KingRex, Augmentation, Augmentation, Howl, Howl, NaturalSelection, Rampage, SurvivalOfTheFittest, ToothClawAndGuns, Upgrade, WildlifePreserve] },
         //{ Faction.Wizards, [Neophyte, Neophyte, Neophyte, Neophyte, Enchantress, Enchantress, Enchantress, Chronomage, Chronomage, Archmage, MassEnchantment, MysticStudies, MysticStudies, Portal, Sacrifice, Scry, Summon, Summon, TimeLoop, WindsOfChange] },
-        //{ Faction.Pirates, [FirstMate, FirstMate, FirstMate, FirstMate, SaucyWench, SaucyWench, SaucyWench] }
-        { Faction.Wizards, [FirstMate, FirstMate, SaucyWench, SaucyWench, FirstMate, FirstMate, SaucyWench, SaucyWench, FirstMate, FirstMate, SaucyWench, SaucyWench, FirstMate, FirstMate, SaucyWench, SaucyWench, FirstMate, FirstMate, SaucyWench, SaucyWench, Summon, Summon, Summon, Summon, Summon] },
+        //{ Faction.Pirates, [FirstMate, FirstMate, FirstMate, FirstMate, SaucyWench, SaucyWench, SaucyWench, Buccaneer, Buccaneer] }
+        { Faction.Wizards, [Buccaneer, Buccaneer, Buccaneer, Buccaneer, Buccaneer, SaucyWench, SaucyWench, SaucyWench, SaucyWench, SaucyWench, Summon, Summon, Summon, Summon, Summon] },
     };
 
     public static readonly Dictionary<Faction, List<Func<BaseCard>>> BaseCardsByFactionDict = new()

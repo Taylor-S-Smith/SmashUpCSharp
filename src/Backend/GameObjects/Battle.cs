@@ -488,6 +488,32 @@ internal class Battle
     {
         return _table.GetBaseSlots();
     }
+    internal BaseCard? GetBaseCardByPlayableCard(PlayableCard cardToFind)
+    {
+        foreach (BaseSlot slot in _table.GetBaseSlots())
+        {
+            foreach (PlayerTerritory territory in slot.Territories)
+            {
+                // Check all played cards on base
+                if (territory.Cards.Contains(cardToFind))
+                {
+                    return slot.BaseCard;
+                }
+                else
+                {
+                    // Check cards attached to played cards
+                    foreach (var card in territory.Cards)
+                    {
+                        if (card.Attachments.Contains(cardToFind))
+                        {
+                            return slot.BaseCard;
+                        }
+                    }
+                }
+            }
+        }
+        return null;
+    }
     public List<Player> GetPlayers()
     {
         return _table.Players;
@@ -625,4 +651,6 @@ internal class Battle
     {
         return _table.GetBaseSlots().Where(x => x.BaseCard.Id == chosenBaseId).FirstOrDefault() ?? throw new Exception($"No active base exists with ID {chosenBaseId}");
     }
+
+    
 }
