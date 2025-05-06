@@ -2,8 +2,6 @@
 using SmashUp.Backend.GameObjects;
 using static SmashUp.Backend.GameObjects.Battle;
 using static SmashUp.Backend.Models.PlayableCard;
-using System.Linq;
-using System.Diagnostics;
 
 namespace SmashUp.Backend.Repositories;
 
@@ -167,7 +165,7 @@ internal static class Database
                 MaxPower = 2,
                 BaseCard = baseSlot.BaseCard
             };
-            PlayableCard? cardToDestroy = battle.SelectFieldCard(laseratops, "Select a card for lasertops to destroy", query)?.SelectedCard;
+            PlayableCard? cardToDestroy = battle.SelectFieldCard(laseratops, "Select a card for Lasertops to destroy", query)?.SelectedCard;
             if (cardToDestroy != null) battle.Destroy(cardToDestroy, laseratops);
         };
 
@@ -672,7 +670,6 @@ internal static class Database
             PlayableCardType.Minion,
             "First Mate",
             [
-                @"2      First Mate       2",
                 @"           n_            ",
                 @"          ("")            ",
                 @"          -|-            ",
@@ -710,6 +707,48 @@ internal static class Database
         };
 
         return firstMate;
+    }
+    public static PlayableCard SaucyWench()
+    {
+        PlayableCard saucyWench = new
+        (
+            Faction.Pirates,
+            PlayableCardType.Minion,
+            "Saucy Wench",
+            [
+                @"            _            ",
+                @"          /("")\          ",
+                @"           <|-r          ",
+                @"           / \           ",
+                @"                         ",
+                @"You may destroy a minion ",
+                @"   of power 2 or less    ",
+                @"      on this base.      ",
+            ],
+            PlayLocation.Base,
+            3
+        );
+
+        saucyWench.OnPlay += (battle, baseSlot) =>
+        {
+            if (baseSlot == null) throw new Exception("No base passed in for Saucy Wench");
+            bool validTargetExist = battle.GetValidFieldCards((card) => card.CardType == PlayableCardType.Minion && card.CurrentPower <= 2, baseSlot.BaseCard).Count > 0;
+            
+            if (validTargetExist && battle.SelectBool([saucyWench], $"Would you like to destroy a minion of power or two or less on {baseSlot.BaseCard.Name}?"))
+            {
+                SelectFieldCardQuery query = new()
+                {
+                    CardType = PlayableCardType.Minion,
+                    MaxPower = 2,
+                    BaseCard = baseSlot.BaseCard
+                };
+                PlayableCard? cardToDestroy = battle.SelectFieldCard(saucyWench, "Select a card for Saucy Wench to destroy", query)?.SelectedCard;
+
+                if (cardToDestroy != null) battle.Destroy(cardToDestroy, saucyWench);
+            }            
+        };
+
+        return saucyWench;
     }
 
     // WIZARDS  
@@ -1315,9 +1354,9 @@ internal static class Database
     public static readonly Dictionary<Faction, List<Func<PlayableCard>>> PlayableCardsByFactionDict = new()
     {
         { Faction.Dinosuars, [WarRaptor, WarRaptor, WarRaptor, WarRaptor, ArmoredStego, ArmoredStego, ArmoredStego, Laseratops, Laseratops, KingRex, Augmentation, Augmentation, Howl, Howl, NaturalSelection, Rampage, SurvivalOfTheFittest, ToothClawAndGuns, Upgrade, WildlifePreserve] },
-        { Faction.Wizards, [Neophyte, Neophyte, Neophyte, Neophyte, Enchantress, Enchantress, Enchantress, Chronomage, Chronomage, Archmage, MassEnchantment, MysticStudies, MysticStudies, Portal, Sacrifice, Scry, Summon, Summon, TimeLoop, WindsOfChange] }
-        { Faction.Pirates, [FirstMate, FirstMate, FirstMate, FirstMate] }
-        //{ Faction.Wizards, [FirstMate, FirstMate, Summon, Summon, Summon, Summon, Summon, KingRex, KingRex, KingRex, KingRex, KingRex, KingRex, KingRex, KingRex, KingRex] },
+        //{ Faction.Wizards, [Neophyte, Neophyte, Neophyte, Neophyte, Enchantress, Enchantress, Enchantress, Chronomage, Chronomage, Archmage, MassEnchantment, MysticStudies, MysticStudies, Portal, Sacrifice, Scry, Summon, Summon, TimeLoop, WindsOfChange] },
+        //{ Faction.Pirates, [FirstMate, FirstMate, FirstMate, FirstMate, SaucyWench, SaucyWench, SaucyWench] }
+        { Faction.Wizards, [FirstMate, FirstMate, SaucyWench, SaucyWench, FirstMate, FirstMate, SaucyWench, SaucyWench, FirstMate, FirstMate, SaucyWench, SaucyWench, FirstMate, FirstMate, SaucyWench, SaucyWench, FirstMate, FirstMate, SaucyWench, SaucyWench, Summon, Summon, Summon, Summon, Summon] },
     };
 
     public static readonly Dictionary<Faction, List<Func<BaseCard>>> BaseCardsByFactionDict = new()
