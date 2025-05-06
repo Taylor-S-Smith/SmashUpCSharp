@@ -181,6 +181,8 @@ internal class Battle
             }
 
             // Step 3: Play/invoke "before scoring" abilities
+            baseToScore.BaseCard.TriggerBeforeBaseScores(this, baseToScore);
+
             // Step 4: Award VPs and play/invoke "when scoring" abilities
 
             // Order players by position
@@ -218,7 +220,7 @@ internal class Battle
 
             // Step 5: Award treasures
             // Step 6: Play/invoke "after scoring" abilities
-            BaseCard? newBase = baseToScore.BaseCard.TriggerAfterAfterBaseScores(this, baseToScore, scoreDict[powerVals[0]]);
+            BaseCard? newBase = baseToScore.BaseCard.TriggerAfterBaseScores(this, baseToScore, scoreDict[powerVals[0]]);
 
             // Step 7: Discard all the cards on the base
             baseToScore.Cards.ForEach(x => RemoveCardFromBattleField(x));
@@ -401,16 +403,18 @@ internal class Battle
         cardToPlay.TriggerOnDiscard(EventManager);
         cardToPlay.Owner.DiscardPile.Add(cardToPlay);
     }
-    internal void Move(PlayableCard cardToMove, BaseCard currentBase, BaseCard newBase, PlayableCard affector)
+    public void Move(PlayableCard cardToMove, BaseCard newBase, PlayableCard affector)
     {
         if (AttemptToAffect(cardToMove, EffectType.Move, affector.CardType, affector.Controller))
         {
-            var currentBaseSlot = GetBaseSlotById(currentBase.Id);
-            if (!RemoveCardFromBase(cardToMove, currentBaseSlot)) throw new Exception($"Attempted to move {cardToMove.Name}, but is was not found on base {currentBase.Name}");
+            // We don't replace the two methods with a call RemoveCardFromBattleField() since we don't want to tigger any leave battlefield effects
+            BaseSlot baseSlot = GetBaseSlotByPlayableCard(cardToMove);
+            RemoveCardFromBase(cardToMove, baseSlot);
             var newBaseSlot = GetBaseSlotById(newBase.Id);
             AddCardToBase(cardToMove, newBaseSlot);
         }
     }
+
     /// <summary>
     /// Checks if a card can be affected by a specific effect. 
     /// If it is protected, this will also resolve the protection triggers
@@ -451,7 +455,6 @@ internal class Battle
 
         throw new Exception($"{cardToRemove.Name} with ID {cardToRemove.Id} is not on the battlefield, so can't be removed");
     }
-
     private bool RemoveCardFromBase(PlayableCard cardToRemove, BaseSlot slot)
     {
         foreach (PlayerTerritory territory in slot.Territories)
@@ -488,7 +491,12 @@ internal class Battle
     {
         return _table.GetBaseSlots();
     }
-    internal BaseCard? GetBaseCardByPlayableCard(PlayableCard cardToFind)
+    public BaseCard GetBaseCardByPlayableCard(PlayableCard cardToFind)
+    {
+
+        return GetBaseSlotByPlayableCard(cardToFind).BaseCard;
+    }
+    private BaseSlot GetBaseSlotByPlayableCard(PlayableCard cardToFind)
     {
         foreach (BaseSlot slot in _table.GetBaseSlots())
         {
@@ -497,7 +505,7 @@ internal class Battle
                 // Check all played cards on base
                 if (territory.Cards.Contains(cardToFind))
                 {
-                    return slot.BaseCard;
+                    return slot;
                 }
                 else
                 {
@@ -506,13 +514,13 @@ internal class Battle
                     {
                         if (card.Attachments.Contains(cardToFind))
                         {
-                            return slot.BaseCard;
+                            return slot;
                         }
                     }
                 }
             }
         }
-        return null;
+        throw new Exception($"No base contains {cardToFind.Name} with ID {cardToFind.Id}");
     }
     public List<Player> GetPlayers()
     {
@@ -650,7 +658,5 @@ internal class Battle
     private BaseSlot GetBaseSlotById(Guid chosenBaseId)
     {
         return _table.GetBaseSlots().Where(x => x.BaseCard.Id == chosenBaseId).FirstOrDefault() ?? throw new Exception($"No active base exists with ID {chosenBaseId}");
-    }
-
-    
+    }    
 }

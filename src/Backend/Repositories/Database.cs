@@ -2,6 +2,7 @@
 using SmashUp.Backend.GameObjects;
 using static SmashUp.Backend.GameObjects.Battle;
 using static SmashUp.Backend.Models.PlayableCard;
+using LinqKit;
 
 namespace SmashUp.Backend.Repositories;
 
@@ -690,7 +691,7 @@ internal static class Database
             {
                 var validBases = battle.GetBaseSlots().Select(x => x.BaseCard).Where(x => x != currentBase).ToList();
                 BaseCard chosenBase = battle.SelectCard(validBases, $"{firstMate.Controller}, select a base to move First Mate to:");
-                battle.Move(firstMate, currentBase, chosenBase, firstMate);
+                battle.Move(firstMate, chosenBase, firstMate);
             }
 
             return null;
@@ -775,15 +776,59 @@ internal static class Database
 
         buccaneer.OnProtect += (battle) =>
         {
-            BaseCard currentBase = battle.GetBaseCardByPlayableCard(buccaneer) ?? throw new Exception($"No base contains {buccaneer.Name} with ID {buccaneer.Id}");
+            BaseCard currentBase = battle.GetBaseCardByPlayableCard(buccaneer);
             var validBases = battle.GetBaseSlots().Select(x => x.BaseCard).Where(x => x != currentBase).ToList();
-            BaseCard chosenBase = battle.SelectCard(validBases, $"{buccaneer.Controller}, select a base to move {buccaneer.Name} to:");
-            battle.Move(buccaneer, currentBase, chosenBase, buccaneer);
+            BaseCard chosenBase = battle.SelectCard(validBases, $"{buccaneer.Controller.Name}, select a base to move {buccaneer.Name} to:");
+            battle.Move(buccaneer, chosenBase, buccaneer);
         };
 
         return buccaneer;
     }
+    public static PlayableCard PirateKing()
+    {
+        PlayableCard pirateKing = new
+        (
+            Faction.Pirates,
+            PlayableCardType.Minion,
+            "Pirate King",
+            [
+                @"          /_V_\          ",
+                @"          (' ') ?        ",
+                @"    <===|--WWW--┘        ",
+                @"            |            ",
+                @"           / \           ",
+                @"          |   |          ",
+                @" Before a base scores you",
+                @"  may move this there.   ",
+            ],
+            PlayLocation.Base,
+            5
+        );
 
+        void OnBeforeScoresHandler(Battle battle, BaseSlot slot)
+        {
+            var baseAboutToScore = slot.BaseCard;
+            if (battle.SelectBool([pirateKing], $"{pirateKing.Controller.Name}, would you like to move {pirateKing.Name} to {slot.BaseCard.Name} before it scores?"))
+            {
+                BaseCard currBase = battle.GetBaseCardByPlayableCard(pirateKing);
+                battle.Move(pirateKing, baseAboutToScore, pirateKing);
+            }
+        }
+
+        pirateKing.OnAddToBase += (battle, baseSlot) =>
+        {
+            var otherBases = battle.GetBaseSlots().Select(x => x.BaseCard).Where(x => x != baseSlot.BaseCard);
+            otherBases.ForEach(x => x.BeforeBaseScores += OnBeforeScoresHandler);
+        };
+
+        pirateKing.OnRemoveFromBase += (battle, baseSlot) =>
+        {
+            var otherBases = battle.GetBaseSlots().Select(x => x.BaseCard).Where(x => x != baseSlot.BaseCard);
+            otherBases.ForEach(x => x.BeforeBaseScores -= OnBeforeScoresHandler);
+        };
+
+        return pirateKing;
+    }
 
     // WIZARDS  
     public static PlayableCard Neophyte()
@@ -1388,9 +1433,10 @@ internal static class Database
     public static readonly Dictionary<Faction, List<Func<PlayableCard>>> PlayableCardsByFactionDict = new()
     {
         { Faction.Dinosuars, [WarRaptor, WarRaptor, WarRaptor, WarRaptor, ArmoredStego, ArmoredStego, ArmoredStego, Laseratops, Laseratops, KingRex, Augmentation, Augmentation, Howl, Howl, NaturalSelection, Rampage, SurvivalOfTheFittest, ToothClawAndGuns, Upgrade, WildlifePreserve] },
-        //{ Faction.Wizards, [Neophyte, Neophyte, Neophyte, Neophyte, Enchantress, Enchantress, Enchantress, Chronomage, Chronomage, Archmage, MassEnchantment, MysticStudies, MysticStudies, Portal, Sacrifice, Scry, Summon, Summon, TimeLoop, WindsOfChange] },
-        //{ Faction.Pirates, [FirstMate, FirstMate, FirstMate, FirstMate, SaucyWench, SaucyWench, SaucyWench, Buccaneer, Buccaneer] }
-        { Faction.Wizards, [Buccaneer, Buccaneer, Buccaneer, Buccaneer, Buccaneer, SaucyWench, SaucyWench, SaucyWench, SaucyWench, SaucyWench, Summon, Summon, Summon, Summon, Summon] },
+        { Faction.Wizards, [Neophyte, Neophyte, Neophyte, Neophyte, Enchantress, Enchantress, Enchantress, Chronomage, Chronomage, Archmage, MassEnchantment, MysticStudies, MysticStudies, Portal, Sacrifice, Scry, Summon, Summon, TimeLoop, WindsOfChange] },
+        { Faction.Pirates, [FirstMate, FirstMate, FirstMate, FirstMate, SaucyWench, SaucyWench, SaucyWench, Buccaneer, Buccaneer, PirateKing] }
+        //{ Faction.Wizards, [PirateKing, PirateKing, PirateKing, PirateKing, PirateKing, PirateKing, Summon, Summon, Summon, Summon] },
+
     };
 
     public static readonly Dictionary<Faction, List<Func<BaseCard>>> BaseCardsByFactionDict = new()

@@ -17,7 +17,9 @@ internal class BaseCard : Card
     public event Action<Battle, PlayableCard> OnRemoveCard;
     public void TriggerAfterDestroyCard(PlayableCard card) => AfterMinionDestroyed.Invoke(card);
     public event Action<PlayableCard> AfterMinionDestroyed = delegate { };
-    public BaseCard? TriggerAfterAfterBaseScores(Battle battle, BaseSlot slot, List<Player> winners) => AfterBaseScores.Invoke(battle, slot, winners);
+    public void TriggerBeforeBaseScores(Battle battle, BaseSlot slot) => BeforeBaseScores.Invoke(battle, slot);
+    public event Action<Battle, BaseSlot> BeforeBaseScores = delegate { };
+    public BaseCard? TriggerAfterBaseScores(Battle battle, BaseSlot slot, List<Player> winners) => AfterBaseScores.Invoke(battle, slot, winners);
     /// <summary>
     /// Return the base that will replace that one that scored, or NULL to draw a new one normally
     /// </summary>
