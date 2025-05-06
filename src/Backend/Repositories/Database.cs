@@ -865,6 +865,53 @@ internal static class Database
 
         return broadside;
     }
+    public static PlayableCard Cannon()
+    {
+        PlayableCard cannon = new
+        (
+            Faction.Pirates,
+            PlayableCardType.Action,
+            "Cannon",
+            [
+                @"   ___________/ |     __ ",
+                @"  /           | |   __  /",
+                @"O|____        | |   __ | ",
+                @" /    \_______| |     __\",
+                @"|      |      \_|        ",
+                @" \____/                  ",
+                @"Destroy up to two minions",
+                @"   of power 2 or less.   ",
+            ],
+            PlayLocation.Discard,
+            3
+        );
+
+        cannon.OnPlay += (battle, baseSlot) =>
+        {
+            for (int i = 0; i < 2; i++)
+            {
+                bool validTargetExists = battle.GetValidFieldCards((card) => card.CardType == PlayableCardType.Minion && card.CurrentPower <= 2).Count > 0;
+
+                if (!validTargetExists) return;
+
+
+                SelectFieldCardQuery query = new()
+                {
+                    CardType = PlayableCardType.Minion,
+                    MaxPower = 2
+                };
+                var result = battle.SelectFieldCard(cannon, "Select a card for Cannon to destroy", query, true);
+
+                if (result.ActionCanceled == true) return;
+
+                var cardToDestroy = result.SelectedCard;
+
+                if (cardToDestroy != null) battle.Destroy(cardToDestroy, cardToDestroy);
+            }            
+        };
+
+        return cannon;
+    }
 
     // WIZARDS  
     public static PlayableCard Neophyte()
@@ -1470,8 +1517,8 @@ internal static class Database
     {
         { Faction.Dinosuars, [WarRaptor, WarRaptor, WarRaptor, WarRaptor, ArmoredStego, ArmoredStego, ArmoredStego, Laseratops, Laseratops, KingRex, Augmentation, Augmentation, Howl, Howl, NaturalSelection, Rampage, SurvivalOfTheFittest, ToothClawAndGuns, Upgrade, WildlifePreserve] },
         //{ Faction.Wizards, [Neophyte, Neophyte, Neophyte, Neophyte, Enchantress, Enchantress, Enchantress, Chronomage, Chronomage, Archmage, MassEnchantment, MysticStudies, MysticStudies, Portal, Sacrifice, Scry, Summon, Summon, TimeLoop, WindsOfChange] },
-        //{ Faction.Pirates, [FirstMate, FirstMate, FirstMate, FirstMate, SaucyWench, SaucyWench, SaucyWench, Buccaneer, Buccaneer, PirateKing] }
-        { Faction.Wizards, [FirstMate, FirstMate, FirstMate, PirateKing, PirateKing, PirateKing, Broadside, Broadside, Broadside] },
+        //{ Faction.Pirates, [FirstMate, FirstMate, FirstMate, FirstMate, SaucyWench, SaucyWench, SaucyWench, Buccaneer, Buccaneer, PirateKing, Broadside, Broadside, Cannon] }
+        { Faction.Wizards, [FirstMate, FirstMate, FirstMate, PirateKing, PirateKing, PirateKing, Cannon, Cannon, Cannon] },
 
     };
 

@@ -95,13 +95,19 @@ internal partial class Application()
             }            
         }
 
-        public SelectFieldCardUIResult SelectFieldCard(List<List<Guid>> validCardIds, PlayableCard? cardToDisplay, string? displayText)
+        public SelectFieldCardUIResult SelectFieldCard(List<List<Guid>> validCardIds, PlayableCard? cardToDisplay, string? displayText, bool cancelable=false)
         {
-            var fieldCardTargeter = new Select2DOption(validCardIds);
+            List<TargetLogic> logics = [];
+            logics.Add(new Select2DOption(validCardIds));
 
-            Guid? selectedCardId = new BattlePage(_table.GetBaseSlots(), _table.ActivePlayer.Player, [cardToDisplay], _buttons, new Targeter([fieldCardTargeter]), displayText ?? "").Run();
+            Option cancelButton = new("I AM DONE");
+            if (cancelable) logics.Add(new SelectOption([cancelButton.Id]));
 
-            return new(selectedCardId, selectedCardId == null);
+            Guid? selectedId = new BattlePage(_table.GetBaseSlots(), _table.ActivePlayer.Player, [cardToDisplay], [cancelButton], new Targeter(logics), displayText ?? "").Run();
+
+            if(selectedId == cancelButton.Id) return new(null, true);
+
+            return new(selectedId, selectedId == null);
         }
 
         public Guid SelectBaseCard(List<Guid> validBaseIds, PlayableCard? cardToDisplay=null, string displayText="")

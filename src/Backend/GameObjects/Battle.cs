@@ -558,7 +558,7 @@ internal class Battle
     }
     public record SelectFieldCardResult(PlayableCard? SelectedCard, BaseCard? SelectedCardBase, bool ActionCanceled);
     /// <returns>Selected Field Card Result, or null if there are no available targets</returns>
-    public SelectFieldCardResult? SelectFieldCard(PlayableCard cardToDisplay, string displaytext, SelectFieldCardQuery query)
+    public SelectFieldCardResult SelectFieldCard(PlayableCard cardToDisplay, string displaytext, SelectFieldCardQuery query, bool cancellable=false)
     {
         var cardPred = PredicateBuilder.New<PlayableCard>();
         if(query.CardType != null) cardPred.And((PlayableCard card) => card.CardType == query.CardType);
@@ -566,9 +566,9 @@ internal class Battle
         if (query.Controller != null) cardPred.And((PlayableCard card) => card.Controller == query.Controller);
 
         List<List<Guid>> validFieldCardIds = GetValidFieldCardIds(cardPred, query.BaseCard);
-        if (validFieldCardIds.Count == 0) return null;
+        if (validFieldCardIds.Count == 0) return new(null, null, false);
 
-        var result = _userInput.SelectFieldCard(validFieldCardIds, cardToDisplay, displaytext);
+        var result = _userInput.SelectFieldCard(validFieldCardIds, cardToDisplay, displaytext, cancellable);
         return new(
             result.SelectedCardId != null ? GetFieldCardById((Guid)result.SelectedCardId) : null,
             result.SelectedCardId != null ? GetBaseCardByFieldCardId((Guid)result.SelectedCardId) : null, 
