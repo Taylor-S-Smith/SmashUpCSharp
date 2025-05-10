@@ -1,5 +1,3 @@
-In the middle of writing dinghy. Cannon and dinghy need to be rewritten so that the choice of up to two minions are made first, then the minions are destroyed at the same time.
-
 Keep in mind:
 - Madness interacts strangely with mass enchant
 - If you try to play a special card with mass enchant, it will discard without effect if it's condition is not met
