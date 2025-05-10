@@ -95,19 +95,19 @@ internal partial class Application()
             }            
         }
 
-        public SelectFieldCardUIResult SelectFieldCard(List<List<Guid>> validCardIds, PlayableCard? cardToDisplay, string? displayText, bool cancelable=false)
+        public SelectResult SelectFieldCard(List<List<Guid>> validCardIds, PlayableCard? cardToDisplay, string? displayText, bool interuptable=false)
         {
             List<TargetLogic> logics = [];
             logics.Add(new Select2DOption(validCardIds));
 
-            Option cancelButton = new("I AM DONE");
-            if (cancelable) logics.Add(new SelectOption([cancelButton.Id]));
+            Option finishButton = new("I AM DONE");
+            if (interuptable) logics.Add(new SelectOption([finishButton.Id]));
 
-            Guid? selectedId = new BattlePage(_table.GetBaseSlots(), _table.ActivePlayer.Player, [cardToDisplay], [cancelButton], new Targeter(logics), displayText ?? "").Run();
+            Guid? selectedId = new BattlePage(_table.GetBaseSlots(), _table.ActivePlayer.Player, [cardToDisplay], [finishButton], new Targeter(logics), displayText ?? "").Run();
 
-            if(selectedId == cancelButton.Id) return new(null, true);
+            if(selectedId == finishButton.Id) return new(null, ResultType.Finished);
 
-            return new(selectedId, selectedId == null);
+            return new(selectedId, ResultType.Success);
         }
 
         public Guid SelectBaseCard(List<Guid> validBaseIds, PlayableCard? cardToDisplay=null, string displayText="")
@@ -176,7 +176,7 @@ internal partial class Application()
 
     }
 
-    private class ConsoleAppTestUI: ConsoleAppBattleUI
+    private class ConsoleApp3PlayerTestUI : ConsoleAppBattleUI
     {
         public override List<(string, List<FactionModel>)> ChooseFactions(List<string> playerNames, List<FactionModel> factionOptions)
         {
@@ -186,6 +186,18 @@ internal partial class Application()
         public override List<string> ChoosePlayerNames()
         {
             return ["Taylor", "Andrew", "Caden"];
+        }
+    }
+    private class ConsoleApp1PlayerTestUI : ConsoleAppBattleUI
+    {
+        public override List<(string, List<FactionModel>)> ChooseFactions(List<string> playerNames, List<FactionModel> factionOptions)
+        {
+            return new([(playerNames[0], [factionOptions[6]])]);
+        }
+
+        public override List<string> ChoosePlayerNames()
+        {
+            return ["Taylor"];
         }
     }
 
@@ -203,7 +215,7 @@ internal partial class Application()
         }
         else if (result == StartPageResult.StartGame)
         {
-            Battle battle = new(new ConsoleAppTestUI(), new GlobalEventManager(), new Random());
+            Battle battle = new(new ConsoleApp1PlayerTestUI(), new GlobalEventManager(), new Random());
             battle.StartBattle();
         }
         else if (result == StartPageResult.ShowCollection)

@@ -1,11 +1,11 @@
 ﻿using static SmashUp.Backend.Models.PlayableCard;
+using SmashUp.Backend.Repositories;
 using SmashUp.Backend.Services;
 using SmashUp.Backend.Models;
 using SmashUp.Backend.API;
 using FluentResults;
 using LinqKit;
-using SmashUp.Backend.Repositories;
-using System.Numerics;
+using System.Linq;
 
 namespace SmashUp.Backend.GameObjects;
 
@@ -350,15 +350,13 @@ internal class Battle
 
         // Activate Card Ability
         cardToPlay.TriggerOnPlay(this, slot);
-
-        // Trigger Base Effects (This includes updating the base's total power)
-        chosenBase.TriggerOnAddCard(this, cardToPlay);
     }
     private void AddCardToBase(PlayableCard cardToPlay, BaseSlot slot)
     {
         PlayerTerritory territory = slot.Territories.Where(x => x.player == cardToPlay.Controller).Single();
         territory.Cards.Add(cardToPlay);
         cardToPlay.TriggerOnAddToBase(this, slot);
+        slot.BaseCard.TriggerOnAddCard(this, cardToPlay);
     }
     private void PlayCardToDiscard(PlayableCard cardToPlay)
     {
@@ -524,7 +522,11 @@ internal class Battle
         }
         throw new Exception($"No base contains {cardToFind.Name} with ID {cardToFind.Id}");
     }
-    public BaseCard GetBaseCard(PlayableCard cardToFind)
+    public List<BaseCard> GetBases()
+    {
+        return _table.GetBaseSlots().Select(slot => slot.BaseCard).ToList();
+    }
+    public BaseCard GetBase(PlayableCard cardToFind)
     {
         return GetBaseSlot(cardToFind).BaseCard;
     }
@@ -555,24 +557,43 @@ internal class Battle
         public BaseCard? BaseCard { get; set; }
         public int? MaxPower { get; set; }
         public Player? Controller { get; set; }
+        public List<PlayableCard> CardsToExclude { get; set; } = [];
     }
-    public record SelectFieldCardResult(PlayableCard? SelectedCard, BaseCard? SelectedCardBase, bool ActionCanceled);
-    /// <returns>Selected Field Card Result, or null if there are no available targets</returns>
+    public record SelectFieldCardResult(PlayableCard? SelectedCard, BaseCard? SelectedCardBase, ResultType Type);
     public SelectFieldCardResult SelectFieldCard(PlayableCard cardToDisplay, string displaytext, SelectFieldCardQuery query, bool cancellable=false)
     {
-        var cardPred = PredicateBuilder.New<PlayableCard>();
+        var cardPred = PredicateBuilder.New((PlayableCard card) => !query.CardsToExclude.Contains(card));
         if(query.CardType != null) cardPred.And((PlayableCard card) => card.CardType == query.CardType);
         if (query.MaxPower != null) cardPred.And((PlayableCard card) => card.CurrentPower <= query.MaxPower);
         if (query.Controller != null) cardPred.And((PlayableCard card) => card.Controller == query.Controller);
 
         List<List<Guid>> validFieldCardIds = GetValidFieldCardIds(cardPred, query.BaseCard);
-        if (validFieldCardIds.Count == 0) return new(null, null, false);
+        if (validFieldCardIds.SelectMany(ids => ids).ToList().Count == 0) return new(null, null, ResultType.NoValidTargets);
 
-        var result = _userInput.SelectFieldCard(validFieldCardIds, cardToDisplay, displaytext, cancellable);
+        SelectResult result = _userInput.SelectFieldCard(validFieldCardIds, cardToDisplay, displaytext, cancellable);
+        
         return new(
-            result.SelectedCardId != null ? GetFieldCardById((Guid)result.SelectedCardId) : null,
-            result.SelectedCardId != null ? GetBaseCardByFieldCardId((Guid)result.SelectedCardId) : null, 
-            result.ActionCanceled);
+            result.SelectedId != null ? GetFieldCardById((Guid)result.SelectedId) : null,
+            result.SelectedId != null ? GetBaseCardByFieldCardId((Guid)result.SelectedId) : null, 
+            result.Type
+        );
+    }
+    public class SelectFieldCardsQuery : SelectFieldCardQuery
+    {
+        public int Num { get; set; }
+    }
+    public record SelectFieldCardsResult(List<(PlayableCard Card, BaseCard Base)> SelectedCards, ResultType Type);
+    public SelectFieldCardsResult SelectFieldCards(PlayableCard cardToDisplay, string displaytext, SelectFieldCardsQuery query, bool cancellable = false)
+    {
+        List<(PlayableCard Card, BaseCard Base)> chosenCards = [];
+        for(int i = 0; i < query.Num; i++)
+        {
+            var result = SelectFieldCard(cardToDisplay, displaytext, query, cancellable);
+            if (result.Type != ResultType.Success) break;
+            chosenCards.Add((result.SelectedCard!, result.SelectedCardBase!));
+            query.CardsToExclude.Add(result.SelectedCard!);
+        }
+        return new(chosenCards, ResultType.Success);
     }
     public BaseCard SelectBaseCard(List<BaseCard> validBases, PlayableCard cardToDisplay, string displayText)
     {

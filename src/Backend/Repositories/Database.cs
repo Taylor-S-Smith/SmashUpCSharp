@@ -3,6 +3,7 @@ using SmashUp.Backend.GameObjects;
 using static SmashUp.Backend.GameObjects.Battle;
 using static SmashUp.Backend.Models.PlayableCard;
 using LinqKit;
+using SmashUp.Backend.API;
 
 namespace SmashUp.Backend.Repositories;
 
@@ -776,7 +777,7 @@ internal static class Database
 
         buccaneer.OnProtect += (battle) =>
         {
-            BaseCard currentBase = battle.GetBaseCard(buccaneer);
+            BaseCard currentBase = battle.GetBase(buccaneer);
             var validBases = battle.GetBaseSlots().Select(x => x.BaseCard).Where(x => x != currentBase).ToList();
             BaseCard chosenBase = battle.SelectCard(validBases, $"{buccaneer.Controller.Name}, select a base to move {buccaneer.Name} to:");
             battle.Move(buccaneer, chosenBase, buccaneer);
@@ -810,7 +811,6 @@ internal static class Database
             var baseAboutToScore = slot.BaseCard;
             if (battle.SelectBool([pirateKing], $"{pirateKing.Controller.Name}, would you like to move {pirateKing.Name} to {slot.BaseCard.Name} before it scores?"))
             {
-                BaseCard currBase = battle.GetBaseCard(pirateKing);
                 battle.Move(pirateKing, baseAboutToScore, pirateKing);
             }
         }
@@ -882,36 +882,68 @@ internal static class Database
                 @"Destroy up to two minions",
                 @"   of power 2 or less.   ",
             ],
-            PlayLocation.Discard,
-            3
+            PlayLocation.Discard
         );
 
         cannon.OnPlay += (battle, baseSlot) =>
         {
-            for (int i = 0; i < 2; i++)
+            // Choose up to two cards
+            SelectFieldCardsQuery query = new()
             {
-                bool validTargetExists = battle.GetValidFieldCards((card) => card.CardType == PlayableCardType.Minion && card.CurrentPower <= 2).Count > 0;
+                CardType = PlayableCardType.Minion,
+                MaxPower = 2,
+                Num = 2
+            };
+            var result = battle.SelectFieldCards(cannon, $"Select a card for Cannon to destroy", query, true);
 
-                if (!validTargetExists) return;
-
-
-                SelectFieldCardQuery query = new()
-                {
-                    CardType = PlayableCardType.Minion,
-                    MaxPower = 2
-                };
-                var result = battle.SelectFieldCard(cannon, "Select a card for Cannon to destroy", query, true);
-
-                if (result.ActionCanceled == true) return;
-
-                var cardToDestroy = result.SelectedCard;
-
-                if (cardToDestroy != null) battle.Destroy(cardToDestroy, cardToDestroy);
-            }            
+            // Destroy Each
+            result.SelectedCards.ForEach(selection => battle.Destroy(selection.Card, cannon));
         };
 
         return cannon;
     }
+    public static PlayableCard Dinghy()
+    {
+        PlayableCard dinghy = new
+        (
+            Faction.Pirates,
+            PlayableCardType.Action,
+            "Dinghy",
+            [
+                @"                         ",
+                @"      ____/_\______      ",
+                @"     |       \     |     ",
+                @"~~~~~~\_______\ __/~~~~~~",
+                @"              \_\        ",
+                @"                         ",
+                @" Move up to two of your  ",
+                @" minions to other bases. ",
+            ],
+            PlayLocation.Discard
+        );
+
+        dinghy.OnPlay += (battle, baseSlot) =>
+        {
+            // Choose up to two cards
+            SelectFieldCardsQuery query = new()
+            {
+                CardType = PlayableCardType.Minion,
+                Controller = dinghy.Controller,
+                Num = 2
+            };
+            var result = battle.SelectFieldCards(dinghy, $"Select a card for Dinghy to move", query, true);
+
+            // Move Each
+            foreach (var selection in result.SelectedCards)
+            {
+                var chosenBase = battle.SelectBaseCard(battle.GetBases().Where(baseCard => baseCard != selection.Base).ToList(), dinghy, $"Select a base to move {selection.Card.Name} to.");
+                battle.Move(selection.Card, chosenBase, dinghy);
+            }
+        };
+
+        return dinghy;
+    }
+
 
     // WIZARDS  
     public static PlayableCard Neophyte()
@@ -1517,8 +1549,8 @@ internal static class Database
     {
         { Faction.Dinosuars, [WarRaptor, WarRaptor, WarRaptor, WarRaptor, ArmoredStego, ArmoredStego, ArmoredStego, Laseratops, Laseratops, KingRex, Augmentation, Augmentation, Howl, Howl, NaturalSelection, Rampage, SurvivalOfTheFittest, ToothClawAndGuns, Upgrade, WildlifePreserve] },
         //{ Faction.Wizards, [Neophyte, Neophyte, Neophyte, Neophyte, Enchantress, Enchantress, Enchantress, Chronomage, Chronomage, Archmage, MassEnchantment, MysticStudies, MysticStudies, Portal, Sacrifice, Scry, Summon, Summon, TimeLoop, WindsOfChange] },
-        //{ Faction.Pirates, [FirstMate, FirstMate, FirstMate, FirstMate, SaucyWench, SaucyWench, SaucyWench, Buccaneer, Buccaneer, PirateKing, Broadside, Broadside, Cannon] }
-        { Faction.Wizards, [FirstMate, FirstMate, FirstMate, PirateKing, PirateKing, PirateKing, Cannon, Cannon, Cannon] },
+        //{ Faction.Pirates, [FirstMate, FirstMate, FirstMate, FirstMate, SaucyWench, SaucyWench, SaucyWench, Buccaneer, Buccaneer, PirateKing, Broadside, Broadside, Cannon, Dinghy, Dinghy] }
+        { Faction.Wizards, [FirstMate, FirstMate, FirstMate, FirstMate, FirstMate, FirstMate, PirateKing, PirateKing, PirateKing, Dinghy, Dinghy, Dinghy, Dinghy, Cannon, Cannon, Cannon] },
 
     };
 
