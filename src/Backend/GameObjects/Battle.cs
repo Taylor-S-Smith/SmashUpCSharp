@@ -14,6 +14,13 @@ namespace SmashUp.Backend.GameObjects;
 /// </summary>
 internal class Battle
 {
+    public enum Phase
+    {
+        PlayCards,
+        Special
+    }
+    public Phase CardPhase { get; set; }
+
     private readonly IFrontendBattleAPI _userInput;
     private readonly Random _random;
     public readonly GlobalEventManager EventManager;
@@ -115,7 +122,7 @@ internal class Battle
     /// </summary>
     private void StartTurn()
     {
-        _table.ActivePlayer.Player.MinionPlays = 1;
+        _table.ActivePlayer.Player.MinionPlays = 10;
         _table.ActivePlayer.Player.ActionPlays = 1;
         EventManager.TriggerStartOfTurn(this, _table.ActivePlayer);
     }
@@ -131,7 +138,7 @@ internal class Battle
             //Use plays
 
             // Select Card From Hand
-            Guid? chosenCardId = _userInput.SelectCardFromHand(_table.ActivePlayer.Player.Hand.ToList(), _table.GetFieldCards(), displayMessage);
+            Guid? chosenCardId = _userInput.SelectCardOrInvokable(_table.ActivePlayer.Player.Hand.ToList(), _table.GetFieldCards(), displayMessage);
             displayMessage = "";
             if (chosenCardId == null) break;
 
@@ -181,7 +188,14 @@ internal class Battle
             }
 
             // Step 3: Play/invoke "before scoring" abilities
+
+            // 3a. Invoke mandatory abilities
             baseToScore.BaseCard.TriggerBeforeBaseScores(this, baseToScore);
+
+            // 3b: Invoke optional abilities, give each player an opportunity to play "Before Scores" specials
+            //     starting with the current player and going clockwise (in this case in order players were added)
+            SpecialPlayCards(Tag.SpecialBeforeScores);
+
 
             // Step 4: Award VPs and play/invoke "when scoring" abilities
 
@@ -234,6 +248,42 @@ internal class Battle
             else baseToScore.BaseCard = _table.DrawBaseCard();
         }
     }
+
+    private void SpecialPlayCards(Tag specialPhase)
+    {
+        // We will continue until all players have passed
+        Dictionary<Player, bool> passTracker = [];
+
+        foreach(Player player in _table.Players)
+        {
+            passTracker.Add(player, false);
+        }
+
+        int playerIndex = _table.Players.FindIndex((player) => player == _table.ActivePlayer.Player);
+        bool hasPassed = true;
+        while (!passTracker.Values.All(hasPassed => hasPassed))
+        {
+            var activePlayer = _table.Players[playerIndex];
+
+            List<PlayableCard> specialCards = activePlayer.Hand.Where(x => x.Tags.Contains(specialPhase)).ToList();
+            Guid? specialId = _userInput.SelectCardOrInvokable(specialCards, [], $"{activePlayer.Name}, play special cards, or pass");
+
+            if (specialId != null)
+            {
+                var specialToPlay = specialCards.Where(x => x.Id == specialId).Single();
+                _table.ActivePlayer.Player.RemoveFromHand(specialToPlay);
+                PlayCard(specialToPlay);
+                hasPassed = false;
+            } else
+            {
+                passTracker[activePlayer] = hasPassed;
+                playerIndex++;
+                if (playerIndex == _table.Players.Count) playerIndex = 0;
+                hasPassed = true;
+            }
+        }
+    }
+
     /// <summary>
     /// Handles logic relating to the "Draw 2 Cards" phase of the Smash Up Rule Book
     /// </summary>

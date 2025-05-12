@@ -27,6 +27,13 @@ internal class PlayableCard : Card
     public int? CurrentPower { get; private set; }
     public PlayLocation PlayLocation { get; private set; }
 
+
+    public enum Tag 
+    {
+        SpecialBeforeScores
+    }
+    public List<Tag> Tags { get; set; } = [];
+
     /// <summary>
     /// Anything that would be considered "Affect"ing a card
     /// </summary>
@@ -54,10 +61,20 @@ internal class PlayableCard : Card
     public List<Protection> Protections = [];
 
     public event Action<int> OnPowerChange = delegate { };
+    /// <summary>
+    /// Is called immediatly after the card is played on the base (minions), or immediatly before it is discarded (most actions)
+    /// </summary>
     public void TriggerOnPlay(Battle battle, BaseSlot? baseSlot=null) => OnPlay(battle, baseSlot);
     public event Action<Battle, BaseSlot?> OnPlay = delegate { };
+    
+    /// <summary>
+    /// Gets called immediatly after the card is added to the territory list
+    /// </summary>
     public void TriggerOnAddToBase(Battle battle, BaseSlot baseSlot) => OnAddToBase(battle, baseSlot);
     public event Action<Battle, BaseSlot> OnAddToBase = delegate { };
+    /// <summary>
+    /// Gets called immediatly after the card is removed to the territory list
+    /// </summary>
     public void TriggerOnRemoveFromBase(Battle battle, BaseSlot baseSlot) => OnRemoveFromBase(battle, baseSlot);
     public event Action<Battle, BaseSlot> OnRemoveFromBase = delegate { };
     public void TriggerOnDiscard(GlobalEventManager eventManager) => OnDiscard(eventManager);

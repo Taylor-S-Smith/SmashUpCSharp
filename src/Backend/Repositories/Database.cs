@@ -36,7 +36,7 @@ internal static class Database
         void ChangePowerForEachWarRaptorOnBase(Battle battle, BaseSlot baseSlot, int amount = 1)
         {
             int currRaptorCount = baseSlot.Territories.SelectMany(x => x.Cards).Where(x => x.Name == WAR_RAPTOR_NAME).ToList().Count;
-            warRaptor.ApplyPowerChange(battle, warRaptor, currRaptorCount);
+            warRaptor.ApplyPowerChange(battle, warRaptor, currRaptorCount*amount);
         }
 
         void addCardHandler(Battle battle, PlayableCard card)
@@ -62,7 +62,11 @@ internal static class Database
 
         warRaptor.OnRemoveFromBase += (battle, baseSlot) =>
         {
+            //Since this is called after it is gone from the base,
+            //we need to remove one extra power to account for iteself
             ChangePowerForEachWarRaptorOnBase(battle, baseSlot, -1);
+            warRaptor.ApplyPowerChange(battle, warRaptor, -1);
+
             // Remove Listeners
             baseSlot.BaseCard.OnAddCard -= addCardHandler;
             baseSlot.BaseCard.OnRemoveCard -= removeCardHandler;
@@ -943,6 +947,51 @@ internal static class Database
 
         return dinghy;
     }
+    public static PlayableCard FullSail()
+    {
+        PlayableCard fullSail = new
+        (
+            Faction.Pirates,
+            PlayableCardType.Action,
+            "Full Sail",
+            [
+                @"A       Full Sail       A",
+                @"      |\        |\       ",
+                @"      | \       | \      ",
+                @"    __|--`_   __|--`_    ",
+                @"    \_____/   \_____/    ",
+                @" Move any number of your ",
+                @" minions to other bases. ",
+                @" Special: Before a base  ",
+                @"scores, you may play this",
+            ],
+            PlayLocation.Discard
+        )
+        {
+            Tags = [Tag.SpecialBeforeScores]
+        };
+
+        fullSail.OnPlay += (battle, baseSlot) =>
+        {
+            // Choose up to two cards
+            SelectFieldCardsQuery query = new()
+            {
+                CardType = PlayableCardType.Minion,
+                Controller = fullSail.Controller,
+                Num = int.MaxValue
+            };
+            var result = battle.SelectFieldCards(fullSail, $"Select any number of minions for {fullSail.Name} to move", query, true);
+
+            // Move Each
+            foreach (var selection in result.SelectedCards)
+            {
+                var chosenBase = battle.SelectBaseCard(battle.GetBases().Where(baseCard => baseCard != selection.Base).ToList(), fullSail, $"Select a base to move {selection.Card.Name} to.");
+                battle.Move(selection.Card, chosenBase, fullSail);
+            }
+        };
+
+        return fullSail;
+    }
 
 
     // WIZARDS  
@@ -1549,8 +1598,8 @@ internal static class Database
     {
         { Faction.Dinosuars, [WarRaptor, WarRaptor, WarRaptor, WarRaptor, ArmoredStego, ArmoredStego, ArmoredStego, Laseratops, Laseratops, KingRex, Augmentation, Augmentation, Howl, Howl, NaturalSelection, Rampage, SurvivalOfTheFittest, ToothClawAndGuns, Upgrade, WildlifePreserve] },
         //{ Faction.Wizards, [Neophyte, Neophyte, Neophyte, Neophyte, Enchantress, Enchantress, Enchantress, Chronomage, Chronomage, Archmage, MassEnchantment, MysticStudies, MysticStudies, Portal, Sacrifice, Scry, Summon, Summon, TimeLoop, WindsOfChange] },
-        //{ Faction.Pirates, [FirstMate, FirstMate, FirstMate, FirstMate, SaucyWench, SaucyWench, SaucyWench, Buccaneer, Buccaneer, PirateKing, Broadside, Broadside, Cannon, Dinghy, Dinghy] }
-        { Faction.Wizards, [FirstMate, FirstMate, FirstMate, FirstMate, FirstMate, FirstMate, PirateKing, PirateKing, PirateKing, Dinghy, Dinghy, Dinghy, Dinghy, Cannon, Cannon, Cannon] },
+        //{ Faction.Pirates, [FirstMate, FirstMate, FirstMate, FirstMate, SaucyWench, SaucyWench, SaucyWench, Buccaneer, Buccaneer, PirateKing, Broadside, Broadside, Cannon, Dinghy, Dinghy, FullSail] }
+        { Faction.Wizards, [WarRaptor, WarRaptor, WarRaptor, WarRaptor, WarRaptor, WarRaptor, FullSail, FullSail, FullSail] },
 
     };
 

@@ -47,7 +47,7 @@ internal partial class Application()
             _table = table;
         }
 
-        public Guid? SelectCardFromHand(List<PlayableCard> handCards, List<List<PlayableCard>> selectableFieldCards, string displayText = "")
+        public Guid? SelectCardOrInvokable(List<PlayableCard> handCards, List<List<PlayableCard>> selectableFieldCards, string displayText = "")
         {
             // Create Targeter
             List<TargetLogic> targetLogics = [];
@@ -62,7 +62,7 @@ internal partial class Application()
             targetLogics.Add(endButtonTargeter);
 
             
-            BattlePage page = new(_table.GetBaseSlots(), _table.ActivePlayer.Player, _table.ActivePlayer.Player.Hand.ToList().ConvertAll(x => (Card)x), _buttons, new Targeter(targetLogics, handTargeter), displayText);
+            BattlePage page = new(_table.GetBaseSlots(), _table.ActivePlayer.Player, handCards.ConvertAll(x => (Card)x), _buttons, new Targeter(targetLogics, handTargeter), displayText);
             while (true)
             {
                 var chosenId = page.Run();
@@ -215,7 +215,7 @@ internal partial class Application()
         }
         else if (result == StartPageResult.StartGame)
         {
-            Battle battle = new(new ConsoleApp1PlayerTestUI(), new GlobalEventManager(), new Random());
+            Battle battle = new(new ConsoleApp3PlayerTestUI(), new GlobalEventManager(), new Random());
             battle.StartBattle();
         }
         else if (result == StartPageResult.ShowCollection)
