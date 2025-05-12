@@ -612,22 +612,29 @@ internal class Battle
     public record SelectFieldCardResult(PlayableCard? SelectedCard, BaseCard? SelectedCardBase, ResultType Type);
     public SelectFieldCardResult SelectFieldCard(PlayableCard cardToDisplay, string displaytext, SelectFieldCardQuery query, bool cancellable=false)
     {
-        var cardPred = PredicateBuilder.New((PlayableCard card) => !query.CardsToExclude.Contains(card));
-        if(query.CardType != null) cardPred.And((PlayableCard card) => card.CardType == query.CardType);
-        if (query.MaxPower != null) cardPred.And((PlayableCard card) => card.CurrentPower <= query.MaxPower);
-        if (query.Controller != null) cardPred.And((PlayableCard card) => card.Controller == query.Controller);
+        Func<PlayableCard, bool> cardPred = GetPredFromQuery(query);
 
         List<List<Guid>> validFieldCardIds = GetValidFieldCardIds(cardPred, query.BaseCard);
         if (validFieldCardIds.SelectMany(ids => ids).ToList().Count == 0) return new(null, null, ResultType.NoValidTargets);
 
         SelectResult result = _userInput.SelectFieldCard(validFieldCardIds, cardToDisplay, displaytext, cancellable);
-        
+
         return new(
             result.SelectedId != null ? GetFieldCardById((Guid)result.SelectedId) : null,
-            result.SelectedId != null ? GetBaseCardByFieldCardId((Guid)result.SelectedId) : null, 
+            result.SelectedId != null ? GetBaseCardByFieldCardId((Guid)result.SelectedId) : null,
             result.Type
         );
     }
+
+    private static Func<PlayableCard, bool> GetPredFromQuery(SelectFieldCardQuery query)
+    {
+        var cardPred = PredicateBuilder.New((PlayableCard card) => !query.CardsToExclude.Contains(card));
+        if (query.CardType != null) cardPred.And((PlayableCard card) => card.CardType == query.CardType);
+        if (query.MaxPower != null) cardPred.And((PlayableCard card) => card.CurrentPower <= query.MaxPower);
+        if (query.Controller != null) cardPred.And((PlayableCard card) => card.Controller == query.Controller);
+        return cardPred;
+    }
+
     public class SelectFieldCardsQuery : SelectFieldCardQuery
     {
         public int Num { get; set; }
@@ -687,6 +694,11 @@ internal class Battle
         return yes.Id == SelectOption([yes, no], cardsToDisplay, displayText);
     }
 
+    public List<PlayableCard> GetValidFieldCards(SelectFieldCardQuery query)
+    {
+        var pred = GetPredFromQuery(query);
+        return GetValidFieldCards(pred, query.BaseCard);
+    }
     public List<PlayableCard> GetValidFieldCards(Func<PlayableCard, bool> pred, BaseCard? baseCard = null)
     {
         IEnumerable<BaseSlot> validBaseSlots = _table.GetBaseSlots();

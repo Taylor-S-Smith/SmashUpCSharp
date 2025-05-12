@@ -992,6 +992,57 @@ internal static class Database
 
         return fullSail;
     }
+    public static PlayableCard Powderkeg()
+    {
+        PlayableCard powderkeg = new
+        (
+            Faction.Pirates,
+            PlayableCardType.Action,
+            "Powderkeg",
+            [
+                @"A       Powderkeg       A",
+                @"          ______         ",
+                @"         |      |        ",
+                @"         |Powder|        ",
+                @"         |______|        ",
+                @"   Destroy one of your   ",
+                @" minions and all minions ",
+                @"with equal or less power ",
+                @"    on the same base.    ",
+            ],
+            PlayLocation.Discard
+        );
+
+        powderkeg.OnPlay += (battle, baseSlot) =>
+        {
+            SelectFieldCardQuery ownMinionQuery = new()
+            {
+                CardType = PlayableCardType.Minion,
+                Controller = powderkeg.Controller
+            };
+            var result = battle.SelectFieldCard(powderkeg, "Choose one of your minions on a base to destroy", ownMinionQuery);
+            PlayableCard? ownMinion = result?.SelectedCard;
+            BaseCard? baseCard = result?.SelectedCardBase;
+
+            if (ownMinion != null)
+            {
+                //Since they are all destroyed at the same time, we need to query for the
+                //other minions before resolving the destruction of the chosen minion
+                SelectFieldCardQuery minionsToDestroyQuery = new()
+                {
+                    CardType = PlayableCardType.Minion,
+                    MaxPower = ownMinion.CurrentPower,
+                    BaseCard = baseCard
+                };
+                var cardsToDestroy = battle.GetValidFieldCards(minionsToDestroyQuery).Where(card => card != ownMinion);
+                
+                battle.Destroy(ownMinion, powderkeg);
+                cardsToDestroy.ForEach(card => battle.Destroy(card, powderkeg));
+            }
+        };
+
+        return powderkeg;
+    }
 
 
     // WIZARDS  
@@ -1598,8 +1649,8 @@ internal static class Database
     {
         { Faction.Dinosuars, [WarRaptor, WarRaptor, WarRaptor, WarRaptor, ArmoredStego, ArmoredStego, ArmoredStego, Laseratops, Laseratops, KingRex, Augmentation, Augmentation, Howl, Howl, NaturalSelection, Rampage, SurvivalOfTheFittest, ToothClawAndGuns, Upgrade, WildlifePreserve] },
         //{ Faction.Wizards, [Neophyte, Neophyte, Neophyte, Neophyte, Enchantress, Enchantress, Enchantress, Chronomage, Chronomage, Archmage, MassEnchantment, MysticStudies, MysticStudies, Portal, Sacrifice, Scry, Summon, Summon, TimeLoop, WindsOfChange] },
-        //{ Faction.Pirates, [FirstMate, FirstMate, FirstMate, FirstMate, SaucyWench, SaucyWench, SaucyWench, Buccaneer, Buccaneer, PirateKing, Broadside, Broadside, Cannon, Dinghy, Dinghy, FullSail] }
-        { Faction.Wizards, [WarRaptor, WarRaptor, WarRaptor, WarRaptor, WarRaptor, WarRaptor, FullSail, FullSail, FullSail] },
+        //{ Faction.Pirates, [FirstMate, FirstMate, FirstMate, FirstMate, SaucyWench, SaucyWench, SaucyWench, Buccaneer, Buccaneer, PirateKing, Broadside, Broadside, Cannon, Dinghy, Dinghy, FullSail, Powderkeg] }
+        { Faction.Wizards, [WarRaptor, WarRaptor, WarRaptor, WarRaptor, Buccaneer, Buccaneer,Buccaneer, Buccaneer, Powderkeg, Powderkeg, Powderkeg] },
 
     };
 
