@@ -241,8 +241,9 @@ internal class Battle
             BaseCard? newBase = baseToScore.BaseCard.TriggerAfterBaseScores(this, baseToScore, scoreDict[powerVals[0]]);
 
             // Step 7: Discard all the cards on the base
-            baseToScore.Cards.ForEach(x => RemoveCardFromBattleField(x));
-            baseToScore.Cards.ForEach(Discard);
+            List<PlayableCard> cardsToDiscard = baseToScore.Cards;
+            cardsToDiscard.ForEach(x => RemoveCardFromBattleField(x));
+            cardsToDiscard.ForEach(Discard);
 
             // Step 8: Discard the base
             _table.AddBaseToDiscard(baseToScore.BaseCard);
@@ -316,7 +317,7 @@ internal class Battle
     /// </summary>
     private void EndTurn()
     {
-        EventManager.TriggerEndOfTurn(_table.ActivePlayer);
+        EventManager.TriggerEndOfTurn(this, _table.ActivePlayer);
         CheckEndOfGame();
     }
     private void CheckEndOfGame()
@@ -737,9 +738,13 @@ internal class Battle
             .ToList();
     }
 
-    private PlayableCard GetFieldCardById(Guid Id)
+    private PlayableCard? GetFieldCardById(Guid Id)
     {
-        return _table.GetBaseSlots().SelectMany(x => x.Cards).Where(x => x.Id == Id).SingleOrDefault() ?? throw new Exception($"No field card exists with ID {Id}");
+        return _table.GetBaseSlots().SelectMany(x => x.Cards).Where(x => x.Id == Id).SingleOrDefault();
+    }
+    public bool IsInField(PlayableCard card)
+    {
+        return GetFieldCardById(card.Id) != null;
     }
     private BaseCard GetBaseCardByFieldCardId(Guid selectedCardId)
     {

@@ -40,7 +40,6 @@ internal static class Database
             @"        |_|--|_|'-.__\   ",
         ]
     );
-
     public static Faction Pirates = new
     (
         "Pirates",
@@ -230,7 +229,7 @@ internal static class Database
             }
         }
 
-        void endTurnHandler(ActivePlayer activePlayer)
+        void endTurnHandler(Battle battle, ActivePlayer activePlayer)
         {
             if (activePlayer.Player != armoredStego.Controller)
             {
@@ -357,7 +356,7 @@ internal static class Database
 
                 if(addedPower)
                 {
-                    void endTurnHandler(ActivePlayer activePlayer)
+                    void endTurnHandler(Battle battle, ActivePlayer activePlayer)
                     {
                         if(activePlayer.Player == augmentation.Controller)
                         {
@@ -393,35 +392,7 @@ internal static class Database
             PlayLocation.Discard
         );
 
-        howl.OnPlay += (battle, baseSlot) =>
-        {
-            SelectFieldCardQuery query = new() 
-            { 
-                Controllers = [howl.Controller]
-            };
-
-            List<PlayableCard> cardsToChange = battle.GetFieldCards(query);
-
-            if (cardsToChange.Count > 0)
-            {
-                foreach (var card in cardsToChange)
-                {
-                    bool appliedPower = card.ApplyPowerChange(battle, howl, 1);
-
-                    void endTurnHandler(ActivePlayer activePlayer)
-                    {
-                        if (activePlayer.Player == howl.Controller)
-                        {
-                            card.ExpirePowerChange(-1);
-                            battle.EventManager.EndOfTurn -= endTurnHandler;
-                        }
-                            
-                    }
-
-                    battle.EventManager.EndOfTurn += endTurnHandler;
-                }
-            }
-        };
+        howl.OnPlay += (battle, baseSlot) => GiveYourMinionsPowerUntilEndOfTurn(battle, howl);
 
         return howl;
     }
@@ -508,7 +479,7 @@ internal static class Database
                 int powerToReduce = ownMinion.CurrentPower ?? 0;
                 baseCard.CurrentBreakpoint -= powerToReduce;
 
-                void endTurnHandler(ActivePlayer activePlayer)
+                void endTurnHandler(Battle battle, ActivePlayer activePlayer)
                 {
                     baseCard.CurrentBreakpoint += powerToReduce;
                     battle.EventManager.EndOfTurn -= endTurnHandler;
@@ -1259,7 +1230,6 @@ internal static class Database
 
         shanghai.OnPlay += (battle, baseSlot) =>
         {
-            // Choose up to two cards
             SelectFieldCardsQuery query = new()
             {
                 CardType = PlayableCardType.Minion,
@@ -1276,8 +1246,33 @@ internal static class Database
 
         return shanghai;
     }
+    public static PlayableCard Swashbuckling()
+    {
+        PlayableCard swashbuckling = new
+        (
+            Dinosaurs,
+            PlayableCardType.Action,
+            "Swashbuckling",
+            [
+                @"A     Swashbuckling     A",
+                @"                         ",
+                @"       /v\  \/           ",
+                @"       ("")  /\  o        ",
+                @"        |--/  \-|        ",
+                @"       / \     < \       ",
+                @"  Each of your minions   ",
+                @"gains +1 power until the ",
+                @"    end of the turn.     ",
+            ],
+            PlayLocation.Discard
+        );
 
-    // WIZARDS  
+        swashbuckling.OnPlay += (battle, baseSlot) => GiveYourMinionsPowerUntilEndOfTurn(battle, swashbuckling);
+
+        return swashbuckling;
+    }
+
+    // WIZARDS
     public static PlayableCard Neophyte()
     {
         PlayableCard neophyte = new
@@ -1490,9 +1485,9 @@ internal static class Database
 
             // Play one revealed action as an extra action
             PlayableCard? chosenCard = null;
-            if (revealedCards.Any(PlayableCardPredicates.IsAction))
+            if (revealedCards.Any(card => card.CardType == PlayableCardType.Action))
             {
-                chosenCard = battle.Select(revealedCards, displayText, PlayableCardPredicates.IsAction);
+                chosenCard = battle.Select(revealedCards, displayText, card => card.CardType == PlayableCardType.Action);
                 chosenCard.ChangeController(battle, massEnchantment.Controller);
                 battle.PlayExtraCard(chosenCard);
             }
@@ -1565,9 +1560,9 @@ internal static class Database
         {
             string displayText = "Choose any number of minions to put in your hand:";
             var revealedCards = portal.Controller.Draw(5);
-            if (revealedCards.Any(PlayableCardPredicates.IsMinion))
+            if (revealedCards.Any(card => card.CardType == PlayableCardType.Minion))
             {
-                List<PlayableCard> chosenCards = battle.SelectMultiple(revealedCards, displayText, null, PlayableCardPredicates.IsMinion);
+                List<PlayableCard> chosenCards = battle.SelectMultiple(revealedCards, displayText, null, card => card.CardType == PlayableCardType.Minion);
 
                 foreach (var card in chosenCards)
                 {
@@ -1664,9 +1659,9 @@ internal static class Database
         {
             string displayText = "Choose an action from your deck to put in your hand:";
             var deckCards = scry.Controller.Deck.Cards;
-            if (deckCards.Any(PlayableCardPredicates.IsAction))
+            if (deckCards.Any(card => card.CardType == PlayableCardType.Action))
             {
-                PlayableCard selectedAction = battle.Select(deckCards, displayText, PlayableCardPredicates.IsAction);
+                PlayableCard selectedAction = battle.Select(deckCards, displayText, card => card.CardType == PlayableCardType.Action);
                 if (!scry.Controller.Deck.Draw(selectedAction)) throw new Exception($"{selectedAction.Name} with ID {selectedAction.Id} doesn't exist in {scry.Controller.Name}'s deck");
                 scry.Controller.Hand.Add(selectedAction);
                 scry.Controller.Deck.Shuffle();
@@ -1844,12 +1839,6 @@ internal static class Database
 
 
     // GENERAL
-    internal static class PlayableCardPredicates
-    {
-        public static bool IsAction(PlayableCard card) => card.CardType == PlayableCardType.Action;
-        public static bool IsMinion(PlayableCard card) => card.CardType == PlayableCardType.Minion;
-    }
-
     public static PlayableCard Minion()
     {
 
@@ -1876,16 +1865,49 @@ internal static class Database
         return minion;
     }
 
-    //TEST
-    public static readonly Dictionary<Faction, List<Func<PlayableCard>>> _PlayableCardsByFactionDict = new()
+    // Card Effects
+    private static void GiveYourMinionsPowerUntilEndOfTurn(Battle battle, PlayableCard affector)
     {
-        { Dinosaurs, [WarRaptor, WarRaptor, WarRaptor, WarRaptor, WarRaptor, WarRaptor, Shanghai] },
-        { Wizards, [WarRaptor, WarRaptor, WarRaptor, WarRaptor, WarRaptor, WarRaptor, Shanghai] },
-        { Pirates, [WarRaptor, WarRaptor, WarRaptor, WarRaptor, WarRaptor, WarRaptor, Shanghai] }
+        SelectFieldCardQuery query = new()
+        {
+            Controllers = [affector.Controller]
+        };
+
+        List<PlayableCard> cardsToChange = battle.GetFieldCards(query);
+
+        if (cardsToChange.Count > 0)
+        {
+            foreach (var card in cardsToChange)
+            {
+                bool appliedPower = card.ApplyPowerChange(battle, affector, 1);
+
+                void endTurnHandler(Battle battle, ActivePlayer activePlayer)
+                {
+                    if (activePlayer.Player == affector.Controller)
+                    {
+                        if(battle.IsInField(card))
+                        {
+                            card.ExpirePowerChange(-1);
+                        }
+                        battle.EventManager.EndOfTurn -= endTurnHandler;
+                    }
+                }
+
+                battle.EventManager.EndOfTurn += endTurnHandler;
+            }
+        }
+    }
+
+    //TEST
+    public static readonly Dictionary<Faction, List<Func<PlayableCard>>> PlayableCardsByFactionDict = new()
+    {
+        { Dinosaurs, [WarRaptor, WarRaptor, WarRaptor, WarRaptor, WarRaptor, WarRaptor, WarRaptor, Swashbuckling, Swashbuckling, Swashbuckling] },
+        { Wizards, [WarRaptor, WarRaptor, WarRaptor, WarRaptor, WarRaptor, WarRaptor, WarRaptor, Swashbuckling, Swashbuckling, Swashbuckling] },
+        { Pirates, [WarRaptor, WarRaptor, WarRaptor, WarRaptor, WarRaptor, WarRaptor, WarRaptor, Swashbuckling, Swashbuckling, Swashbuckling] }
     };
 
     //REAL
-    public static readonly Dictionary<Faction, List<Func<PlayableCard>>> PlayableCardsByFactionDict = new()
+    public static readonly Dictionary<Faction, List<Func<PlayableCard>>> _PlayableCardsByFactionDict = new()
     {
         { Dinosaurs, [WarRaptor, WarRaptor, WarRaptor, WarRaptor, ArmoredStego, ArmoredStego, ArmoredStego, Laseratops, Laseratops, KingRex, Augmentation, Augmentation, Howl, Howl, NaturalSelection, Rampage, SurvivalOfTheFittest, ToothClawAndGuns, Upgrade, WildlifePreserve] },
         { Wizards, [Neophyte, Neophyte, Neophyte, Neophyte, Enchantress, Enchantress, Enchantress, Chronomage, Chronomage, Archmage, MassEnchantment, MysticStudies, MysticStudies, Portal, Sacrifice, Scry, Summon, Summon, TimeLoop, WindsOfChange] },
