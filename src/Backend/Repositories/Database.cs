@@ -1183,7 +1183,6 @@ internal static class Database
             PlayableCardType.Action,
             "Sea Dogs",
             [
-                @"A       Sea Dogs        A",
                 @"              /\_        ",
                 @"       |\____/ o_)       ",
                 @"       |  __   /         ",
@@ -1236,6 +1235,46 @@ internal static class Database
         };
 
         return seaDogs;
+    }
+    public static PlayableCard Shanghai()
+    {
+        PlayableCard shanghai = new
+        (
+            Pirates,
+            PlayableCardType.Action,
+            "Shanghai",
+            [
+                @"A        Shanghai       A",
+                @"        _                ",
+                @"      /("")\     \O/      ",
+                @"       <|-r      |       ",
+                @"       / \      / \      ",
+                @"    -----------------    ",
+                @"                         ",
+                @"  Move another player's  ",
+                @" minion to another base. ",
+            ],
+            PlayLocation.Discard
+        );
+
+        shanghai.OnPlay += (battle, baseSlot) =>
+        {
+            // Choose up to two cards
+            SelectFieldCardsQuery query = new()
+            {
+                CardType = PlayableCardType.Minion,
+                Controllers = battle.GetOtherPlayers(shanghai.Controller)
+            };
+            var result = battle.SelectFieldCard(shanghai, $"Select a card to Shanghai!", query, true);
+
+            if(result.SelectedCard != null)
+            {
+                var chosenBase = battle.SelectBaseCard(battle.GetBases().Where(baseCard => baseCard != result.SelectedCardBase).ToList(), shanghai, $"Select a base to move {result.SelectedCard.Name} to.");
+                battle.Move(result.SelectedCard, chosenBase, shanghai);
+            }
+        };
+
+        return shanghai;
     }
 
     // WIZARDS  
@@ -1837,15 +1876,16 @@ internal static class Database
         return minion;
     }
 
-
-    public static readonly Dictionary<Faction, List<Func<PlayableCard>>> PlayableCardsByFactionDict = new()
+    //TEST
+    public static readonly Dictionary<Faction, List<Func<PlayableCard>>> _PlayableCardsByFactionDict = new()
     {
-        { Dinosaurs, [SeaDogs, SeaDogs, SeaDogs, SeaDogs, SeaDogs, SeaDogs] },
-        { Wizards, [SeaDogs, SeaDogs, SeaDogs, SeaDogs, SeaDogs, SeaDogs] },
-        { Pirates, [SeaDogs, SeaDogs, SeaDogs, SeaDogs, SeaDogs, SeaDogs] }
+        { Dinosaurs, [WarRaptor, WarRaptor, WarRaptor, WarRaptor, WarRaptor, WarRaptor, Shanghai] },
+        { Wizards, [WarRaptor, WarRaptor, WarRaptor, WarRaptor, WarRaptor, WarRaptor, Shanghai] },
+        { Pirates, [WarRaptor, WarRaptor, WarRaptor, WarRaptor, WarRaptor, WarRaptor, Shanghai] }
     };
 
-    public static readonly Dictionary<Faction, List<Func<PlayableCard>>> REAL_PlayableCardsByFactionDict = new()
+    //REAL
+    public static readonly Dictionary<Faction, List<Func<PlayableCard>>> PlayableCardsByFactionDict = new()
     {
         { Dinosaurs, [WarRaptor, WarRaptor, WarRaptor, WarRaptor, ArmoredStego, ArmoredStego, ArmoredStego, Laseratops, Laseratops, KingRex, Augmentation, Augmentation, Howl, Howl, NaturalSelection, Rampage, SurvivalOfTheFittest, ToothClawAndGuns, Upgrade, WildlifePreserve] },
         { Wizards, [Neophyte, Neophyte, Neophyte, Neophyte, Enchantress, Enchantress, Enchantress, Chronomage, Chronomage, Archmage, MassEnchantment, MysticStudies, MysticStudies, Portal, Sacrifice, Scry, Summon, Summon, TimeLoop, WindsOfChange] },
