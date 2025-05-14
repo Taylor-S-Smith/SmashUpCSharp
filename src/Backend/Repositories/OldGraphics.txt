@@ -1702,7 +1702,7 @@
                 @"2      Tenacious Z      2",
                 @"        ___              ",
                 @"       |RIP|   O/        ",
-                @"~~~~~~~~~~~~~//~~~~~~~~~~",
+                @"-------|   |-//-----------",
                 @"~~~~~~~~~~~~~/\~~~~~~~~~~",
                 @"Special: During your turn",
                 @" you may play this card  ",
@@ -1768,9 +1768,9 @@
             "Grave Robbing",
             [
                 @"A     Grave Robbing     A",
-                @"          O              ",
-                @"         /\       ___    ",
-                @" _I--D__/\ \O _  |RIP|___",
+                @"          O       ___    ",
+                @"         /\      |RIP|   ",
+                @" _I--D__/\ \O _  |   |___",
                 @" ~~~~~~~~~|  \  |~~~~~~~~",
                 @" ~~~~~~~~~|___|\|~~~~~~~~",
                 @" Place a card from your  ",
@@ -1856,11 +1856,11 @@
                 @"   ___        ___        ",
                 @"  |RIP|      |RIP|   O   ",
                 @"  |   |  O/  |   | // \  ",
-                @"Play on a base. Ongoing: ",
-                @"  On your turn, you may  ",
-                @" a minion here from your ",
-                @" discard pile instead of ",
-                @"     from your hand.     ",
+                @"     Play on a base.     ",
+                @"  Ongoing: On your turn, ",
+                @"  you may play a minion  ",
+                @" here from your discard  ",
+                @"  instead of your hand.  ",
             ]
         );
 

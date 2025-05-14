@@ -9,6 +9,132 @@ namespace SmashUp.Backend.Repositories;
 
 internal static class Database
 {
+    // FACTIONS
+    public static Faction Aliens = new
+    (
+        "Aliens",
+        [
+            @"    /                \   ",
+            @"   ( A  L  I  E  N  S )  ",
+            @"    \__            __/   ",
+            @"       \__________/      ",
+            @"         |     |         ",
+            @"         |     |         ",
+            @"         | \ / |         ",
+            @"         |  |  |         ",
+            @"         | /o\ |         ",
+        ]
+    );
+    public static Faction Dinosaurs = new
+    (
+        "Dinosuars",
+        [
+            @"  /\/\/\/\/\/\/\/\/\/\   ",
+            @" |  D I N O S A U R S |  ",
+            @"  \/\/\/\/\/\/\/\/\/\/   ",
+            @"                         ",
+            @"       ====<[]           ",
+            @"       /| __||___        ",
+            @"    \\| |/       \       ",
+            @"    (___   ) |  )  \_    ",
+            @"        |_|--|_|'-.__\   ",
+        ]
+    );
+
+    public static Faction Pirates = new
+    (
+        "Pirates",
+        [
+            @"     ____/_\________     ",
+            @"    | P I R A T E S |    ",
+            @"     \_______\ ___ /     ",
+            @"             \_\         ",
+            @"                         ",
+            @"          /v\            ",
+            @"          ("")           ",
+            @"          -|-|===>       ",
+            @"          / \            ",
+        ]
+    );
+    public static Faction Ninjas = new
+    (
+        "Ninjas",
+        [
+            @"      +-+-+-+-+-+-+      ",
+            @"      |N|I|N|J|A|S|      ",
+            @"      +-+-+-+-+-+-+      ",
+            @"                         ",
+            @"        \   \            ",
+            @"           _/\_          ",
+            @"        \ \    /         ",
+            @"          /_  _\         ",
+            @"            \/           ",
+        ]
+    );
+    public static Faction Robots = new
+    ( 
+        "Robots",
+        [
+            @"|\ /|\ /|\ /|\ /|\ /|\ /|",
+            @"| R | O | B | O | T | S |",
+            @"|/_\|/_\|/_\|/_\|/_\|/_\|",
+            @"           ___           ",
+            @"        <=|_=_|=>        ",
+            @"            |            ",
+            @"        /--[_]--\        ",
+            @"       /    |    \       ",
+            @"      /     |     \      ",
+        ]
+    );
+    public static Faction Tricksters = new
+    (
+        "Tricksters",
+        [
+            @"  /\  /\  /\  /\  /\ /\  ",
+            @" / T R I C K S T E R S \ ",
+            @"  ||  ||  ||  ||  || ||  ",
+            @"                         ",
+            @"           / \           ",
+            @"          /___\          ",
+            @"        \ (o o)-U        ",
+            @"         \/|_|\          ",
+            @"           | |           ",
+        ]
+    );
+    public static Faction Wizards = new
+    ( 
+        "Wizards",
+        [
+            @"     *-*-*-*-*-*-*-*     ",
+            @"     |W|I|Z|A|R|D|S|     ",
+            @"     *-*-*-*-*-*-*-*     ",
+            @"                         ",
+            @"         _*_*_*_         ",
+            @"       */* * * *\*       ",
+            @"      *|*   O | *|*      ",
+            @"      *|*  -|-| *|*      ",
+            @"      *|*  / \  *|*      ",
+        ]
+    );
+    public static Faction Zombies = new
+    (
+        "Zombies",
+        [
+            @"    ___    ___    ___    ",
+            @"   |ZOM|  |BIE|  | S |   ",
+            @"___|___|__|___|__|___|___",
+            @"                         ",
+            @"            _            ",
+            @"          _/_\_ |        ",
+            @"           |_| /|        ",
+            @"         [_]| / |        ",
+            @"           / \           ",
+        ]
+    );
+
+    public static List<Faction> Factions = [Aliens, Dinosaurs, Pirates, Ninjas, Robots, Tricksters, Wizards, Zombies];
+
+
     // DINOSAURS
     public static PlayableCard WarRaptor()
     {
@@ -16,7 +142,7 @@ internal static class Database
 
         PlayableCard warRaptor = new
         (
-            Faction.Dinosuars,
+            Dinosaurs,
             PlayableCardType.Minion,
             WAR_RAPTOR_NAME,
             [
@@ -78,7 +204,7 @@ internal static class Database
     {
         PlayableCard armoredStego = new
         (
-            Faction.Dinosuars,
+            Dinosaurs,
             PlayableCardType.Minion,
             "Armored Stego",
             [
@@ -144,7 +270,7 @@ internal static class Database
     {
         PlayableCard laseratops = new
         (
-            Faction.Dinosuars,
+            Dinosaurs,
             PlayableCardType.Minion,
             "Laseratops",
             [
@@ -181,7 +307,7 @@ internal static class Database
     {
         return new
         (
-            Faction.Dinosuars,
+            Dinosaurs,
             PlayableCardType.Minion,
             "King Rex",
             [
@@ -202,7 +328,7 @@ internal static class Database
     {
         PlayableCard augmentation = new
         (
-            Faction.Dinosuars,
+            Dinosaurs,
             PlayableCardType.Action,
             "Augmentation",
             [
@@ -251,7 +377,7 @@ internal static class Database
     {
         PlayableCard howl = new
         (
-            Faction.Dinosuars,
+            Dinosaurs,
             PlayableCardType.Action,
             "Howl",
             [
@@ -269,7 +395,12 @@ internal static class Database
 
         howl.OnPlay += (battle, baseSlot) =>
         {
-            List<PlayableCard> cardsToChange = battle.GetValidFieldCards((card) => card.Controller == howl.Controller);
+            SelectFieldCardQuery query = new() 
+            { 
+                Controllers = [howl.Controller]
+            };
+
+            List<PlayableCard> cardsToChange = battle.GetFieldCards(query);
 
             if (cardsToChange.Count > 0)
             {
@@ -298,7 +429,7 @@ internal static class Database
     {
         PlayableCard naturalSelection = new
         (
-            Faction.Dinosuars,
+            Dinosaurs,
             PlayableCardType.Action,
             "Natural Selection",
             [
@@ -319,7 +450,7 @@ internal static class Database
             SelectFieldCardQuery query1 = new()
             {
                 CardType = PlayableCardType.Minion,
-                Controller = naturalSelection.Controller
+                Controllers = [naturalSelection.Controller]
             };
             var result = battle.SelectFieldCard(naturalSelection, "Choose one of your minions on a base", query1);
             PlayableCard? ownMinion = result?.SelectedCard;
@@ -345,7 +476,7 @@ internal static class Database
     {
         PlayableCard rampage = new
         (
-            Faction.Dinosuars,
+            Dinosaurs,
             PlayableCardType.Action,
             "Rampage",
             [
@@ -366,7 +497,7 @@ internal static class Database
             SelectFieldCardQuery query1 = new()
             {
                 CardType = PlayableCardType.Minion,
-                Controller = rampage.Controller
+                Controllers = [rampage.Controller]
             };
             var result = battle.SelectFieldCard(rampage, "Choose one of your minions on a base", query1);
             PlayableCard? ownMinion = result?.SelectedCard;
@@ -393,7 +524,7 @@ internal static class Database
     {
         PlayableCard survivalOfTheFittest = new
         (
-            Faction.Dinosuars,
+            Dinosaurs,
             PlayableCardType.Action,
             "Survival Of The Fittest",
             [
@@ -424,7 +555,7 @@ internal static class Database
                     if (lowestPowerCards.Count == 1) battle.Destroy(lowestPowerCards.Single(), survivalOfTheFittest);
                     else if (lowestPowerCards.Count > 1)
                     {
-                        PlayableCard cardToDestroy = battle.SelectCard(lowestPowerCards, "These minions are tied. Select one to destroy:");
+                        PlayableCard cardToDestroy = battle.Select(lowestPowerCards, "These minions are tied. Select one to destroy:");
                         battle.Destroy(cardToDestroy, survivalOfTheFittest);
                     }
                 }
@@ -439,7 +570,7 @@ internal static class Database
     {
         PlayableCard toothAndClawAndGuns = new
         (
-            Faction.Dinosuars,
+            Dinosaurs,
             PlayableCardType.Action,
             "Tooth Claw And Guns",
             [
@@ -485,7 +616,7 @@ internal static class Database
     {
         PlayableCard upgrade = new
         (
-            Faction.Dinosuars,
+            Dinosaurs,
             PlayableCardType.Action,
             "Upgrade",
             [
@@ -519,7 +650,7 @@ internal static class Database
     {
         PlayableCard wildlifePreserve = new
         (
-            Faction.Dinosuars,
+            Dinosaurs,
             PlayableCardType.Action,
             "Wildlife Preserve",
             [
@@ -621,7 +752,7 @@ internal static class Database
     {
         return new
         (
-            Faction.Dinosuars,
+            Dinosaurs,
             "Jungle Oasis",
             [
                 "      2      0      0       ",
@@ -641,7 +772,7 @@ internal static class Database
     {
         BaseCard tarPits = new
         (
-            Faction.Dinosuars,
+            Dinosaurs,
             "Tar Pits",
             [
                 "      4      3      1       ",
@@ -672,7 +803,7 @@ internal static class Database
     {
         PlayableCard firstMate = new
         (
-            Faction.Pirates,
+            Pirates,
             PlayableCardType.Minion,
             "First Mate",
             [
@@ -695,7 +826,7 @@ internal static class Database
             if (battle.SelectBool([firstMate], $"{firstMate.Controller.Name}, would you like to move First Mate to another base?"))
             {
                 var validBases = battle.GetBaseSlots().Select(x => x.BaseCard).Where(x => x != currentBase).ToList();
-                BaseCard chosenBase = battle.SelectCard(validBases, $"{firstMate.Controller}, select a base to move First Mate to:");
+                BaseCard chosenBase = battle.Select(validBases, $"{firstMate.Controller}, select a base to move First Mate to:");
                 battle.Move(firstMate, chosenBase, firstMate);
             }
 
@@ -718,7 +849,7 @@ internal static class Database
     {
         PlayableCard saucyWench = new
         (
-            Faction.Pirates,
+            Pirates,
             PlayableCardType.Minion,
             "Saucy Wench",
             [
@@ -738,16 +869,17 @@ internal static class Database
         saucyWench.OnPlay += (battle, baseSlot) =>
         {
             if (baseSlot == null) throw new Exception("No base passed in for Saucy Wench");
-            bool validTargetExist = battle.GetValidFieldCards((card) => card.CardType == PlayableCardType.Minion && card.CurrentPower <= 2, baseSlot.BaseCard).Count > 0;
+            SelectFieldCardQuery query = new()
+            {
+                CardType = PlayableCardType.Minion,
+                MaxPower = 2,
+                BaseCard = baseSlot.BaseCard
+            };
+
+            bool validTargetExist = battle.GetFieldCards(query).Count > 0;
 
             if (validTargetExist && battle.SelectBool([saucyWench], $"Would you like to destroy a minion of power or two or less on {baseSlot.BaseCard.Name}?"))
             {
-                SelectFieldCardQuery query = new()
-                {
-                    CardType = PlayableCardType.Minion,
-                    MaxPower = 2,
-                    BaseCard = baseSlot.BaseCard
-                };
                 PlayableCard? cardToDestroy = battle.SelectFieldCard(saucyWench, "Select a card for Saucy Wench to destroy", query)?.SelectedCard;
 
                 if (cardToDestroy != null) battle.Destroy(cardToDestroy, saucyWench);
@@ -760,12 +892,12 @@ internal static class Database
     {
         PlayableCard buccaneer = new
         (
-            Faction.Pirates,
+            Pirates,
             PlayableCardType.Minion,
             "Buccaneer",
             [
                 @"          /v\            ",
-                @"          ("") |          ",
+                @"          ("")           ",
                 @"          -|-|===>       ",
                 @"          / \            ",
                 @"                         ",
@@ -783,7 +915,7 @@ internal static class Database
         {
             BaseCard currentBase = battle.GetBase(buccaneer);
             var validBases = battle.GetBaseSlots().Select(x => x.BaseCard).Where(x => x != currentBase).ToList();
-            BaseCard chosenBase = battle.SelectCard(validBases, $"{buccaneer.Controller.Name}, select a base to move {buccaneer.Name} to:");
+            BaseCard chosenBase = battle.Select(validBases, $"{buccaneer.Controller.Name}, select a base to move {buccaneer.Name} to:");
             battle.Move(buccaneer, chosenBase, buccaneer);
         };
 
@@ -793,7 +925,7 @@ internal static class Database
     {
         PlayableCard pirateKing = new
         (
-            Faction.Pirates,
+            Pirates,
             PlayableCardType.Minion,
             "Pirate King",
             [
@@ -837,7 +969,7 @@ internal static class Database
     {
         PlayableCard broadside = new
         (
-            Faction.Pirates,
+            Pirates,
             PlayableCardType.Action,
             "Broadside",
             [
@@ -873,7 +1005,7 @@ internal static class Database
     {
         PlayableCard cannon = new
         (
-            Faction.Pirates,
+            Pirates,
             PlayableCardType.Action,
             "Cannon",
             [
@@ -910,7 +1042,7 @@ internal static class Database
     {
         PlayableCard dinghy = new
         (
-            Faction.Pirates,
+            Pirates,
             PlayableCardType.Action,
             "Dinghy",
             [
@@ -932,7 +1064,7 @@ internal static class Database
             SelectFieldCardsQuery query = new()
             {
                 CardType = PlayableCardType.Minion,
-                Controller = dinghy.Controller,
+                Controllers = [dinghy.Controller],
                 Num = 2
             };
             var result = battle.SelectFieldCards(dinghy, $"Select a card for Dinghy to move", query, true);
@@ -951,7 +1083,7 @@ internal static class Database
     {
         PlayableCard fullSail = new
         (
-            Faction.Pirates,
+            Pirates,
             PlayableCardType.Action,
             "Full Sail",
             [
@@ -977,7 +1109,7 @@ internal static class Database
             SelectFieldCardsQuery query = new()
             {
                 CardType = PlayableCardType.Minion,
-                Controller = fullSail.Controller,
+                Controllers = [fullSail.Controller],
                 Num = int.MaxValue
             };
             var result = battle.SelectFieldCards(fullSail, $"Select any number of minions for {fullSail.Name} to move", query, true);
@@ -996,7 +1128,7 @@ internal static class Database
     {
         PlayableCard powderkeg = new
         (
-            Faction.Pirates,
+            Pirates,
             PlayableCardType.Action,
             "Powderkeg",
             [
@@ -1018,7 +1150,7 @@ internal static class Database
             SelectFieldCardQuery ownMinionQuery = new()
             {
                 CardType = PlayableCardType.Minion,
-                Controller = powderkeg.Controller
+                Controllers = [powderkeg.Controller]
             };
             var result = battle.SelectFieldCard(powderkeg, "Choose one of your minions on a base to destroy", ownMinionQuery);
             PlayableCard? ownMinion = result?.SelectedCard;
@@ -1034,7 +1166,7 @@ internal static class Database
                     MaxPower = ownMinion.CurrentPower,
                     BaseCard = baseCard
                 };
-                var cardsToDestroy = battle.GetValidFieldCards(minionsToDestroyQuery).Where(card => card != ownMinion);
+                var cardsToDestroy = battle.GetFieldCards(minionsToDestroyQuery).Where(card => card != ownMinion);
                 
                 battle.Destroy(ownMinion, powderkeg);
                 cardsToDestroy.ForEach(card => battle.Destroy(card, powderkeg));
@@ -1043,14 +1175,75 @@ internal static class Database
 
         return powderkeg;
     }
+    public static PlayableCard SeaDogs()
+    {
+        PlayableCard seaDogs = new
+        (
+            Pirates,
+            PlayableCardType.Action,
+            "Sea Dogs",
+            [
+                @"A       Sea Dogs        A",
+                @"              /\_        ",
+                @"       |\____/ o_)       ",
+                @"       |  __   /         ",
+                @"       |_|  |_|          ",
+                @"Name a faction. Move all ",
+                @"other players' minions of",
+                @"  that faction from one  ",
+                @"     base to another.    ",
+            ],
+            PlayLocation.Discard
+        );
 
+        seaDogs.OnPlay += (battle, baseSlot) =>
+        {
+            // Name a faction
+            List<Faction> factions = battle.GetFactions();
+            Faction chosenFaction = battle.Select(factions, "Choose a faction to move");
+            
+            // Choose a base containing that faction
+            var basesWithFaction = battle.GetBaseSlots().Where(slot => slot.Cards.Any(card => card.Controller != seaDogs.Controller && card.Faction == chosenFaction)).Bases();
+
+            BaseCard base1;
+            if(basesWithFaction.Count > 1)
+            {
+                base1 = battle.SelectBaseCard(basesWithFaction, seaDogs, $"Choose a base to move all cards from the {chosenFaction.Name} faction from:");
+            } 
+            else if (basesWithFaction.Count == 1)
+            {
+                base1 = basesWithFaction.Single();
+            }
+            else return;
+
+            // Choose another base
+            var otherBases = battle.GetBases().Where(baseCard => baseCard != base1).ToList();
+            BaseCard base2 = battle.SelectBaseCard(otherBases, seaDogs, $"Choose a base to move all cards from the {chosenFaction.Name} faction to:");
+
+
+            // Move all minions of chosen faction from base 1 to base 2
+            SelectFieldCardQuery query = new()
+            {
+                BaseCard = base1,
+                Controllers = battle.GetOtherPlayers(seaDogs.Controller),
+                Faction = chosenFaction
+            };
+            var cards = battle.GetFieldCards(query);
+            foreach (var card in cards)
+            {
+                battle.Move(card, base2, seaDogs);
+            }
+        };
+
+        return seaDogs;
+    }
 
     // WIZARDS  
     public static PlayableCard Neophyte()
     {
         PlayableCard neophyte = new
         (
-            Faction.Wizards,
+            Wizards,
             PlayableCardType.Minion,
             "Neophyte",
             [
@@ -1110,7 +1303,7 @@ internal static class Database
     {
         PlayableCard enchantress = new
         (
-            Faction.Wizards,
+            Wizards,
             PlayableCardType.Minion,
             "Enchantress",
             [
@@ -1139,7 +1332,7 @@ internal static class Database
     {
         PlayableCard chronomage = new
         (
-            Faction.Wizards,
+            Wizards,
             PlayableCardType.Minion,
             "Chronomage",
             [
@@ -1169,7 +1362,7 @@ internal static class Database
     {
         PlayableCard archmage = new
         (
-            Faction.Dinosuars,
+            Dinosaurs,
             PlayableCardType.Minion,
             "Archmage",
             [
@@ -1222,7 +1415,7 @@ internal static class Database
     {
         PlayableCard massEnchantment = new
         (
-            Faction.Wizards,
+            Wizards,
             PlayableCardType.Action,
             "Mass Enchantment",
             [
@@ -1260,7 +1453,7 @@ internal static class Database
             PlayableCard? chosenCard = null;
             if (revealedCards.Any(PlayableCardPredicates.IsAction))
             {
-                chosenCard = battle.SelectCard(revealedCards, displayText, PlayableCardPredicates.IsAction);
+                chosenCard = battle.Select(revealedCards, displayText, PlayableCardPredicates.IsAction);
                 chosenCard.ChangeController(battle, massEnchantment.Controller);
                 battle.PlayExtraCard(chosenCard);
             }
@@ -1283,7 +1476,7 @@ internal static class Database
     {
         PlayableCard mysticStudies = new
         (
-            Faction.Wizards,
+            Wizards,
             PlayableCardType.Action,
             "Mystic Studies",
             [
@@ -1312,7 +1505,7 @@ internal static class Database
     {
         PlayableCard portal = new
         (
-            Faction.Wizards,
+            Wizards,
             PlayableCardType.Action,
             "Portal",
             [
@@ -1335,7 +1528,7 @@ internal static class Database
             var revealedCards = portal.Controller.Draw(5);
             if (revealedCards.Any(PlayableCardPredicates.IsMinion))
             {
-                List<PlayableCard> chosenCards = battle.SelectCards(revealedCards, displayText, null, PlayableCardPredicates.IsMinion);
+                List<PlayableCard> chosenCards = battle.SelectMultiple(revealedCards, displayText, null, PlayableCardPredicates.IsMinion);
 
                 foreach (var card in chosenCards)
                 {
@@ -1346,7 +1539,7 @@ internal static class Database
                     revealedCards.Remove(card);
                 }
 
-                revealedCards = battle.SelectCards(revealedCards, "Choose the order these cards they should put back on your deck (e.i. the last one chosen will be the next one drawn).", revealedCards.Count);
+                revealedCards = battle.SelectMultiple(revealedCards, "Choose the order these cards they should put back on your deck (e.i. the last one chosen will be the next one drawn).", revealedCards.Count);
                 foreach (var card in revealedCards)
                 {
                     // When a card that others can see goes to the hand, deck or discard pile,
@@ -1370,7 +1563,7 @@ internal static class Database
     {
         PlayableCard sacrifice = new
         (
-            Faction.Wizards,
+            Wizards,
             PlayableCardType.Action,
             "Sacrifice",
             [
@@ -1393,7 +1586,7 @@ internal static class Database
             SelectFieldCardQuery query = new()
             {
                 CardType = PlayableCardType.Minion,
-                Controller = sacrifice.Controller
+                Controllers = [sacrifice.Controller]
             };
             PlayableCard? cardToDestroy = battle.SelectFieldCard(sacrifice, "Select a card to sacrifice", query)?.SelectedCard;
             if (cardToDestroy != null)
@@ -1411,7 +1604,7 @@ internal static class Database
     {
         PlayableCard scry = new
         (
-            Faction.Wizards,
+            Wizards,
             PlayableCardType.Action,
             "Scry",
             [
@@ -1434,7 +1627,7 @@ internal static class Database
             var deckCards = scry.Controller.Deck.Cards;
             if (deckCards.Any(PlayableCardPredicates.IsAction))
             {
-                PlayableCard selectedAction = battle.SelectCard(deckCards, displayText, PlayableCardPredicates.IsAction);
+                PlayableCard selectedAction = battle.Select(deckCards, displayText, PlayableCardPredicates.IsAction);
                 if (!scry.Controller.Deck.Draw(selectedAction)) throw new Exception($"{selectedAction.Name} with ID {selectedAction.Id} doesn't exist in {scry.Controller.Name}'s deck");
                 scry.Controller.Hand.Add(selectedAction);
                 scry.Controller.Deck.Shuffle();
@@ -1451,7 +1644,7 @@ internal static class Database
     {
         PlayableCard summon = new
         (
-            Faction.Wizards,
+            Wizards,
             PlayableCardType.Action,
             "Summon",
             [
@@ -1479,7 +1672,7 @@ internal static class Database
     {
         PlayableCard timeLoop = new
         (
-            Faction.Wizards,
+            Wizards,
             PlayableCardType.Action,
             "Time Loop",
             [
@@ -1507,7 +1700,7 @@ internal static class Database
     {
         PlayableCard windsOfChange = new
         (
-            Faction.Wizards,
+            Wizards,
             PlayableCardType.Action,
             "Winds of Change",
             [
@@ -1540,7 +1733,7 @@ internal static class Database
     {
         BaseCard schoolOfWizardry = new
         (
-            Faction.Wizards,
+            Wizards,
             "School of Wizardry",
             [
                 "      3      2      1       ",
@@ -1557,12 +1750,12 @@ internal static class Database
         schoolOfWizardry.AfterBaseScores += (battle, slot, winners) =>
         {
             List<BaseCard> bases = battle.DrawBases(3);
-            BaseCard chosenBase = battle.SelectCard(bases, $"{string.Join(" and ", winners.Select(x => x.Name))}, choose a base to replace School of Wizardry");
+            BaseCard chosenBase = battle.Select(bases, $"{string.Join(" and ", winners.Select(x => x.Name))}, choose a base to replace School of Wizardry");
             bases.Remove(chosenBase);
             if (bases.Count > 1)
             {
                 // This wil reorder them according to selection
-                bases = battle.SelectCards(bases, $"{string.Join(" and ", winners.Select(x => x.Name))}, choose bases in the order they should put back on the deck (e.i. the last one chosen will be the next one drawn).", bases.Count);
+                bases = battle.SelectMultiple(bases, $"{string.Join(" and ", winners.Select(x => x.Name))}, choose bases in the order they should put back on the deck (e.i. the last one chosen will be the next one drawn).", bases.Count);
             }
             battle.PutBasesToTop(bases);
 
@@ -1575,7 +1768,7 @@ internal static class Database
     {
         BaseCard theGreatLibrary = new
         (
-            Faction.Wizards,
+            Wizards,
             "The Great Library",
             [
 
@@ -1623,7 +1816,7 @@ internal static class Database
 
         PlayableCard minion = new
         (
-            Faction.Dinosuars,
+            Dinosaurs,
             PlayableCardType.Minion,
             "minion",
             [
@@ -1647,16 +1840,22 @@ internal static class Database
 
     public static readonly Dictionary<Faction, List<Func<PlayableCard>>> PlayableCardsByFactionDict = new()
     {
-        { Faction.Dinosuars, [WarRaptor, WarRaptor, WarRaptor, WarRaptor, ArmoredStego, ArmoredStego, ArmoredStego, Laseratops, Laseratops, KingRex, Augmentation, Augmentation, Howl, Howl, NaturalSelection, Rampage, SurvivalOfTheFittest, ToothClawAndGuns, Upgrade, WildlifePreserve] },
-        //{ Faction.Wizards, [Neophyte, Neophyte, Neophyte, Neophyte, Enchantress, Enchantress, Enchantress, Chronomage, Chronomage, Archmage, MassEnchantment, MysticStudies, MysticStudies, Portal, Sacrifice, Scry, Summon, Summon, TimeLoop, WindsOfChange] },
-        //{ Faction.Pirates, [FirstMate, FirstMate, FirstMate, FirstMate, SaucyWench, SaucyWench, SaucyWench, Buccaneer, Buccaneer, PirateKing, Broadside, Broadside, Cannon, Dinghy, Dinghy, FullSail, Powderkeg] }
-        { Faction.Wizards, [WarRaptor, WarRaptor, WarRaptor, WarRaptor, Buccaneer, Buccaneer,Buccaneer, Buccaneer, Powderkeg, Powderkeg, Powderkeg] },
+        { Dinosaurs, [SeaDogs, SeaDogs, SeaDogs, SeaDogs, SeaDogs, SeaDogs] },
+        { Wizards, [SeaDogs, SeaDogs, SeaDogs, SeaDogs, SeaDogs, SeaDogs] },
+        { Pirates, [SeaDogs, SeaDogs, SeaDogs, SeaDogs, SeaDogs, SeaDogs] }
+    };
 
+    public static readonly Dictionary<Faction, List<Func<PlayableCard>>> REAL_PlayableCardsByFactionDict = new()
+    {
+        { Dinosaurs, [WarRaptor, WarRaptor, WarRaptor, WarRaptor, ArmoredStego, ArmoredStego, ArmoredStego, Laseratops, Laseratops, KingRex, Augmentation, Augmentation, Howl, Howl, NaturalSelection, Rampage, SurvivalOfTheFittest, ToothClawAndGuns, Upgrade, WildlifePreserve] },
+        { Wizards, [Neophyte, Neophyte, Neophyte, Neophyte, Enchantress, Enchantress, Enchantress, Chronomage, Chronomage, Archmage, MassEnchantment, MysticStudies, MysticStudies, Portal, Sacrifice, Scry, Summon, Summon, TimeLoop, WindsOfChange] },
+        { Pirates, [FirstMate, FirstMate, FirstMate, FirstMate, SaucyWench, SaucyWench, SaucyWench, Buccaneer, Buccaneer, PirateKing, Broadside, Broadside, Cannon, Dinghy, Dinghy, FullSail, Powderkeg, SeaDogs] }
     };
 
     public static readonly Dictionary<Faction, List<Func<BaseCard>>> BaseCardsByFactionDict = new()
     {
-        { Faction.Dinosuars, [JungleOasis, TarPits] },
-        { Faction.Wizards, [SchoolOfWizardry, TheGreatLibrary] }
+        { Dinosaurs, [JungleOasis, TarPits] },
+        { Pirates, [JungleOasis, TarPits] },
+        { Wizards, [SchoolOfWizardry, TheGreatLibrary] }
     };
 }

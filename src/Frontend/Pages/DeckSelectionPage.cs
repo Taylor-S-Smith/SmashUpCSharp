@@ -1,23 +1,23 @@
-﻿using SmashUp.Frontend.Utilities;
-using SmashUp.Backend.API;
+﻿using SmashUp.Backend.Models;
+using SmashUp.Frontend.Utilities;
 using System.Text;
 
 namespace SmashUp.Frontend.Pages
 {
-    internal class DeckSelectionPage(List<string> playerNames, List<FactionModel> factionOptions) : ReferencePage<List<(string, List<FactionModel>)>>
+    internal class DeckSelectionPage(List<string> playerNames, List<Faction> factionOptions) : ReferencePage<List<(string, List<Faction>)>>
     {
         //Static Variables
         static readonly int NUM_FACTIONS = 2;
 
         //State Variables
-        private readonly List<(string, List<FactionModel>)> _allSelections = [];
+        private readonly List<(string, List<Faction>)> _allSelections = [];
         private readonly List<string> _playerNames = playerNames;
-        private readonly List<FactionModel> _selectedFactions = [];
+        private readonly List<Faction> _selectedFactions = [];
         private int _playerIndex = 0;
         private int _factionIndex = 1;
 
         private int _selectedOption = 0;
-        private readonly List<FactionModel> _factionOptions = factionOptions;
+        private readonly List<Faction> _factionOptions = factionOptions;
 
         //Display Variables
         private string[] _header = [];
@@ -28,7 +28,7 @@ namespace SmashUp.Frontend.Pages
             return RenderUtil.GenerateTextSelect(consoleWidth, consoleHeight, _header, _factionOptions.Select(x => x.Name).ToArray(), _selectedOption, HEADER_PADDING, OPTION_PADDING);
         }
 
-        public override List<(string, List<FactionModel>)>? HandleKeyPress(UserKeyPress keyPress)
+        public override List<(string, List<Faction>)>? HandleKeyPress(UserKeyPress keyPress)
         {
             switch (keyPress)
             {

@@ -3,7 +3,7 @@
 namespace SmashUp.Backend.Repositories;
 
 
-internal class CardRepository
+internal class Repository
 {
     /// <summary>
     /// Gets a list of playable cards by a list of factions. Every playable card whose faction appears in the list will be returned.
@@ -29,5 +29,10 @@ internal class CardRepository
             cards.AddRange(Database.BaseCardsByFactionDict[faction].Select(x => x()).ToList());
         }
         return cards;
+    }
+
+    public static List<Faction> GetFactions()
+    {
+        return Database.Factions;
     }
 }

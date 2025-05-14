@@ -1,13 +1,6 @@
 ﻿namespace SmashUp.Backend.Models;
 
-internal enum Faction
+internal class Faction(string name, string[] graphic) : Displayable(graphic)
 {
-    Aliens,
-    Dinosuars,
-    Ninjas,
-    Pirates,
-    Robots,
-    Tricksters,
-    Wizards,
-    Zombies
+    public string Name { get; } = name;
 }

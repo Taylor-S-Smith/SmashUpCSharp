@@ -7,7 +7,7 @@ internal class CardGraphicUtil
 {
     public static string[] GenerateBaseCardGraphic(string[] graphic, string title, int totalPower, int currentBreakpoint, bool useAltBorder = false)
     {
-        return GenerateCardGraphic(graphic, useAltBorder, (width, useAltBorder) => TitleLineBuilder(width, useAltBorder, title, totalPower.ToString(), currentBreakpoint.ToString()));
+        return GenerateGraphic(graphic, useAltBorder, (width, useAltBorder) => TitleLineBuilder(width, useAltBorder, title, totalPower.ToString(), currentBreakpoint.ToString()));
     }
     public static string[] GeneratePlayableCardGraphic(string[] graphic, string title, int? power, bool useAltBorder = false)
     {
@@ -23,10 +23,13 @@ internal class CardGraphicUtil
             leftText = ((int)power).ToString();
             rightText = ((int)power).ToString();
         }
-        return GenerateCardGraphic(graphic, useAltBorder, (width, useAltBorder) => TitleLineBuilder(width, useAltBorder, title, leftText, rightText));
+        return GenerateGraphic(graphic, useAltBorder, (width, useAltBorder) => TitleLineBuilder(width, useAltBorder, title, leftText, rightText));
     }
-
-    private static string[] GenerateCardGraphic(string[] graphic, bool useAltBorder = false, Func<int, bool, string?>? titleLineBuilder = null)
+    public static string[] GenerateDisplayGraphic(string[] graphic, bool useAltBorder = false)
+    {
+        return GenerateGraphic(graphic, useAltBorder);
+    }
+    private static string[] GenerateGraphic(string[] graphic, bool useAltBorder = false, Func<int, bool, string?>? titleLineBuilder = null)
     {
         int graphicWidth = graphic.Max(line => line.Length);
         int graphicHeight = graphic.Length;

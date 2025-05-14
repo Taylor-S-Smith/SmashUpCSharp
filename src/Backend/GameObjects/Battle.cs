@@ -30,6 +30,8 @@ internal class Battle
 
     private const int WINNING_VP = 15;
 
+    private List<Faction> factionsRepresented = [];
+
     public Battle(IFrontendBattleAPI userInputHandler, GlobalEventManager eventManager, Random random)
     {
         _userInput = userInputHandler;
@@ -54,22 +56,24 @@ internal class Battle
         List<Player> players = [];
 
         //Choose 2 Factions
-        List<(string, List<FactionModel>)> factionChoices = _userInput.ChooseFactions(playerNames, FactionService.GetFactionModels());
+        List<(string PlayerName, List<Faction> Factions)> factionChoices = _userInput.ChooseFactions(playerNames, Repository.GetFactions());
+
+        factionsRepresented = factionChoices.SelectMany(choice => choice.Factions).ToList();
 
         //Build Player Decks
         foreach (var choice in factionChoices)
         {
-            string playerName = choice.Item1;
-            List<Faction> factions = choice.Item2.Select(x => x.Faction).ToList();
-            List<PlayableCard> cards = CardRepository.GetPlayableCards(factions);
+            string playerName = choice.PlayerName;
+            List<Faction> factions = choice.Factions;
+            List<PlayableCard> cards = Repository.GetPlayableCards(factions);
 
             var player = new Player(playerName, cards);
             players.Add(player);
         }
 
         //Build the Base Deck
-        List<Faction> allFactions = factionChoices.SelectMany(x => x.Item2.Select(y => y.Faction)).ToList();
-        Deck<BaseCard> baseDeck = new(CardRepository.GetBaseCards(allFactions));
+        List<Faction> allFactions = factionChoices.SelectMany(x => x.Factions).ToList();
+        Deck<BaseCard> baseDeck = new(Repository.GetBaseCards(allFactions));
 
         //Draw And Play Bases
         List<BaseCard> startingBases = baseDeck.Draw(players.Count + 1);
@@ -254,7 +258,7 @@ internal class Battle
         // We will continue until all players have passed
         Dictionary<Player, bool> passTracker = [];
 
-        foreach(Player player in _table.Players)
+        foreach (Player player in _table.Players)
         {
             passTracker.Add(player, false);
         }
@@ -274,7 +278,8 @@ internal class Battle
                 _table.ActivePlayer.Player.RemoveFromHand(specialToPlay);
                 PlayCard(specialToPlay);
                 hasPassed = false;
-            } else
+            }
+            else
             {
                 passTracker[activePlayer] = hasPassed;
                 playerIndex++;
@@ -298,7 +303,7 @@ internal class Battle
         {
             int numToDiscard = numCards - 10;
             var handCards = _table.ActivePlayer.Player.Hand.ToList().ConvertAll(x => (Card)x);
-            var cardIdsToDiscard = _userInput.SelectCard(handCards, handCards, $"Choose {numToDiscard} card{(numToDiscard > 1 ? 's' : null)} to discard", numToDiscard);
+            var cardIdsToDiscard = _userInput.Select(handCards.AsDisplayable(), handCards.AsDisplayable(), $"Choose {numToDiscard} card{(numToDiscard > 1 ? 's' : null)} to discard", numToDiscard);
             foreach (var cardId in cardIdsToDiscard)
             {
                 var card = GetHandCardById(cardId);
@@ -357,7 +362,7 @@ internal class Battle
         {
             PlayCardToMinion(cardToPlay);
         }
-        else if(cardToPlay.PlayLocation == PlayLocation.Discard)
+        else if (cardToPlay.PlayLocation == PlayLocation.Discard)
         {
             PlayCardToDiscard(cardToPlay);
         }
@@ -474,7 +479,7 @@ internal class Battle
     public bool AttemptToAffect(PlayableCard cardToAffect, EffectType effect, PlayableCardType affectorCardType, Player affectorPlayer)
     {
         List<Protection> protections = cardToAffect.Protections.Where(x => x.From == effect && (x.CardType == null || x.CardType == affectorCardType) && (x.FromPlayers == null || x.FromPlayers.Contains(affectorPlayer))).ToList();
-        
+
         if (protections.Count == 0) return true;
         else
         {
@@ -485,7 +490,7 @@ internal class Battle
             }
             else
             {
-                protector = SelectCard(protections.Select(x => x.GrantedBy).ToList(), $"{cardToAffect.Controller.Name}, {cardToAffect.Name} is being protected by multiple cards, choose which one to recieve protection from:");
+                protector = Select(protections.Select(x => x.GrantedBy).ToList(), $"{cardToAffect.Controller.Name}, {cardToAffect.Name} is being protected by multiple cards, choose which one to recieve protection from:");
             }
 
             protector.TriggerOnProtect(this);
@@ -537,6 +542,7 @@ internal class Battle
         return false;
     }
 
+
     // INTERACT WITH TABLE
     public List<BaseSlot> GetBaseSlots()
     {
@@ -584,6 +590,10 @@ internal class Battle
     {
         return _table.Players;
     }
+    public List<Player> GetOtherPlayers(Player player)
+    {
+        return _table.Players.Where(x => x != player).ToList();
+    }
     public Player GetActivePlayer()
     {
         return _table.ActivePlayer.Player;
@@ -594,27 +604,29 @@ internal class Battle
     }
     internal void PutBasesToTop(List<BaseCard> chosenOrder)
     {
-        foreach(var baseCard in chosenOrder)
+        foreach (var baseCard in chosenOrder)
         {
             _table.Board.BaseDeck.AddToTop(baseCard);
         }
     }
 
+
     // INTERACTING WITH UI
     public class SelectFieldCardQuery
     {
-        public PlayableCardType? CardType { get; set; } 
+        public PlayableCardType? CardType { get; set; }
+        public Faction? Faction { get; set; }
         public BaseCard? BaseCard { get; set; }
         public int? MaxPower { get; set; }
-        public Player? Controller { get; set; }
+        public List<Player> Controllers { get; set; } = [];
         public List<PlayableCard> CardsToExclude { get; set; } = [];
     }
     public record SelectFieldCardResult(PlayableCard? SelectedCard, BaseCard? SelectedCardBase, ResultType Type);
-    public SelectFieldCardResult SelectFieldCard(PlayableCard cardToDisplay, string displaytext, SelectFieldCardQuery query, bool cancellable=false)
+    public SelectFieldCardResult SelectFieldCard(PlayableCard cardToDisplay, string displaytext, SelectFieldCardQuery query, bool cancellable = false)
     {
-        Func<PlayableCard, bool> cardPred = GetPredFromQuery(query);
+        Func<PlayableCard, bool> cardPred = GetPred(query);
 
-        List<List<Guid>> validFieldCardIds = GetValidFieldCardIds(cardPred, query.BaseCard);
+        List<List<Guid>> validFieldCardIds = GetFieldCardIds(cardPred, query.BaseCard);
         if (validFieldCardIds.SelectMany(ids => ids).ToList().Count == 0) return new(null, null, ResultType.NoValidTargets);
 
         SelectResult result = _userInput.SelectFieldCard(validFieldCardIds, cardToDisplay, displaytext, cancellable);
@@ -626,12 +638,13 @@ internal class Battle
         );
     }
 
-    private static Func<PlayableCard, bool> GetPredFromQuery(SelectFieldCardQuery query)
+    private static Func<PlayableCard, bool> GetPred(SelectFieldCardQuery query)
     {
         var cardPred = PredicateBuilder.New((PlayableCard card) => !query.CardsToExclude.Contains(card));
         if (query.CardType != null) cardPred.And((PlayableCard card) => card.CardType == query.CardType);
+        if (query.Faction != null) cardPred.And((PlayableCard card) => card.Faction == query.Faction);
         if (query.MaxPower != null) cardPred.And((PlayableCard card) => card.CurrentPower <= query.MaxPower);
-        if (query.Controller != null) cardPred.And((PlayableCard card) => card.Controller == query.Controller);
+        if (query.Controllers.Count > 0) cardPred.And((PlayableCard card) => query.Controllers.Contains(card.Controller));
         return cardPred;
     }
 
@@ -643,7 +656,7 @@ internal class Battle
     public SelectFieldCardsResult SelectFieldCards(PlayableCard cardToDisplay, string displaytext, SelectFieldCardsQuery query, bool cancellable = false)
     {
         List<(PlayableCard Card, BaseCard Base)> chosenCards = [];
-        for(int i = 0; i < query.Num; i++)
+        for (int i = 0; i < query.Num; i++)
         {
             var result = SelectFieldCard(cardToDisplay, displaytext, query, cancellable);
             if (result.Type != ResultType.Success) break;
@@ -657,35 +670,33 @@ internal class Battle
         Guid chosenId = _userInput.SelectBaseCard(validBases.Select(x => x.Id).ToList(), cardToDisplay, displayText);
         return validBases.Where(x => x.Id == chosenId).SingleOrDefault() ?? throw new Exception($"No option with ID: {chosenId}");
     }
-    public T SelectCard<T>(List<T> options, string displayText, Func<T, bool>? isValidChoice = null)
-        where T : Card
+    public T Select<T>(List<T> options, string displayText, Func<T, bool>? isValidChoice = null)
+        where T : Displayable
     {
         isValidChoice ??= _ => true;
-        // We use new(options) to pass a new list, rather than a reference to the existing one
-        Guid chosenId = _userInput.SelectCard(options.ConvertAll(x => (Card)x), options.Where(isValidChoice).ToList().ConvertAll(x => (Card)x), displayText, 1).Single();
+        Guid chosenId = _userInput.Select(options.AsDisplayable(), options.Where(isValidChoice).AsDisplayable(), displayText, 1).Single();
+        
         return options.Where(x => x.Id == chosenId).SingleOrDefault() ?? throw new Exception($"No option with ID: {chosenId}");
     }
     /// <summary>
-    /// Accesses UI to allow player to select a card from options. 
+    /// Accesses UI to allow player to select several cards at once from options. 
     /// The order of the returned list will be reverse the order they were selected.
     /// That is, the last card of the list was chosen first by the player.
     /// </summary>
     /// <param name="numToSelect">The num to return, or null if any number works</param>
     /// <param name="isValidChoice">Determins which options are selectable</param>
-    public List<T> SelectCards<T>(List<T> options, string displayText, int? numToSelect=null, Func<T, bool>? isValidChoice = null)
-        where T : Card
+    public List<T> SelectMultiple<T>(List<T> options, string displayText, int? numToSelect = null, Func<T, bool>? isValidChoice = null)
+        where T : Displayable
     {
         isValidChoice ??= _ => true;
-        // We use new(options) to pass a new list, rather than a reference to the existing one
-        var validChoices = options.Where(isValidChoice).ToList().ConvertAll(x => (Card)x);
-        List<Guid> chosenIds = _userInput.SelectCard(options.ConvertAll(x => (Card)x), validChoices, displayText, numToSelect).ToList();
-        
+        List<Guid> chosenIds = _userInput.Select(options.AsDisplayable(), options.Where(isValidChoice).AsDisplayable(), displayText, numToSelect).ToList();
+
         // We get the result based on a select on chosenIds because order matters
-        return chosenIds.Select(id => options.Where(option => option.Id == id).Single()).ToList();
+        return chosenIds.Select(id => options.Where(option => option.Id == id).SingleOrDefault() ?? throw new Exception($"No option with ID: {id}")).ToList();
     }
     public Guid SelectOption(List<Option> options, List<PlayableCard> cardsToDisplay, string displayText)
     {
-       return _userInput.SelectOption(options, cardsToDisplay, displayText);
+        return _userInput.SelectOption(options, cardsToDisplay, displayText);
     }
     public bool SelectBool(List<PlayableCard> cardsToDisplay, string displayText)
     {
@@ -694,12 +705,13 @@ internal class Battle
         return yes.Id == SelectOption([yes, no], cardsToDisplay, displayText);
     }
 
-    public List<PlayableCard> GetValidFieldCards(SelectFieldCardQuery query)
+    //GET
+    public List<PlayableCard> GetFieldCards(SelectFieldCardQuery query)
     {
-        var pred = GetPredFromQuery(query);
-        return GetValidFieldCards(pred, query.BaseCard);
+        var pred = GetPred(query);
+        return GetFieldCards(pred, query.BaseCard);
     }
-    public List<PlayableCard> GetValidFieldCards(Func<PlayableCard, bool> pred, BaseCard? baseCard = null)
+    private List<PlayableCard> GetFieldCards(Func<PlayableCard, bool> pred, BaseCard? baseCard = null)
     {
         IEnumerable<BaseSlot> validBaseSlots = _table.GetBaseSlots();
 
@@ -711,7 +723,7 @@ internal class Battle
             .SelectMany(x => x.Cards.Where(pred))
             .ToList();
     }
-    private List<List<Guid>> GetValidFieldCardIds(Func<PlayableCard, bool> pred, BaseCard? baseCard = null)
+    private List<List<Guid>> GetFieldCardIds(Func<PlayableCard, bool> pred, BaseCard? baseCard = null)
     {
         IEnumerable<BaseSlot> validBaseSlots = _table.GetBaseSlots();
 
@@ -744,5 +756,13 @@ internal class Battle
     private BaseSlot GetBaseSlotById(Guid chosenBaseId)
     {
         return _table.GetBaseSlots().Where(x => x.BaseCard.Id == chosenBaseId).FirstOrDefault() ?? throw new Exception($"No active base exists with ID {chosenBaseId}");
-    }    
+    }
+
+    /// <summary>
+    /// Gets all the factions, ordered by the ones actually used in the battle
+    /// </summary>
+    public List<Faction> GetFactions()
+    {
+        return Repository.GetFactions().OrderBy(x => !factionsRepresented.Contains(x)).ToList();
+    }
 }
