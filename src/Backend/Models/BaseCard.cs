@@ -2,6 +2,8 @@
 
 namespace SmashUp.Backend.Models;
 
+internal record ScoreResult(List<Player> First, List<Player> Second, List<Player> Third);
+
 internal class BaseCard : Card
 {
     public int PrintedBreakpoint { get; set; }
@@ -19,11 +21,13 @@ internal class BaseCard : Card
     public event Action<PlayableCard> AfterMinionDestroyed = delegate { };
     public void TriggerBeforeBaseScores(Battle battle, BaseSlot slot) => BeforeBaseScores.Invoke(battle, slot);
     public event Action<Battle, BaseSlot> BeforeBaseScores = delegate { };
-    public BaseCard? TriggerAfterBaseScores(Battle battle, BaseSlot slot, List<Player> winners) => AfterBaseScores.Invoke(battle, slot, winners);
+    public BaseCard? TriggerAfterBaseScores(Battle battle, BaseSlot slot, ScoreResult scoreResult) => AfterBaseScores.Invoke(battle, slot, scoreResult);
     /// <summary>
     /// Return the base that will replace that one that scored, or NULL to draw a new one normally
     /// </summary>
-    public event Func<Battle, BaseSlot, List<Player>, BaseCard?> AfterBaseScores = delegate { return null; };
+    public event Func<Battle, BaseSlot, ScoreResult, BaseCard?> AfterBaseScores = delegate { return null; };
+    public void TriggerAfterReplaced(Battle battle, BaseSlot slot , ScoreResult scoreResult) => AfterReplaced.Invoke(battle, slot, scoreResult);
+    public event Action<Battle, BaseSlot, ScoreResult> AfterReplaced = delegate { };
 
     public BaseCard(Faction faction, string name, string[] graphic, int breakpoint, int[] pointSpread) : base(faction, name, graphic)
     {

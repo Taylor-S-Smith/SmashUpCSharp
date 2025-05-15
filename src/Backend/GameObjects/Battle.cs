@@ -183,18 +183,18 @@ internal class Battle
             if (scoringBases.Count == 0) break;
 
             // Step 2: Choose one base that is ready to score
-            BaseSlot baseToScore;
-            if (scoringBases.Count == 1) baseToScore = scoringBases[0];
+            BaseSlot slotToScore;
+            if (scoringBases.Count == 1) slotToScore = scoringBases[0];
             else
             {
                 Guid chosenBaseId = _userInput.SelectBaseCard(scoringBases.Select(slot => slot.BaseCard.Id).ToList(), null, "Multiple bases are ready to score. Choose a base to score first:");
-                baseToScore = GetBaseSlotById(chosenBaseId);
+                slotToScore = GetBaseSlotById(chosenBaseId);
             }
 
             // Step 3: Play/invoke "before scoring" abilities
 
             // 3a. Invoke mandatory abilities
-            baseToScore.BaseCard.TriggerBeforeBaseScores(this, baseToScore);
+            slotToScore.BaseCard.TriggerBeforeBaseScores(this, slotToScore);
 
             // 3b: Invoke optional abilities, give each player an opportunity to play "Before Scores" specials
             //     starting with the current player and going clockwise (in this case in order players were added)
@@ -208,7 +208,7 @@ internal class Battle
             foreach (Player player in _table.Players)
             {
                 // Must have at least one minion on the base, or at least 1 total power on the base to receive VP
-                var playersCards = baseToScore.Cards.Where(card => card.Controller == player);
+                var playersCards = slotToScore.Cards.Where(card => card.Controller == player);
                 int totalPower = playersCards.Sum(x => x.CurrentPower) ?? 0;
                 if (playersCards.Any(card => card.CardType == PlayableCardType.Minion) || totalPower > 0)
                 {
@@ -224,33 +224,39 @@ internal class Battle
             int playerPostitionIndex = 0;
             List<int> powerVals = scoreDict.Keys.OrderDescending().ToList();
 
-            while (baseAwardIndex < baseToScore.BaseCard.PointSpread.Length && baseAwardIndex < powerVals.Count)
+            while (baseAwardIndex < slotToScore.BaseCard.PointSpread.Length && baseAwardIndex < powerVals.Count)
             {
                 List<Player> players = scoreDict[powerVals[playerPostitionIndex]];
                 playerPostitionIndex++;
                 foreach (Player player in players)
                 {
-                    player.GainVP(baseToScore.BaseCard.PointSpread[baseAwardIndex]);
+                    player.GainVP(slotToScore.BaseCard.PointSpread[baseAwardIndex]);
                 }
 
                 baseAwardIndex += players.Count;
             }
 
+            ScoreResult scoreResult = new(scoreDict[powerVals[0]], powerVals.Count > 1 ? scoreDict[powerVals[1]] : [], powerVals.Count > 2 ? scoreDict[powerVals[2]] : []);
+
             // Step 5: Award treasures
             // Step 6: Play/invoke "after scoring" abilities
-            BaseCard? newBase = baseToScore.BaseCard.TriggerAfterBaseScores(this, baseToScore, scoreDict[powerVals[0]]);
+            BaseCard? newBase = slotToScore.BaseCard.TriggerAfterBaseScores(this, slotToScore, scoreResult);
 
             // Step 7: Discard all the cards on the base
-            List<PlayableCard> cardsToDiscard = baseToScore.Cards;
+            List<PlayableCard> cardsToDiscard = slotToScore.Cards;
             cardsToDiscard.ForEach(x => RemoveCardFromBattleField(x));
             cardsToDiscard.ForEach(Discard);
 
             // Step 8: Discard the base
-            _table.AddBaseToDiscard(baseToScore.BaseCard);
+            _table.AddBaseToDiscard(slotToScore.BaseCard);
 
             // Step 9: Replace the base
-            if (newBase != null) baseToScore.BaseCard = newBase;
-            else baseToScore.BaseCard = _table.DrawBaseCard();
+            BaseCard oldBase = slotToScore.BaseCard;
+            if (newBase != null) slotToScore.BaseCard = newBase;
+            else slotToScore.BaseCard = _table.DrawBaseCard();
+
+            // Trigger After Replaced Abilities
+            oldBase.TriggerAfterReplaced(this, slotToScore, scoreResult);
         }
     }
 
@@ -641,7 +647,9 @@ internal class Battle
         Func<PlayableCard, bool> cardPred = GetPred(query);
 
         List<List<Guid>> validFieldCardIds = GetFieldCardIds(cardPred, query.BaseCard);
-        if (validFieldCardIds.SelectMany(ids => ids).ToList().Count == 0) return new(null, null, ResultType.NoValidTargets);
+        List<Guid> validIds = validFieldCardIds.SelectMany(ids => ids).ToList();
+        if (validIds.Count == 0) return new(null, null, ResultType.NoValidTargets);
+        if (validIds.Count == 1 && !cancellable) return new(GetFieldCardById(validIds[0]), GetBaseCardByFieldCardId(validIds[0]), ResultType.Success);
 
         SelectResult result = _userInput.SelectFieldCard(validFieldCardIds, displayable, displaytext, cancellable);
 

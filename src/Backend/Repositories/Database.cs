@@ -792,7 +792,7 @@ internal static class Database
             2
         );
 
-        BaseCard? MoveToAnotherBase(Battle battle, BaseSlot slot, List<Player> winners)
+        BaseCard? MoveToAnotherBase(Battle battle, BaseSlot slot, ScoreResult scoreResult)
         {
             var currentBase = slot.BaseCard;
             if (battle.SelectBool([firstMate], $"{firstMate.Controller.Name}, would you like to move First Mate to another base?"))
@@ -1273,7 +1273,6 @@ internal static class Database
         return swashbuckling;
     }
 
-
     public static BaseCard TheGreyOpal()
     {
         BaseCard theGreyOpal = new
@@ -1295,10 +1294,11 @@ internal static class Database
             [3, 1, 1]
         );
 
-        theGreyOpal.AfterBaseScores += (battle, slot, winners) =>
+        theGreyOpal.AfterBaseScores += (battle, slot, scoreResult) =>
         {
+            var winners = scoreResult.First;
             var playersWithMinionHereNotWinner = battle.GetPlayers()
-                                                       .Where(player => slot.Cards.Any(card => card.Controller == player && 
+                                                       .Where(player => slot.Cards.Any(card => card.Controller == player &&
                                                                                        card.CardType == PlayableCardType.Minion &&
                                                                                        !winners.Contains(card.Controller)));
             foreach (var player in playersWithMinionHereNotWinner)
@@ -1324,6 +1324,52 @@ internal static class Database
         };
 
         return theGreyOpal;
+    }
+    public static BaseCard Tortuga()
+    {
+        BaseCard tortuga = new
+        (
+            Pirates,
+            "Tortuga",
+            [
+
+
+                "      4      3      2       ",
+                "                            ",
+                "                            ",
+                " The runner up may move one ",
+                "of his or her minions to the",
+                "base that replaces this base",
+
+            ],
+            21,
+            [4, 3, 2]
+        );
+
+        tortuga.AfterReplaced += (battle, slot, scoreResults) =>
+        {
+            var runnersUp = scoreResults.Second;
+
+            foreach (var player in runnersUp)
+            {
+                bool moveMinion = battle.SelectBool([], $"{player.Name}, would you like to move one of your minions to {slot.BaseCard.Name}?");
+                if (moveMinion)
+                {
+                    SelectFieldCardQuery query = new()
+                    {
+                        Controllers = [player]
+                    };
+
+                    var result = battle.SelectFieldCard(slot.BaseCard, $"{player.Name}, choose a minion to move to {slot.BaseCard.Name}", query);
+                    if (result.SelectedCard == null) continue;
+
+                    PlayableCard chosenMinion = result.SelectedCard;
+                    battle.Move(chosenMinion, slot.BaseCard, player);
+                }
+            }
+        };
+
+        return tortuga;
     }
 
     // WIZARDS
@@ -1835,8 +1881,9 @@ internal static class Database
             [3, 2, 1]
         );
 
-        schoolOfWizardry.AfterBaseScores += (battle, slot, winners) =>
+        schoolOfWizardry.AfterBaseScores += (battle, slot, scoreResult) =>
         {
+            var winners = scoreResult.First;
             List<BaseCard> bases = battle.DrawBases(3);
             BaseCard chosenBase = battle.Select(bases, $"{string.Join(" and ", winners.Select(x => x.Name))}, choose a base to replace School of Wizardry");
             bases.Remove(chosenBase);
@@ -1955,9 +2002,9 @@ internal static class Database
     //TEST
     public static readonly Dictionary<Faction, List<Func<PlayableCard>>> PlayableCardsByFactionDict = new()
     {
-        { Dinosaurs, [WarRaptor, WarRaptor, WarRaptor, WarRaptor, WarRaptor, WarRaptor, WarRaptor, Swashbuckling, Swashbuckling, Swashbuckling] },
-        { Wizards, [WarRaptor, WarRaptor, WarRaptor, WarRaptor, WarRaptor, WarRaptor, WarRaptor, Swashbuckling, Swashbuckling, Swashbuckling] },
-        { Pirates, [WarRaptor, WarRaptor, WarRaptor, WarRaptor, WarRaptor, WarRaptor, WarRaptor, Swashbuckling, Swashbuckling, Swashbuckling] }
+        { Dinosaurs, [FirstMate, Laseratops, FirstMate, Laseratops, FirstMate, Laseratops, FirstMate, Laseratops] },
+        { Wizards, [FirstMate, Laseratops, FirstMate, Laseratops, FirstMate, Laseratops, FirstMate, Laseratops] },
+        { Pirates, [FirstMate, Laseratops, FirstMate, Laseratops, FirstMate, Laseratops, FirstMate, Laseratops] }
     };
 
     //REAL
@@ -1971,7 +2018,7 @@ internal static class Database
     public static readonly Dictionary<Faction, List<Func<BaseCard>>> BaseCardsByFactionDict = new()
     {
         { Dinosaurs, [JungleOasis, TarPits] },
-        { Pirates, [TheGreyOpal] },
+        { Pirates, [TheGreyOpal, Tortuga] },
         { Wizards, [SchoolOfWizardry, TheGreatLibrary] }
     };
 }
