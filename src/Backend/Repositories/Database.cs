@@ -4,6 +4,7 @@ using static SmashUp.Backend.GameObjects.Battle;
 using static SmashUp.Backend.Models.PlayableCard;
 using LinqKit;
 using SmashUp.Backend.API;
+using System.Reflection.Metadata.Ecma335;
 
 namespace SmashUp.Backend.Repositories;
 
@@ -1272,6 +1273,59 @@ internal static class Database
         return swashbuckling;
     }
 
+
+    public static BaseCard TheGreyOpal()
+    {
+        BaseCard theGreyOpal = new
+        (
+            Pirates,
+            "The Grey Opal",
+            [
+
+
+                "      3      1      1       ",
+                "After this base scores, all ",
+                "   players other than the   ",
+                "  winner may move a minion  ",
+                "  from here to another base ",
+                "instead of the discard pile.",
+
+            ],
+            17,
+            [3, 1, 1]
+        );
+
+        theGreyOpal.AfterBaseScores += (battle, slot, winners) =>
+        {
+            var playersWithMinionHereNotWinner = battle.GetPlayers()
+                                                       .Where(player => slot.Cards.Any(card => card.Controller == player && 
+                                                                                       card.CardType == PlayableCardType.Minion &&
+                                                                                       !winners.Contains(card.Controller)));
+            foreach (var player in playersWithMinionHereNotWinner)
+            {
+                bool moveMinion = battle.SelectBool([], $"{player.Name}, would you like to move one of your minions from {theGreyOpal.Name}?");
+                if (moveMinion)
+                {
+                    SelectFieldCardQuery query = new()
+                    {
+                        Controllers = [player],
+                        BaseCard = theGreyOpal
+                    };
+
+                    var result = battle.SelectFieldCard(theGreyOpal, $"{player.Name}, choose a minion to move from {theGreyOpal.Name}", query);
+                    if (result.SelectedCard == null) continue;
+                    PlayableCard chosenMinion = result.SelectedCard;
+                    BaseCard chosenBase = battle.SelectBaseCard(battle.GetBases().Where(x => x != theGreyOpal).ToList(), chosenMinion, $"{player.Name}, choose a base to move {chosenMinion.Name} to:");
+                    battle.Move(chosenMinion, chosenBase, player);
+                }
+            }
+
+            return null;
+        };
+
+        return theGreyOpal;
+    }
+
     // WIZARDS
     public static PlayableCard Neophyte()
     {
@@ -1917,7 +1971,7 @@ internal static class Database
     public static readonly Dictionary<Faction, List<Func<BaseCard>>> BaseCardsByFactionDict = new()
     {
         { Dinosaurs, [JungleOasis, TarPits] },
-        { Pirates, [JungleOasis, TarPits] },
+        { Pirates, [TheGreyOpal] },
         { Wizards, [SchoolOfWizardry, TheGreatLibrary] }
     };
 }

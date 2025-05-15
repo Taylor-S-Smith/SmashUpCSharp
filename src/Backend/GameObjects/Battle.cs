@@ -471,13 +471,26 @@ internal class Battle
             AddCardToBase(cardToMove, newBaseSlot);
         }
     }
+    public void Move(PlayableCard cardToMove, BaseCard newBase, Player affector)
+    {
+        if (AttemptToAffect(cardToMove, EffectType.Move, null, affector))
+        {
+            // We don't replace the two methods with a call RemoveCardFromBattleField() since we don't want to tigger any leave battlefield effects
+            BaseSlot baseSlot = GetBaseSlot(cardToMove);
+            RemoveCardFromBase(cardToMove, baseSlot);
+            var newBaseSlot = GetBaseSlotById(newBase.Id);
+            AddCardToBase(cardToMove, newBaseSlot);
+        }
+    }
 
     /// <summary>
     /// Checks if a card can be affected by a specific effect. 
     /// If it is protected, this will also resolve the protection triggers
     /// </summary>
+    /// <param name="affectorCardType">Action or Minion. Leave null if a playable card is not
+    ///                                causing the action to occur, e.g. Base or passive effect</param>
     /// <returns>True if card can be affected, otherwise false</returns>
-    public bool AttemptToAffect(PlayableCard cardToAffect, EffectType effect, PlayableCardType affectorCardType, Player affectorPlayer)
+    public bool AttemptToAffect(PlayableCard cardToAffect, EffectType effect, PlayableCardType? affectorCardType, Player affectorPlayer)
     {
         List<Protection> protections = cardToAffect.Protections.Where(x => x.From == effect && (x.CardType == null || x.CardType == affectorCardType) && (x.FromPlayers == null || x.FromPlayers.Contains(affectorPlayer))).ToList();
 
@@ -623,14 +636,14 @@ internal class Battle
         public List<PlayableCard> CardsToExclude { get; set; } = [];
     }
     public record SelectFieldCardResult(PlayableCard? SelectedCard, BaseCard? SelectedCardBase, ResultType Type);
-    public SelectFieldCardResult SelectFieldCard(PlayableCard cardToDisplay, string displaytext, SelectFieldCardQuery query, bool cancellable = false)
+    public SelectFieldCardResult SelectFieldCard(Displayable displayable, string displaytext, SelectFieldCardQuery query, bool cancellable = false)
     {
         Func<PlayableCard, bool> cardPred = GetPred(query);
 
         List<List<Guid>> validFieldCardIds = GetFieldCardIds(cardPred, query.BaseCard);
         if (validFieldCardIds.SelectMany(ids => ids).ToList().Count == 0) return new(null, null, ResultType.NoValidTargets);
 
-        SelectResult result = _userInput.SelectFieldCard(validFieldCardIds, cardToDisplay, displaytext, cancellable);
+        SelectResult result = _userInput.SelectFieldCard(validFieldCardIds, displayable, displaytext, cancellable);
 
         return new(
             result.SelectedId != null ? GetFieldCardById((Guid)result.SelectedId) : null,
@@ -666,9 +679,9 @@ internal class Battle
         }
         return new(chosenCards, ResultType.Success);
     }
-    public BaseCard SelectBaseCard(List<BaseCard> validBases, PlayableCard cardToDisplay, string displayText)
+    public BaseCard SelectBaseCard(List<BaseCard> validBases, Displayable displayable, string displayText)
     {
-        Guid chosenId = _userInput.SelectBaseCard(validBases.Select(x => x.Id).ToList(), cardToDisplay, displayText);
+        Guid chosenId = _userInput.SelectBaseCard(validBases.Select(x => x.Id).ToList(), displayable, displayText);
         return validBases.Where(x => x.Id == chosenId).SingleOrDefault() ?? throw new Exception($"No option with ID: {chosenId}");
     }
     public T Select<T>(List<T> options, string displayText, Func<T, bool>? isValidChoice = null)

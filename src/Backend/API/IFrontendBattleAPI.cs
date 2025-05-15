@@ -19,8 +19,8 @@ internal interface IFrontendBattleAPI
     List<string> ChoosePlayerNames();
     void InitializeData(Table table);
     Guid? SelectCardOrInvokable(List<PlayableCard> validCardsToDisplay, List<List<PlayableCard>> selectableFieldCards, string displayText);
-    Guid SelectBaseCard(List<Guid> validBaseIds, PlayableCard? cardToDisplay = null, string displayText = "");
-    SelectResult SelectFieldCard(List<List<Guid>> validCardIds, PlayableCard? cardToDisplay, string? displayText, bool interuptable = false);
+    Guid SelectBaseCard(List<Guid> validBaseIds, Displayable? cardToDisplay = null, string displayText = "");
+    SelectResult SelectFieldCard(List<List<Guid>> validCardIds, Displayable? displayable, string? displayText, bool interuptable = false);
     /// <summary>
     /// Allows user to select one of several text options
     /// </summary>

@@ -91,7 +91,7 @@ internal class ConsoleAppBattleUI() : IFrontendBattleAPI
         }
     }
 
-    public SelectResult SelectFieldCard(List<List<Guid>> validCardIds, PlayableCard? cardToDisplay, string? displayText, bool interuptable = false)
+    public SelectResult SelectFieldCard(List<List<Guid>> validCardIds, Displayable? displayable, string? displayText, bool interuptable = false)
     {
         List<TargetLogic> logics = [];
         logics.Add(new Select2DOption(validCardIds));
@@ -99,18 +99,18 @@ internal class ConsoleAppBattleUI() : IFrontendBattleAPI
         Option finishButton = new("I AM DONE");
         if (interuptable) logics.Add(new SelectOption([finishButton.Id]));
 
-        Guid? selectedId = new BattlePage(_table.GetBaseSlots(), _table.ActivePlayer.Player, [cardToDisplay], [finishButton], new Targeter(logics), displayText ?? "").Run();
+        Guid? selectedId = new BattlePage(_table.GetBaseSlots(), _table.ActivePlayer.Player, [displayable], [finishButton], new Targeter(logics), displayText ?? "").Run();
 
         if (selectedId == finishButton.Id) return new(null, ResultType.Finished);
 
         return new(selectedId, ResultType.Success);
     }
 
-    public Guid SelectBaseCard(List<Guid> validBaseIds, PlayableCard? cardToDisplay = null, string displayText = "")
+    public Guid SelectBaseCard(List<Guid> validBaseIds, Displayable? cardToDisplay = null, string displayText = "")
     {
-        List<PlayableCard> cardsToDisplay = [];
-        if (cardToDisplay != null) cardsToDisplay.Add(cardToDisplay);
-        return new BattlePage(_table.GetBaseSlots(), _table.ActivePlayer.Player, cardsToDisplay.AsDisplayable(), _buttons, new Targeter([new SelectOption(validBaseIds)]), displayText).Run();
+        List<Displayable> displayables = [];
+        if (cardToDisplay != null) displayables.Add(cardToDisplay);
+        return new BattlePage(_table.GetBaseSlots(), _table.ActivePlayer.Player, displayables, _buttons, new Targeter([new SelectOption(validBaseIds)]), displayText).Run();
     }
 
     public List<Guid> Select(List<Displayable> display, List<Displayable> validOptions, string displayText, int? numToReturn)
