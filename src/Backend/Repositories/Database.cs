@@ -91,7 +91,7 @@ internal static class Database
     (
         "Tricksters",
         [
-            @"  /\  /\  /\  /\  /\ /\  ",
+            @"  /\  /\  /\ /\  /\  /\  ",
             @" / T R I C K S T E R S \ ",
             @"  ||  ||  ||  ||  || ||  ",
             @"                         ",
