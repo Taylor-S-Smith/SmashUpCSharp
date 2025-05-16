@@ -5,6 +5,7 @@ using static SmashUp.Backend.Models.PlayableCard;
 using LinqKit;
 using SmashUp.Backend.API;
 using System.Reflection.Metadata.Ecma335;
+using System.Drawing.Text;
 
 namespace SmashUp.Backend.Repositories;
 
@@ -244,10 +245,10 @@ internal static class Database
             battle.EventManager.EndOfTurn += endTurnHandler;
         };
 
-        armoredStego.OnDiscard += (eventManager) =>
+        armoredStego.OnDiscard += (battle) =>
         {
-            eventManager.StartOfTurn -= turnStartHandler;
-            eventManager.EndOfTurn -= endTurnHandler;
+            battle.EventManager.StartOfTurn -= turnStartHandler;
+            battle.EventManager.EndOfTurn -= endTurnHandler;
         };
 
         armoredStego.OnChangeController += (battle, oldController, newController) =>
@@ -844,7 +845,7 @@ internal static class Database
             SelectCardQuery query = new()
             {
                 CardType = PlayableCardType.Minion,
-                //MaxPower = 2,
+                MaxPower = 2,
                 BaseCard = baseSlot.BaseCard
             };
 
@@ -1514,6 +1515,94 @@ internal static class Database
 
         return nukebot;
     }
+    public static PlayableCard MicrobotAlpha()
+    {
+        PlayableCard microbotAlpha = new
+        (
+            Robots,
+            PlayableCardType.Minion,
+            "Microbot Alpha",
+            [
+                @"1    Microbot Alpha     1",
+                @"          _[o]_          ",
+                @"       ]-|_ | _|-[       ",
+                @"          _|_|_          ",
+                @"         /_____\         ",
+                @" Ongoing: Gains +1 power ",
+                @" for each of your other  ",
+                @"   Microbots. All your   ",
+                @"  minions are Microbots. ",
+            ],
+            PlayLocation.Base,
+            1
+        );
+
+        void addCardHandler(Battle battle, PlayableCard card)
+        {
+            if(card.Controller == microbotAlpha.Controller)
+            {
+                // Add a temp microbot tag
+                card.Tags.Add(Tag.TempMicrobot);
+
+                // Increase own power
+                microbotAlpha.ApplyPowerChange(battle, microbotAlpha, 1);
+            }
+        }
+
+        void removeCardHandler(Battle battle, PlayableCard card)
+        {
+            if (card.Controller == microbotAlpha.Controller)
+            {
+                // Remove temp microbot tag
+                card.Tags.Remove(Tag.TempMicrobot);
+
+                // Decrease own power
+                microbotAlpha.ApplyPowerChange(battle, microbotAlpha, -1);
+            }
+        }
+
+        microbotAlpha.AfterEnterBattleField += (battle) =>
+        {
+            // Get all controller's minions
+            SelectCardQuery query = new()
+            {
+                Controllers = [microbotAlpha.Controller]
+            };
+            var cards = battle.GetFieldCards(query).Where(x => x != microbotAlpha);
+
+            // Add temp microbot tag
+            cards.ForEach(x => x.Tags.Add(Tag.TempMicrobot));
+
+            // Increase power for each, except self
+            microbotAlpha.ApplyPowerChange(battle, microbotAlpha, cards.Count() - 1);
+
+            // Add Listeners
+            battle.EventManager.AfterAddCard += addCardHandler;
+            battle.EventManager.AfterRemoveCard += removeCardHandler;
+        };
+
+        microbotAlpha.OnDiscard += (battle) =>
+        {
+            // Get all controller's minions
+            SelectCardQuery query = new()
+            {
+                Controllers = [microbotAlpha.Controller]
+            };
+            var cards = battle.GetFieldCards(query).Where(x => x != microbotAlpha);
+
+            // Remove temp microbot tag
+            cards.ForEach(x => x.Tags.Remove(Tag.TempMicrobot));
+
+            // Decrease power for each
+            microbotAlpha.ApplyPowerChange(battle, microbotAlpha, cards.Count() - 1);
+
+            // Remove Listeners
+            battle.EventManager.AfterAddCard -= addCardHandler;
+            battle.EventManager.AfterRemoveCard -= removeCardHandler;
+        };
+
+        return microbotAlpha;
+    }
 
 
     // WIZARDS
@@ -1672,9 +1761,9 @@ internal static class Database
             battle.EventManager.StartOfTurn += turnStartHandler;
         };
 
-        archmage.OnDiscard += (eventManager) =>
+        archmage.OnDiscard += (battle) =>
         {
-            eventManager.StartOfTurn -= turnStartHandler;
+            battle.EventManager.StartOfTurn -= turnStartHandler;
         };
 
         archmage.OnChangeController += (battle, oldController, newController) =>
@@ -2146,7 +2235,7 @@ internal static class Database
     //TEST
     public static readonly Dictionary<Faction, List<Func<PlayableCard>>> PlayableCardsByFactionDict = new()
     {
-        { Dinosaurs, [Warbot, Warbot, Warbot, Nukebot, Nukebot, Nukebot, Nukebot, Nukebot, SaucyWench, SaucyWench, SaucyWench, Buccaneer, Buccaneer, Buccaneer, Buccaneer] }
+        { Dinosaurs, [SaucyWench, SaucyWench, SaucyWench, MicrobotAlpha, MicrobotAlpha, MicrobotAlpha, FirstMate, FirstMate, FirstMate] }
     };
 
     //REAL
@@ -2154,7 +2243,7 @@ internal static class Database
     {
         { Dinosaurs, [WarRaptor, WarRaptor, WarRaptor, WarRaptor, ArmoredStego, ArmoredStego, ArmoredStego, Laseratops, Laseratops, KingRex, Augmentation, Augmentation, Howl, Howl, NaturalSelection, Rampage, SurvivalOfTheFittest, ToothClawAndGuns, Upgrade, WildlifePreserve] },
         { Pirates, [FirstMate, FirstMate, FirstMate, FirstMate, SaucyWench, SaucyWench, SaucyWench, Buccaneer, Buccaneer, PirateKing, Broadside, Broadside, Cannon, Dinghy, Dinghy, FullSail, Powderkeg, SeaDogs, Shanghai, Swashbuckling] },
-        { Robots, [Zapbot, Zapbot, Zapbot, Zapbot, Hoverbot, Hoverbot, Hoverbot, Warbot, Warbot] },
+        { Robots, [Zapbot, Zapbot, Zapbot, Zapbot, Hoverbot, Hoverbot, Hoverbot, Warbot, Warbot, MicrobotAlpha] },
         { Wizards, [Neophyte, Neophyte, Neophyte, Neophyte, Enchantress, Enchantress, Enchantress, Chronomage, Chronomage, Archmage, MassEnchantment, MysticStudies, MysticStudies, Portal, Sacrifice, Scry, Summon, Summon, TimeLoop, WindsOfChange] },
     };
 

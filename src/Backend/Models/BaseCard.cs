@@ -13,7 +13,7 @@ internal class BaseCard : Card
 
     public int CurrentPower { get; set; } = 0;
 
-    public void TriggerOnAddCard(Battle battle, PlayableCard card) => OnAddCard.Invoke(battle, card);
+    public void TriggerAfterAddCard(Battle battle, PlayableCard card) => OnAddCard.Invoke(battle, card);
     public event Action<Battle, PlayableCard> OnAddCard;
     public void TriggerOnRemoveCard(Battle battle, PlayableCard card) => OnRemoveCard.Invoke(battle, card);
     public event Action<Battle, PlayableCard> OnRemoveCard;

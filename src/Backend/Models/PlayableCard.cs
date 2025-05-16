@@ -31,7 +31,9 @@ internal class PlayableCard : Card
 
     public enum Tag 
     {
-        SpecialBeforeScores
+        SpecialBeforeScores,
+        Microbot,
+        TempMicrobot
     }
     public List<Tag> Tags { get; set; } = [];
 
@@ -62,8 +64,17 @@ internal class PlayableCard : Card
     public List<Protection> Protections = [];
 
     public event Action<int> OnPowerChange = delegate { };
+
+
+
     /// <summary>
-    /// Is called immediatly after the card is played on the base (minions), or immediatly before it is discarded (most actions)
+    /// Called immmediatly after card is in play, before OnPlay
+    /// </summary>
+    public void TriggerAfterEnterBattleField(Battle battle) => AfterEnterBattleField(battle);
+    public event Action<Battle> AfterEnterBattleField = delegate { };
+
+    /// <summary>
+    /// Is called immediatly after the card is played. If minion or modifier, it will be called after AfterEnterBattleField. If standard action it will be immediatly before it is discarded
     /// </summary>
     public void TriggerOnPlay(Battle battle, BaseSlot? baseSlot=null) => OnPlay(battle, baseSlot);
     public event Action<Battle, BaseSlot?> OnPlay = delegate { };
@@ -71,15 +82,18 @@ internal class PlayableCard : Card
     /// <summary>
     /// Gets called immediatly after the card is added to the territory list
     /// </summary>
-    public void TriggerOnAddToBase(Battle battle, BaseSlot baseSlot) => OnAddToBase(battle, baseSlot);
+    public void TriggerAfterAddToBase(Battle battle, BaseSlot baseSlot) => OnAddToBase(battle, baseSlot);
     public event Action<Battle, BaseSlot> OnAddToBase = delegate { };
     /// <summary>
     /// Gets called immediatly after the card is removed to the territory list
     /// </summary>
     public void TriggerOnRemoveFromBase(Battle battle, BaseSlot baseSlot) => OnRemoveFromBase(battle, baseSlot);
     public event Action<Battle, BaseSlot> OnRemoveFromBase = delegate { };
-    public void TriggerOnDiscard(GlobalEventManager eventManager) => OnDiscard(eventManager);
-    public event Action<GlobalEventManager> OnDiscard = delegate { };
+    /// <summary>
+    /// After card is removed from battlefield, but before it exists in the discard pile
+    /// </summary>
+    public void TriggerOnDiscard(Battle battle) => OnDiscard(battle);
+    public event Action<Battle> OnDiscard = delegate { };
     public void TriggerAfterDestroyed(Battle battle, BaseSlot baseSlot) => AfterDestroyed(battle, baseSlot);
     public event Action<Battle, BaseSlot> AfterDestroyed = delegate { };
     public void TriggerOnProtect(Battle battle) => OnProtect(battle);

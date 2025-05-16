@@ -419,8 +419,10 @@ internal class Battle
     {
         PlayerTerritory territory = slot.Territories.Where(x => x.player == cardToPlay.Controller).Single();
         territory.Cards.Add(cardToPlay);
-        cardToPlay.TriggerOnAddToBase(this, slot);
-        slot.BaseCard.TriggerOnAddCard(this, cardToPlay);
+        cardToPlay.TriggerAfterEnterBattleField(this);
+        EventManager.TriggerAfterAddCard(this, cardToPlay);
+        cardToPlay.TriggerAfterAddToBase(this, slot);
+        slot.BaseCard.TriggerAfterAddCard(this, cardToPlay);
     }
     private void PlayCardToDiscard(PlayableCard cardToPlay)
     {
@@ -457,16 +459,17 @@ internal class Battle
         {
             var baseSlot = RemoveCardFromBattleField(cardToDestroy);
             Discard(cardToDestroy);
-            baseSlot.BaseCard.TriggerAfterDestroyCard(cardToDestroy);
             cardToDestroy.TriggerAfterDestroyed(this, baseSlot);
+            baseSlot.BaseCard.TriggerAfterDestroyCard(cardToDestroy);
         }
     }
     /// <summary>
-    /// Discarding removes the card from play, but does not count as affecting the card
+    /// Discarding puts the card in it's owner's discard pile, it does not count as affecting the card
+    /// This does NOT remove the card from it's old location
     /// </summary>
     public void Discard(PlayableCard cardToPlay)
     {
-        cardToPlay.TriggerOnDiscard(EventManager);
+        cardToPlay.TriggerOnDiscard(this);
         cardToPlay.Owner.DiscardPile.Add(cardToPlay);
     }
     public void Move(PlayableCard cardToMove, BaseCard newBase, PlayableCard affector)
@@ -529,7 +532,11 @@ internal class Battle
     {
         foreach (BaseSlot slot in _table.GetBaseSlots())
         {
-            if (RemoveCardFromBase(cardToRemove, slot)) return slot;
+            if (RemoveCardFromBase(cardToRemove, slot))
+            {
+                EventManager.TriggerAfterRemoveCard(this, cardToRemove);
+                return slot;
+            }
         }
 
         throw new Exception($"{cardToRemove.Name} with ID {cardToRemove.Id} is not on the battlefield, so can't be removed");

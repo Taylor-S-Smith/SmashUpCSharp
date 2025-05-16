@@ -13,17 +13,15 @@ Misc Tests to one day write:
 - Two allow you to choose
 - Wizard base puts cards on top of base deck in correct order
 
-Event Approach Rules:
-- Events should only be used for logic that:
-	- Applies to an unknown number of objects
-	- Will not be the same for each object
-- When calling class events you should call the most specific one applicable. 
-  It is the responsability of the more general class events to call all dependent events.
-- When Listening, listen to the most specific one. If you only need to know when a card is added to a specific base, don't listen to the event manager
-- Create as specific event as you can. No need to track global deaths if per base works just as well
-- When performing any operation, check the events of all effected objects, and global events
-  
-
+Event Approach Rules: 
+- Each event should only ever be triggered in ONE place
+- When calling class events you should call the most specific one applicable.
+- We tigger events in the order of PlayableCard, Base, Global. 
+- When Listening, listen to the most specific one. No need to recieve global death info if per base works just as well
+- "On" suggests that it is triggered in the in-between state. E.g. remvoed from battlefield, but not in discard pile
+- "Before" suggests that the action specified has not happened yet, but other events (such as removing from hand) could have occured
+- "After" suggests that the action specified has been fully resolved up to this point. E.g. the card exists in the battlefield (However, there is nuance to this. See above for order on timing resolutions for multiple event types)
+ 
 Disclaimer:
 - When multiple effects are triggered by a single action, the rules say to let the active player decide the order.
   To avoid implementing a complex choosing system in an already complex UI, I instead let effects resolve in the 
@@ -37,6 +35,7 @@ Faction(s) with digital-only Mechanics:
 - Generate tokens ((Necomancer/Cultists)+Alchemists)
 - Add effects (power, onplay) to cards in hand (Enchanters+)
 - Steal card text
+- Retrigger onplay actions
 
 - Keyword: Animate
 - Cultists
@@ -44,9 +43,10 @@ Faction(s) with digital-only Mechanics:
 Card Ideas:
 - After a card is destroyed, put it in YOUR discard pile.
 - Transform a card into another random one.
-- Generate a random card
+- Generate a random card. Generate a random ___ card.
 - Choose a base. Generate a 1-power minion there
 - Give the minion's in your hand +1 power
+- Master Alchemist: When you transform a minion, it always be 5 or more power
 - 
 - 0 Power; Animate: gain +2 power
 - Play on a minion. Ongoing: This minion has +1 power. Animate: Gain control of this minion
