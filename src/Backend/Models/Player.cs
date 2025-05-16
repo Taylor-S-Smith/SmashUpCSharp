@@ -99,9 +99,16 @@ internal class Player : Identifiable
         Hand.AddRange(cardsToDraw);
     }
 
-    public void AddMinionPlay(int? maxPower=null)
+    public void AddMinionPlay(int? maxPower = null)
     {
         MinionPlayQueue.Enqueue(new(maxPower), maxPower ?? DEFAULT_MINION_PLAY_PRIORITY);
+    }
+    public void SetMinionPlays(int numMinionPlays=1)
+    {
+        for(int i = 0; i < numMinionPlays; i++)
+        {
+            MinionPlayQueue.Enqueue(new(null), DEFAULT_MINION_PLAY_PRIORITY);
+        }
     }
 
     /// <summary>

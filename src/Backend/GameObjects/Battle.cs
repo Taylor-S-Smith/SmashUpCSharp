@@ -126,19 +126,7 @@ internal class Battle
     /// </summary>
     private void StartTurn()
     {
-        _table.ActivePlayer.Player.AddMinionPlay();
-
-        ///FOR TESTING ONLY, REMOVE AFTER TESTING!!!
-        _table.ActivePlayer.Player.AddMinionPlay();
-        //_table.ActivePlayer.Player.AddMinionPlay();
-        //_table.ActivePlayer.Player.AddMinionPlay();
-        //_table.ActivePlayer.Player.AddMinionPlay();
-        //_table.ActivePlayer.Player.AddMinionPlay();
-        //_table.ActivePlayer.Player.AddMinionPlay();
-        //_table.ActivePlayer.Player.AddMinionPlay();
-        //_table.ActivePlayer.Player.AddMinionPlay();
-        //_table.ActivePlayer.Player.AddMinionPlay();
-        ///
+        _table.ActivePlayer.Player.SetMinionPlays();
 
         _table.ActivePlayer.Player.ActionPlays = 1;
         EventManager.TriggerStartOfTurn(this, _table.ActivePlayer);

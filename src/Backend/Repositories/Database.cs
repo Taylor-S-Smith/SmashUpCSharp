@@ -1089,7 +1089,7 @@ internal static class Database
             // Move Each
             foreach (var selection in result.SelectedCards)
             {
-                var chosenBase = battle.SelectBaseCard(battle.GetBases().Where(baseCard => baseCard != selection.Base).ToList(), fullSail, $"Select a base to move {selection.Card.Name} to.");
+                var chosenBase = battle.SelectBaseCard(battle.GetBases().Where(baseCard => baseCard != selection.Base).ToList(), selection.Card, $"Select a base to move {selection.Card.Name} to.");
                 battle.Move(selection.Card, chosenBase, fullSail);
             }
         };
@@ -1381,7 +1381,6 @@ internal static class Database
             PlayableCardType.Minion,
             "Zapbot",
             [
-                @"2        Zapbot         2",
                 @"           ___           ",
                 @"     |__| [__()          ",
                 @"       \ __|__           ",
@@ -1401,6 +1400,56 @@ internal static class Database
         };
 
         return zapbot;
+    }
+    public static PlayableCard Hoverbot()
+    {
+        PlayableCard hoverbot = new
+        (
+            Robots,
+            PlayableCardType.Minion,
+            "Hoverbot",
+            [
+                @"        __|--|__         ",
+                @"       /__    __\        ",
+                @"        / \  / \         ",
+                @"         / \/ \          ",
+                @" Reveal the top card of  ",
+                @"your deck. If minion, you",
+                @" may play it as an extra ",
+                @"  minion, or return it.  ",
+            ],
+            PlayLocation.Base,
+            3
+        );
+
+        hoverbot.OnPlay += (battle, baseSlot) =>
+        {
+            var cardToReveal = hoverbot.Controller.Draw();
+
+            Option playIt = new("Play It as Extra Minion");
+            Option returnIt = new("Return It");
+
+            List<Option> options = [];
+            if (cardToReveal.CardType == PlayableCardType.Minion)
+            {
+                options.Add(playIt);
+            }
+
+            options.Add(returnIt);
+
+            Guid chosenOption = battle.SelectOption(options, [cardToReveal], $"{hoverbot.Name} revealed {cardToReveal.Name}");
+
+            if (playIt.Id == chosenOption)
+            {
+                battle.PlayExtraCard(cardToReveal);
+            }
+            else if (returnIt.Id == chosenOption)
+            {
+                hoverbot.Controller.Deck.AddToTop(cardToReveal);
+            }
+        };
+
+        return hoverbot;
     }
 
 
@@ -1444,7 +1493,7 @@ internal static class Database
             {
                 options.Add(returnIt);
             }
-            Guid chosenOption = battle.SelectOption(options, [cardToReveal], $"Neophyte revealed {cardToReveal.Name}");
+            Guid chosenOption = battle.SelectOption(options, [cardToReveal], $"{neophyte.Name} revealed {cardToReveal.Name}");
 
             if (playIt.Id == chosenOption)
             {
@@ -2034,15 +2083,16 @@ internal static class Database
     //TEST
     public static readonly Dictionary<Faction, List<Func<PlayableCard>>> PlayableCardsByFactionDict = new()
     {
-        { Dinosaurs, [Zapbot, Zapbot, Zapbot, Zapbot, Zapbot, FirstMate, KingRex, FirstMate, KingRex, FirstMate, KingRex] }
+        { Dinosaurs, [Hoverbot, Hoverbot, Hoverbot, FullSail, FullSail, FullSail, FullSail, FullSail, FullSail, FirstMate, KingRex, FirstMate, KingRex] }
     };
 
     //REAL
     public static readonly Dictionary<Faction, List<Func<PlayableCard>>> _PlayableCardsByFactionDict = new()
     {
         { Dinosaurs, [WarRaptor, WarRaptor, WarRaptor, WarRaptor, ArmoredStego, ArmoredStego, ArmoredStego, Laseratops, Laseratops, KingRex, Augmentation, Augmentation, Howl, Howl, NaturalSelection, Rampage, SurvivalOfTheFittest, ToothClawAndGuns, Upgrade, WildlifePreserve] },
+        { Pirates, [FirstMate, FirstMate, FirstMate, FirstMate, SaucyWench, SaucyWench, SaucyWench, Buccaneer, Buccaneer, PirateKing, Broadside, Broadside, Cannon, Dinghy, Dinghy, FullSail, Powderkeg, SeaDogs, Shanghai, Swashbuckling] },
+        { Robots, [Zapbot, Zapbot, Zapbot, Zapbot, Hoverbot, Hoverbot, Hoverbot] },
         { Wizards, [Neophyte, Neophyte, Neophyte, Neophyte, Enchantress, Enchantress, Enchantress, Chronomage, Chronomage, Archmage, MassEnchantment, MysticStudies, MysticStudies, Portal, Sacrifice, Scry, Summon, Summon, TimeLoop, WindsOfChange] },
-        { Pirates, [FirstMate, FirstMate, FirstMate, FirstMate, SaucyWench, SaucyWench, SaucyWench, Buccaneer, Buccaneer, PirateKing, Broadside, Broadside, Cannon, Dinghy, Dinghy, FullSail, Powderkeg, SeaDogs] }
     };
 
     public static readonly Dictionary<Faction, List<Func<BaseCard>>> BaseCardsByFactionDict = new()
