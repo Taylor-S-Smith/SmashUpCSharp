@@ -1451,6 +1451,32 @@ internal static class Database
 
         return hoverbot;
     }
+    public static PlayableCard Warbot()
+    {
+        PlayableCard warbot = new
+        (
+            Robots,
+            PlayableCardType.Minion,
+            "Warbot",
+            [
+                @"4        Warbot         4",
+                @"       __________        ",
+                @"      | ________ |       ",
+                @"    /-||________||-\     ",
+                @"  _/_ |          | _\_   ",
+                @" |   ||__________||   |  ",
+                @"        |_|  |_|         ",
+                @"  Ongoing: This minion   ",
+                @"  cannot be destroyed.   ",
+            ],
+            PlayLocation.Base,
+            4
+        );
+
+        warbot.Protections.Add(new(EffectType.Destroy, warbot));
+
+        return warbot;
+    }
 
 
     // WIZARDS
@@ -2083,7 +2109,7 @@ internal static class Database
     //TEST
     public static readonly Dictionary<Faction, List<Func<PlayableCard>>> PlayableCardsByFactionDict = new()
     {
-        { Dinosaurs, [Hoverbot, Hoverbot, Hoverbot, FullSail, FullSail, FullSail, FullSail, FullSail, FullSail, FirstMate, KingRex, FirstMate, KingRex] }
+        { Dinosaurs, [Warbot, Warbot, Warbot, SaucyWench, SaucyWench, SaucyWench, SaucyWench] }
     };
 
     //REAL
@@ -2091,7 +2117,7 @@ internal static class Database
     {
         { Dinosaurs, [WarRaptor, WarRaptor, WarRaptor, WarRaptor, ArmoredStego, ArmoredStego, ArmoredStego, Laseratops, Laseratops, KingRex, Augmentation, Augmentation, Howl, Howl, NaturalSelection, Rampage, SurvivalOfTheFittest, ToothClawAndGuns, Upgrade, WildlifePreserve] },
         { Pirates, [FirstMate, FirstMate, FirstMate, FirstMate, SaucyWench, SaucyWench, SaucyWench, Buccaneer, Buccaneer, PirateKing, Broadside, Broadside, Cannon, Dinghy, Dinghy, FullSail, Powderkeg, SeaDogs, Shanghai, Swashbuckling] },
-        { Robots, [Zapbot, Zapbot, Zapbot, Zapbot, Hoverbot, Hoverbot, Hoverbot] },
+        { Robots, [Zapbot, Zapbot, Zapbot, Zapbot, Hoverbot, Hoverbot, Hoverbot, Warbot, Warbot] },
         { Wizards, [Neophyte, Neophyte, Neophyte, Neophyte, Enchantress, Enchantress, Enchantress, Chronomage, Chronomage, Archmage, MassEnchantment, MysticStudies, MysticStudies, Portal, Sacrifice, Scry, Summon, Summon, TimeLoop, WindsOfChange] },
     };
 
