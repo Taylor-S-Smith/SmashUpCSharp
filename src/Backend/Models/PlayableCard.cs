@@ -1,4 +1,5 @@
-﻿using SmashUp.Backend.GameObjects;
+﻿using System;
+using SmashUp.Backend.GameObjects;
 using SmashUp.Backend.Services;
 
 namespace SmashUp.Backend.Models;
@@ -66,7 +67,7 @@ internal class PlayableCard : Card
     /// </summary>
     public void TriggerOnPlay(Battle battle, BaseSlot? baseSlot=null) => OnPlay(battle, baseSlot);
     public event Action<Battle, BaseSlot?> OnPlay = delegate { };
-    
+
     /// <summary>
     /// Gets called immediatly after the card is added to the territory list
     /// </summary>
@@ -78,7 +79,9 @@ internal class PlayableCard : Card
     public void TriggerOnRemoveFromBase(Battle battle, BaseSlot baseSlot) => OnRemoveFromBase(battle, baseSlot);
     public event Action<Battle, BaseSlot> OnRemoveFromBase = delegate { };
     public void TriggerOnDiscard(GlobalEventManager eventManager) => OnDiscard(eventManager);
-    public event Action<GlobalEventManager> OnDiscard;
+    public event Action<GlobalEventManager> OnDiscard = delegate { };
+    public void TriggerAfterDestroyed(Battle battle, BaseSlot baseSlot) => AfterDestroyed(battle, baseSlot);
+    public event Action<Battle, BaseSlot> AfterDestroyed = delegate { };
     public void TriggerOnProtect(Battle battle) => OnProtect(battle);
     public event Action<Battle> OnProtect = delegate { };
     public void TriggerOnAttach(Battle battle, PlayableCard cardAttachedTo) => OnAttach(battle, cardAttachedTo);

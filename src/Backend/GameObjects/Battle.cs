@@ -126,7 +126,7 @@ internal class Battle
     /// </summary>
     private void StartTurn()
     {
-        _table.ActivePlayer.Player.SetMinionPlays();
+        _table.ActivePlayer.Player.SetMinionPlays(10);
 
         _table.ActivePlayer.Player.ActionPlays = 1;
         EventManager.TriggerStartOfTurn(this, _table.ActivePlayer);
@@ -455,9 +455,10 @@ internal class Battle
     {
         if (AttemptToAffect(cardToDestroy, EffectType.Destroy, affector.CardType, affector.Controller))
         {
-            var baseCard = RemoveCardFromBattleField(cardToDestroy);
+            var baseSlot = RemoveCardFromBattleField(cardToDestroy);
             Discard(cardToDestroy);
-            baseCard.TriggerAfterDestroyCard(cardToDestroy);
+            baseSlot.BaseCard.TriggerAfterDestroyCard(cardToDestroy);
+            cardToDestroy.TriggerAfterDestroyed(this, baseSlot);
         }
     }
     /// <summary>
@@ -524,11 +525,11 @@ internal class Battle
     /// </summary>
     /// <param name="AddFunction">Function that is called after removal, usually determines where the card ends up</param>
     /// <returns>Base the card was removed from</returns>
-    private BaseCard RemoveCardFromBattleField(PlayableCard cardToRemove)
+    private BaseSlot RemoveCardFromBattleField(PlayableCard cardToRemove)
     {
         foreach (BaseSlot slot in _table.GetBaseSlots())
         {
-            if (RemoveCardFromBase(cardToRemove, slot)) return slot.BaseCard;
+            if (RemoveCardFromBase(cardToRemove, slot)) return slot;
         }
 
         throw new Exception($"{cardToRemove.Name} with ID {cardToRemove.Id} is not on the battlefield, so can't be removed");

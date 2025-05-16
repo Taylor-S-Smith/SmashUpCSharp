@@ -844,7 +844,7 @@ internal static class Database
             SelectCardQuery query = new()
             {
                 CardType = PlayableCardType.Minion,
-                MaxPower = 2,
+                //MaxPower = 2,
                 BaseCard = baseSlot.BaseCard
             };
 
@@ -1476,6 +1476,43 @@ internal static class Database
         warbot.Protections.Add(new(EffectType.Destroy, warbot));
 
         return warbot;
+    }
+    public static PlayableCard Nukebot()
+    {
+        PlayableCard nukebot = new
+        (
+            Robots,
+            PlayableCardType.Minion,
+            "Nukebot",
+            [
+                @"           ___           ",
+                @"        <=|_=_|=>        ",
+                @"            |            ",
+                @"        /--[_]--\        ",
+                @"       /    |    \       ",
+                @" After this is destroyed,",
+                @"   destroy each other    ",
+                @"  player's minions here. ",
+            ],
+            PlayLocation.Base,
+            5
+        );
+
+        nukebot.AfterDestroyed += (battle, baseSlot) =>
+        {
+            //Since they are all destroyed at the same time, we need to query for the
+            //other minions before resolving the destruction of the chosen minion
+            SelectCardQuery minionsToDestroyQuery = new()
+            {
+                CardType = PlayableCardType.Minion,
+                BaseCard = baseSlot.BaseCard,
+                Controllers = battle.GetOtherPlayers(nukebot.Controller)
+            };
+            var cardsToDestroy = battle.GetFieldCards(minionsToDestroyQuery);
+            cardsToDestroy.ForEach(card => battle.Destroy(card, nukebot));
+        };
+
+        return nukebot;
     }
 
 
@@ -2109,7 +2146,7 @@ internal static class Database
     //TEST
     public static readonly Dictionary<Faction, List<Func<PlayableCard>>> PlayableCardsByFactionDict = new()
     {
-        { Dinosaurs, [Warbot, Warbot, Warbot, SaucyWench, SaucyWench, SaucyWench, SaucyWench] }
+        { Dinosaurs, [Warbot, Warbot, Warbot, Nukebot, Nukebot, Nukebot, Nukebot, Nukebot, SaucyWench, SaucyWench, SaucyWench, Buccaneer, Buccaneer, Buccaneer, Buccaneer] }
     };
 
     //REAL
