@@ -67,7 +67,8 @@ internal class Player : Identifiable
         List<PlayableCard> cardsToDraw = [];
         for(int i = 0; i < numToDraw; i++)
         {
-            cardsToDraw.Add(Draw());
+            var card = Draw();
+            if(card != null) cardsToDraw.Add(card);
         }
 
         return cardsToDraw;

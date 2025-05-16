@@ -469,7 +469,7 @@ internal class Battle
     /// </summary>
     public void Discard(PlayableCard cardToPlay)
     {
-        cardToPlay.TriggerOnDiscard(this);
+        cardToPlay.TriggerAfterRemoveFromBattlefield(this);
         cardToPlay.Owner.DiscardPile.Add(cardToPlay);
     }
     public void Move(PlayableCard cardToMove, BaseCard newBase, PlayableCard affector)

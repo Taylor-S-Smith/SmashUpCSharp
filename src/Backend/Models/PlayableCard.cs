@@ -92,8 +92,8 @@ internal class PlayableCard : Card
     /// <summary>
     /// After card is removed from battlefield, but before it exists in the discard pile
     /// </summary>
-    public void TriggerOnDiscard(Battle battle) => OnDiscard(battle);
-    public event Action<Battle> OnDiscard = delegate { };
+    public void TriggerAfterRemoveFromBattlefield(Battle battle) => AfterRemoveFromBattlefield(battle);
+    public event Action<Battle> AfterRemoveFromBattlefield = delegate { };
     public void TriggerAfterDestroyed(Battle battle, BaseSlot baseSlot) => AfterDestroyed(battle, baseSlot);
     public event Action<Battle, BaseSlot> AfterDestroyed = delegate { };
     public void TriggerOnProtect(Battle battle) => OnProtect(battle);
@@ -176,7 +176,7 @@ internal class PlayableCard : Card
         CurrentPower = power;
         PlayLocation = playLocation;
 
-        OnDiscard = (eventManager) =>
+        AfterRemoveFromBattlefield = (eventManager) =>
         {
             CurrentPower = PrintedPower;
             ResetController();

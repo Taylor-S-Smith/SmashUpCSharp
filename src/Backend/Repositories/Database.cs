@@ -245,7 +245,7 @@ internal static class Database
             battle.EventManager.EndOfTurn += endTurnHandler;
         };
 
-        armoredStego.OnDiscard += (battle) =>
+        armoredStego.AfterRemoveFromBattlefield += (battle) =>
         {
             battle.EventManager.StartOfTurn -= turnStartHandler;
             battle.EventManager.EndOfTurn -= endTurnHandler;
@@ -1535,7 +1535,10 @@ internal static class Database
             ],
             PlayLocation.Base,
             1
-        );
+        )
+        {
+            Tags = [Tag.Microbot]
+        };
 
         void addCardHandler(Battle battle, PlayableCard card)
         {
@@ -1581,7 +1584,7 @@ internal static class Database
             battle.EventManager.AfterRemoveCard += removeCardHandler;
         };
 
-        microbotAlpha.OnDiscard += (battle) =>
+        microbotAlpha.AfterRemoveFromBattlefield += (battle) =>
         {
             // Get all controller's minions
             SelectCardQuery query = new()
@@ -1603,7 +1606,56 @@ internal static class Database
 
         return microbotAlpha;
     }
+    public static PlayableCard MicrobotArchive()
+    {
+        PlayableCard microbotArchive = new
+        (
+            Robots,
+            PlayableCardType.Minion,
+            "Microbot Archive",
+            [
+                @"1   Microbot Archive    1",
+                @"            [=}          ",
+                @"         ___|_           ",
+                @"        /   _ \--\o      ",
+                @"        |  |O||          ",
+                @"        |_____|          ",
+                @"Ongoing: After a Microbot",
+                @"you control is destroyed,",
+                @"including this, draw card",
+            ],
+            PlayLocation.Base,
+            1
+        )
+        {
+            Tags = [Tag.Microbot]
+        };
 
+        bool IsMicrobot(PlayableCard card)
+        {
+            return card.Tags.Contains(Tag.Microbot) || card.Tags.Contains(Tag.TempMicrobot);
+        }
+
+        void removeCardHandler(Battle battle, PlayableCard card)
+        {
+            if (card.Controller == microbotArchive.Controller && IsMicrobot(card))
+            {
+                card.Controller.Hand.Add(card.Controller.Draw());
+            }
+        }
+
+        microbotArchive.AfterEnterBattleField += (battle) =>
+        {
+            battle.EventManager.AfterRemoveCard += removeCardHandler;
+        };
+
+        microbotArchive.AfterRemoveFromBattlefield += (battle) =>
+        {
+            battle.EventManager.AfterRemoveCard -= removeCardHandler;
+        };
+
+        return microbotArchive;
+    }
 
     // WIZARDS
     public static PlayableCard Neophyte()
@@ -1761,7 +1813,7 @@ internal static class Database
             battle.EventManager.StartOfTurn += turnStartHandler;
         };
 
-        archmage.OnDiscard += (battle) =>
+        archmage.AfterRemoveFromBattlefield += (battle) =>
         {
             battle.EventManager.StartOfTurn -= turnStartHandler;
         };
@@ -2235,7 +2287,7 @@ internal static class Database
     //TEST
     public static readonly Dictionary<Faction, List<Func<PlayableCard>>> PlayableCardsByFactionDict = new()
     {
-        { Dinosaurs, [SaucyWench, SaucyWench, SaucyWench, MicrobotAlpha, MicrobotAlpha, MicrobotAlpha, FirstMate, FirstMate, FirstMate] }
+        { Dinosaurs, [SaucyWench, SaucyWench, SaucyWench, MicrobotAlpha, MicrobotAlpha, MicrobotAlpha, MicrobotArchive, MicrobotArchive, MicrobotArchive, FirstMate, FirstMate, FirstMate] }
     };
 
     //REAL
@@ -2243,7 +2295,7 @@ internal static class Database
     {
         { Dinosaurs, [WarRaptor, WarRaptor, WarRaptor, WarRaptor, ArmoredStego, ArmoredStego, ArmoredStego, Laseratops, Laseratops, KingRex, Augmentation, Augmentation, Howl, Howl, NaturalSelection, Rampage, SurvivalOfTheFittest, ToothClawAndGuns, Upgrade, WildlifePreserve] },
         { Pirates, [FirstMate, FirstMate, FirstMate, FirstMate, SaucyWench, SaucyWench, SaucyWench, Buccaneer, Buccaneer, PirateKing, Broadside, Broadside, Cannon, Dinghy, Dinghy, FullSail, Powderkeg, SeaDogs, Shanghai, Swashbuckling] },
-        { Robots, [Zapbot, Zapbot, Zapbot, Zapbot, Hoverbot, Hoverbot, Hoverbot, Warbot, Warbot, MicrobotAlpha] },
+        { Robots, [Zapbot, Zapbot, Zapbot, Zapbot, Hoverbot, Hoverbot, Hoverbot, Warbot, Warbot, MicrobotAlpha, MicrobotArchive] },
         { Wizards, [Neophyte, Neophyte, Neophyte, Neophyte, Enchantress, Enchantress, Enchantress, Chronomage, Chronomage, Archmage, MassEnchantment, MysticStudies, MysticStudies, Portal, Sacrifice, Scry, Summon, Summon, TimeLoop, WindsOfChange] },
     };
 
