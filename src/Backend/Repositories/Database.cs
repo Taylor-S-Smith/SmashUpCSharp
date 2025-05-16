@@ -291,7 +291,7 @@ internal static class Database
         {
             if (baseSlot == null) throw new Exception("No base passed in for Laseratops");
 
-            SelectFieldCardQuery query = new()
+            SelectCardQuery query = new()
             {
                 CardType = PlayableCardType.Minion,
                 MaxPower = 2,
@@ -346,7 +346,7 @@ internal static class Database
 
         augmentation.OnPlay += (battle, baseSlot) =>
         {
-            SelectFieldCardQuery query = new()
+            SelectCardQuery query = new()
             {
                 CardType = PlayableCardType.Minion
             };
@@ -419,7 +419,7 @@ internal static class Database
 
         naturalSelection.OnPlay += (battle, baseSlot) =>
         {
-            SelectFieldCardQuery query1 = new()
+            SelectCardQuery query1 = new()
             {
                 CardType = PlayableCardType.Minion,
                 Controllers = [naturalSelection.Controller]
@@ -430,7 +430,7 @@ internal static class Database
 
             if (ownMinion != null)
             {
-                SelectFieldCardQuery query2 = new()
+                SelectCardQuery query2 = new()
                 {
                     CardType = PlayableCardType.Minion,
                     MaxPower = ownMinion.CurrentPower - 1,
@@ -466,7 +466,7 @@ internal static class Database
 
         rampage.OnPlay += (battle, baseSlot) =>
         {
-            SelectFieldCardQuery query1 = new()
+            SelectCardQuery query1 = new()
             {
                 CardType = PlayableCardType.Minion,
                 Controllers = [rampage.Controller]
@@ -841,7 +841,7 @@ internal static class Database
         saucyWench.OnPlay += (battle, baseSlot) =>
         {
             if (baseSlot == null) throw new Exception("No base passed in for Saucy Wench");
-            SelectFieldCardQuery query = new()
+            SelectCardQuery query = new()
             {
                 CardType = PlayableCardType.Minion,
                 MaxPower = 2,
@@ -1119,7 +1119,7 @@ internal static class Database
 
         powderkeg.OnPlay += (battle, baseSlot) =>
         {
-            SelectFieldCardQuery ownMinionQuery = new()
+            SelectCardQuery ownMinionQuery = new()
             {
                 CardType = PlayableCardType.Minion,
                 Controllers = [powderkeg.Controller]
@@ -1132,7 +1132,7 @@ internal static class Database
             {
                 //Since they are all destroyed at the same time, we need to query for the
                 //other minions before resolving the destruction of the chosen minion
-                SelectFieldCardQuery minionsToDestroyQuery = new()
+                SelectCardQuery minionsToDestroyQuery = new()
                 {
                     CardType = PlayableCardType.Minion,
                     MaxPower = ownMinion.CurrentPower,
@@ -1193,7 +1193,7 @@ internal static class Database
 
 
             // Move all minions of chosen faction from base 1 to base 2
-            SelectFieldCardQuery query = new()
+            SelectCardQuery query = new()
             {
                 BaseCard = base1,
                 Controllers = battle.GetOtherPlayers(seaDogs.Controller),
@@ -1306,7 +1306,7 @@ internal static class Database
                 bool moveMinion = battle.SelectBool([], $"{player.Name}, would you like to move one of your minions from {theGreyOpal.Name}?");
                 if (moveMinion)
                 {
-                    SelectFieldCardQuery query = new()
+                    SelectCardQuery query = new()
                     {
                         Controllers = [player],
                         BaseCard = theGreyOpal
@@ -1355,7 +1355,7 @@ internal static class Database
                 bool moveMinion = battle.SelectBool([], $"{player.Name}, would you like to move one of your minions to {slot.BaseCard.Name}?");
                 if (moveMinion)
                 {
-                    SelectFieldCardQuery query = new()
+                    SelectCardQuery query = new()
                     {
                         Controllers = [player]
                     };
@@ -1371,6 +1371,38 @@ internal static class Database
 
         return tortuga;
     }
+
+    // ROBOTS
+    public static PlayableCard Zapbot()
+    {
+        PlayableCard zapbot = new
+        (
+            Robots,
+            PlayableCardType.Minion,
+            "Zapbot",
+            [
+                @"2        Zapbot         2",
+                @"           ___           ",
+                @"     |__| [__()          ",
+                @"       \ __|__           ",
+                @"        |     |--[}==    ",
+                @"        |_____|          ",
+                @"        O     O          ",
+                @"  You may play an extra  ",
+                @"minion of power 2 or less",
+            ],
+            PlayLocation.Base,
+            2
+        );
+
+        zapbot.OnPlay += (battle, baseSlot) =>
+        {
+            zapbot.Controller.AddMinionPlay(2);
+        };
+
+        return zapbot;
+    }
+
 
     // WIZARDS
     public static PlayableCard Neophyte()
@@ -1717,7 +1749,7 @@ internal static class Database
 
         sacrifice.OnPlay += (battle, baseSlot) =>
         {
-            SelectFieldCardQuery query = new()
+            SelectCardQuery query = new()
             {
                 CardType = PlayableCardType.Minion,
                 Controllers = [sacrifice.Controller]
@@ -1797,7 +1829,7 @@ internal static class Database
 
         summon.OnPlay += (battle, baseslot) =>
         {
-            summon.Controller.MinionPlays += 1;
+            summon.Controller.AddMinionPlay();
         };
 
         return summon;
@@ -1969,7 +2001,7 @@ internal static class Database
     // Card Effects
     private static void GiveYourMinionsPowerUntilEndOfTurn(Battle battle, PlayableCard affector)
     {
-        SelectFieldCardQuery query = new()
+        SelectCardQuery query = new()
         {
             Controllers = [affector.Controller]
         };
@@ -2002,9 +2034,7 @@ internal static class Database
     //TEST
     public static readonly Dictionary<Faction, List<Func<PlayableCard>>> PlayableCardsByFactionDict = new()
     {
-        { Dinosaurs, [FirstMate, Laseratops, FirstMate, Laseratops, FirstMate, Laseratops, FirstMate, Laseratops] },
-        { Wizards, [FirstMate, Laseratops, FirstMate, Laseratops, FirstMate, Laseratops, FirstMate, Laseratops] },
-        { Pirates, [FirstMate, Laseratops, FirstMate, Laseratops, FirstMate, Laseratops, FirstMate, Laseratops] }
+        { Dinosaurs, [Zapbot, Zapbot, Zapbot, Zapbot, Zapbot, FirstMate, KingRex, FirstMate, KingRex, FirstMate, KingRex] }
     };
 
     //REAL

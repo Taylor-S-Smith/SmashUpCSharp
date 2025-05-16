@@ -126,7 +126,20 @@ internal class Battle
     /// </summary>
     private void StartTurn()
     {
-        _table.ActivePlayer.Player.MinionPlays = 10;
+        _table.ActivePlayer.Player.AddMinionPlay();
+
+        ///FOR TESTING ONLY, REMOVE AFTER TESTING!!!
+        _table.ActivePlayer.Player.AddMinionPlay();
+        //_table.ActivePlayer.Player.AddMinionPlay();
+        //_table.ActivePlayer.Player.AddMinionPlay();
+        //_table.ActivePlayer.Player.AddMinionPlay();
+        //_table.ActivePlayer.Player.AddMinionPlay();
+        //_table.ActivePlayer.Player.AddMinionPlay();
+        //_table.ActivePlayer.Player.AddMinionPlay();
+        //_table.ActivePlayer.Player.AddMinionPlay();
+        //_table.ActivePlayer.Player.AddMinionPlay();
+        ///
+
         _table.ActivePlayer.Player.ActionPlays = 1;
         EventManager.TriggerStartOfTurn(this, _table.ActivePlayer);
     }
@@ -378,7 +391,7 @@ internal class Battle
     {
         if (cardToPlay.CardType == PlayableCardType.Minion)
         {
-            if (player.MinionPlays == 0) return Result.Fail("You don't have any more minion plays");
+            return player.HasMinionPlay(cardToPlay.CurrentPower ?? 0);
         }
         else if (cardToPlay.CardType == PlayableCardType.Action)
         {
@@ -390,7 +403,8 @@ internal class Battle
     {
         if (cardToPlay.CardType == PlayableCardType.Minion)
         {
-            player.MinionPlays--;
+            var result = player.UseMinionPlay(cardToPlay.CurrentPower ?? 0);
+            if (!result) throw new Exception($"Attempted to remove minion play for power {cardToPlay.CurrentPower}, but no valid minion play exists");
         }
         else if (cardToPlay.CardType == PlayableCardType.Action)
         {
@@ -427,7 +441,7 @@ internal class Battle
     }
     private void PlayCardToMinion(PlayableCard cardToPlay)
     {
-        SelectFieldCardQuery query = new()
+        SelectCardQuery query = new()
         {
             CardType = PlayableCardType.Minion,
         };
@@ -632,7 +646,7 @@ internal class Battle
 
 
     // INTERACTING WITH UI
-    public class SelectFieldCardQuery
+    public class SelectCardQuery
     {
         public PlayableCardType? CardType { get; set; }
         public Faction? Faction { get; set; }
@@ -642,7 +656,7 @@ internal class Battle
         public List<PlayableCard> CardsToExclude { get; set; } = [];
     }
     public record SelectFieldCardResult(PlayableCard? SelectedCard, BaseCard? SelectedCardBase, ResultType Type);
-    public SelectFieldCardResult SelectFieldCard(Displayable displayable, string displaytext, SelectFieldCardQuery query, bool cancellable = false)
+    public SelectFieldCardResult SelectFieldCard(Displayable displayable, string displaytext, SelectCardQuery query, bool cancellable = false)
     {
         Func<PlayableCard, bool> cardPred = GetPred(query);
 
@@ -660,7 +674,7 @@ internal class Battle
         );
     }
 
-    private static Func<PlayableCard, bool> GetPred(SelectFieldCardQuery query)
+    private static Func<PlayableCard, bool> GetPred(SelectCardQuery query)
     {
         var cardPred = PredicateBuilder.New((PlayableCard card) => !query.CardsToExclude.Contains(card));
         if (query.CardType != null) cardPred.And((PlayableCard card) => card.CardType == query.CardType);
@@ -670,7 +684,7 @@ internal class Battle
         return cardPred;
     }
 
-    public class SelectFieldCardsQuery : SelectFieldCardQuery
+    public class SelectFieldCardsQuery : SelectCardQuery
     {
         public int Num { get; set; }
     }
@@ -728,7 +742,7 @@ internal class Battle
     }
 
     //GET
-    public List<PlayableCard> GetFieldCards(SelectFieldCardQuery query)
+    public List<PlayableCard> GetFieldCards(SelectCardQuery query)
     {
         var pred = GetPred(query);
         return GetFieldCards(pred, query.BaseCard);
@@ -782,6 +796,11 @@ internal class Battle
     private BaseSlot GetBaseSlotById(Guid chosenBaseId)
     {
         return _table.GetBaseSlots().Where(x => x.BaseCard.Id == chosenBaseId).FirstOrDefault() ?? throw new Exception($"No active base exists with ID {chosenBaseId}");
+    }
+    public List<PlayableCard> GetHandCards(Player player, SelectCardQuery query)
+    {
+        var pred = GetPred(query);
+        return player.Hand.Where(pred).ToList();
     }
 
     /// <summary>

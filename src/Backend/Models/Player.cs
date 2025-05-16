@@ -1,4 +1,6 @@
 ﻿using System.Collections.Generic;
+using FluentResults;
+using Microsoft.Win32;
 using SmashUp.Backend.GameObjects;
 
 namespace SmashUp.Backend.Models;
@@ -15,11 +17,18 @@ internal class Player : Identifiable
 {
     public string Name { get; }
     public int VictoryPoints { get; private set; }
-    public int MinionPlays { get; set; }
-    public int ActionPlays { get; set; }
     public List<PlayableCard> Hand { get; set; } = [];
     public Deck<PlayableCard> Deck { get; }
     public List<PlayableCard> DiscardPile { get; private set; } = [];
+
+
+    // Elements are placed in the queue with priority equal to power, or 999 if there is no power constraint
+    private const int DEFAULT_MINION_PLAY_PRIORITY = 999;
+    public record MinionPlay(int? MaxPower);
+    public PriorityQueue<MinionPlay, int> MinionPlayQueue { get; set; } = new();
+    public int MinionPlays { get => MinionPlayQueue.Count; }
+    public int ActionPlays { get; set; }
+
 
     /// <param name="name"></param>
     public Player(string name, List<PlayableCard> cards)
@@ -88,5 +97,69 @@ internal class Player : Identifiable
         var cardsToDraw = Draw(Hand.Count);
         Recard();
         Hand.AddRange(cardsToDraw);
+    }
+
+    public void AddMinionPlay(int? maxPower=null)
+    {
+        MinionPlayQueue.Enqueue(new(maxPower), maxPower ?? DEFAULT_MINION_PLAY_PRIORITY);
+    }
+
+    /// <summary>
+    /// Removes the most retrictive banked play that applies.
+    /// </summary>
+    /// <param name="minionPower">The power of the minion to play</param>
+    /// <returns>True if a valid play was removed, false if no valid play exists.</returns>
+    public bool UseMinionPlay(int minionPower)
+    {
+        return GetValidMinionPlay(minionPower).IsSuccess;
+    }
+    public Result HasMinionPlay(int minionPower)
+    {
+        var result = GetValidMinionPlay(minionPower);
+
+        if(result.IsSuccess)
+        {
+            MinionPlayQueue.Enqueue(result.Value, result.Value.MaxPower ?? DEFAULT_MINION_PLAY_PRIORITY);
+        }
+        
+        return result.ToResult();
+    }
+    private Result<MinionPlay> GetValidMinionPlay(int minionPower)
+    {
+        MinionPlay? validMinionPlay = null;
+        List <MinionPlay> minionPlays = [];
+        while (MinionPlayQueue.Count > 0)
+        {
+            MinionPlay minionPlay = MinionPlayQueue.Dequeue();
+            if (minionPlay.MaxPower == null || minionPlay.MaxPower >= minionPower)
+            {
+                validMinionPlay = minionPlay;
+                break;
+            }
+
+            minionPlays.Add(minionPlay);
+        }
+
+
+        Result<MinionPlay> result;
+        if(validMinionPlay == null)
+        {
+            while (MinionPlayQueue.Count > 0)  minionPlays.Add(MinionPlayQueue.Dequeue());
+            var leastRestrictivePlay = minionPlays.LastOrDefault();
+
+            string errorMsg;
+            if (leastRestrictivePlay == null) errorMsg = "You don't have any more minion plays";
+            else errorMsg = $"You only have plays available for minions of power {leastRestrictivePlay.MaxPower} or less";
+            result = Result.Fail(errorMsg);
+        } 
+        else
+        {
+            result = Result.Ok(validMinionPlay);
+        }
+
+        MinionPlayQueue.EnqueueRange(minionPlays.Select(x => (x, x.MaxPower ?? DEFAULT_MINION_PLAY_PRIORITY)));
+        return result;
+
+
     }
 }
