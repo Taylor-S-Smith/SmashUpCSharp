@@ -1885,6 +1885,49 @@ internal static class Database
 
         return microbotReclaimer;
     }
+    public static PlayableCard TechCenter()
+    {
+        PlayableCard techCenter = new
+        (
+            Robots,
+            PlayableCardType.Action,
+            "Tech Center",
+            [
+                @"A      Tech Center      A",
+                @"          __|__          ",
+                @"        _|     |_        ",
+                @"    ]--/_       _\--[    ",
+                @"       _|__ _ __|_       ",
+                @"      / |__| |__| \      ",
+                @"     Choose a base.      ",
+                @"  Draw a card for each   ",
+                @" of your minions there.  ",
+            ],
+            PlayLocation.Discard
+        );
+
+        techCenter.OnPlay += (battle, baseslot) =>
+        {
+            List<BaseCard> validBases = battle.GetBaseSlots()
+                                              .Where(x => x.Cards.Any(card => card.Controller == techCenter.Controller))
+                                              .Select(slot => slot.BaseCard).ToList();
+
+            if (validBases.Count < 1) return;
+                
+            BaseCard chosenBase = battle.SelectBaseCard(validBases, techCenter, "Choose a base. You will draw cards for each of your minions there.");
+
+            SelectFieldCardsQuery query = new()
+            {
+                BaseCard = chosenBase,
+                CardType = PlayableCardType.Minion,
+                Controllers = [techCenter.Controller]
+            };
+            int numMinions = battle.GetFieldCards(query).Count;
+            techCenter.Controller.DrawToHand(numMinions);
+        };
+
+        return techCenter;
+    }
 
 
     // WIZARDS
@@ -2513,7 +2556,7 @@ internal static class Database
     public static readonly Dictionary<Faction, List<Func<PlayableCard>>> PlayableCardsByFactionDict = new()
     {
         //{ Dinosaurs, [MicrobotAlpha, MicrobotArchive, MicrobotFixer, SaucyWench, MicrobotAlpha, MicrobotArchive, MicrobotFixer, SaucyWench, MicrobotAlpha, MicrobotArchive, MicrobotFixer, SaucyWench] },
-        { Dinosaurs, [MicrobotGuard, MicrobotGuard, MicrobotGuard, MicrobotGuard, Warbot, Warbot, Warbot, MicrobotReclaimer, MicrobotReclaimer] }
+        { Dinosaurs, [TechCenter, TechCenter, TechCenter, TechCenter, TechCenter, Zapbot, Zapbot, Zapbot, Zapbot, Zapbot, Zapbot, Zapbot, Zapbot] }
     };
 
     //REAL
