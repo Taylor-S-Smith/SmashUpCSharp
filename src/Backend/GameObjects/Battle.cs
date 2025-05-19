@@ -119,7 +119,7 @@ internal class Battle
     }
     private void DrawInitialHand(Player player)
     {
-        player.Hand = player.Draw(5);
+        player.DrawToHand(5);
 
         //Mulligan
         if (!player.Hand.Any(x => x.CardType == PlayableCardType.Minion))
@@ -155,7 +155,7 @@ internal class Battle
     /// </summary>
     private void StartTurn()
     {
-        _table.ActivePlayer.Player.SetMinionPlays(1);
+        _table.ActivePlayer.Player.SetMinionPlays(10);
 
         _table.ActivePlayer.Player.ActionPlays = 1;
         EventManager.TriggerStartOfTurn(this, _table.ActivePlayer);
@@ -334,9 +334,9 @@ internal class Battle
     /// </summary>
     private void Draw2Cards()
     {
-        var cardsDrawn = _table.ActivePlayer.Player.Draw(2);
-        _table.ActivePlayer.Player.Hand.AddRange(cardsDrawn);
-        _userInput.ViewCards(cardsDrawn.ConvertAll(x => (Card)x), "You drew the following:", "CONTINUE");
+        var cardsDrawn = _table.ActivePlayer.Player.DrawToHand(2);
+        if (cardsDrawn.Count > 0) _userInput.ViewCards(cardsDrawn.ConvertAll(x => (Card)x), "You drew the following:", "CONTINUE");
+        else _userInput.ViewCards(cardsDrawn.ConvertAll(x => (Card)x), "You have no cards in your deck or discard pile to draw", "CONTINUE");
 
         int numCards = _table.ActivePlayer.Player.Hand.Count;
         if (numCards > 10)

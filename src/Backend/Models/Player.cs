@@ -1,7 +1,5 @@
 ﻿using System.Collections.Generic;
 using FluentResults;
-using Microsoft.Win32;
-using SmashUp.Backend.GameObjects;
 
 namespace SmashUp.Backend.Models;
 
@@ -17,7 +15,10 @@ internal class Player : Identifiable
 {
     public string Name { get; }
     public int VictoryPoints { get; private set; }
-    public List<PlayableCard> Hand { get; set; } = [];
+
+    private readonly List<PlayableCard> _hand = [];
+    public IReadOnlyList<PlayableCard> Hand => _hand;
+
     public Deck<PlayableCard> Deck { get; }
     public List<PlayableCard> DiscardPile { get; private set; } = [];
 
@@ -46,11 +47,11 @@ internal class Player : Identifiable
 
     public void Discard(PlayableCard cardToDiscard)
     {
-        if (Hand.Remove(cardToDiscard) != true) throw new Exception($"{Name}'s hand doesn't contain {cardToDiscard.ToString()}");
+        if (_hand.Remove(cardToDiscard) != true) throw new Exception($"{Name}'s hand doesn't contain {cardToDiscard.ToString()}");
         DiscardPile.Add(cardToDiscard);
     }
 
-    public PlayableCard Draw()
+    public PlayableCard? Draw()
     {
         var cardToDraw = Deck.Draw();
         if (cardToDraw == null)
@@ -58,7 +59,6 @@ internal class Player : Identifiable
             Deck.Shuffle(DiscardPile);
             DiscardPile = [];
             cardToDraw = Deck.Draw();
-            if (cardToDraw == null) throw new Exception($"Failed to draw card, there are no cards in {Name}'s deck or dicard pile");
         }
         return cardToDraw;
     }
@@ -73,6 +73,16 @@ internal class Player : Identifiable
 
         return cardsToDraw;
     }
+    public List<PlayableCard> DrawToHand(int numToDraw = 1)
+    {
+        var cardsToDraw = Draw(numToDraw);
+        _hand.AddRange(cardsToDraw);
+        return cardsToDraw;
+    }
+    public void AddToHand(PlayableCard card)
+    {
+        _hand.Add(card);
+    }
 
 
     /// <summary>
@@ -80,14 +90,14 @@ internal class Player : Identifiable
     /// </summary>
     public void Recard()
     {
-        Deck.AddToBottom(Hand);
+        Deck.AddToBottom(_hand);
         Deck.Shuffle();
-        Hand.Clear();
+        _hand.Clear();
     }
 
     public void RemoveFromHand(PlayableCard cardToPlay)
     {
-        Hand.Remove(cardToPlay);
+        _hand.Remove(cardToPlay);
     }
 
     /// <summary>
@@ -97,7 +107,7 @@ internal class Player : Identifiable
     {
         var cardsToDraw = Draw(Hand.Count);
         Recard();
-        Hand.AddRange(cardsToDraw);
+        _hand.AddRange(cardsToDraw);
     }
 
     public void AddMinionPlay(int? maxPower = null)

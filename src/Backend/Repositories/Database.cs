@@ -872,7 +872,7 @@ internal static class Database
             SelectCardQuery query = new()
             {
                 CardType = PlayableCardType.Minion,
-                //MaxPower = 2,
+                MaxPower = 2,
                 BaseCard = baseSlot.BaseCard
             };
 
@@ -1460,6 +1460,8 @@ internal static class Database
         {
             var cardToReveal = hoverbot.Controller.Draw();
 
+            if (cardToReveal == null) return;
+
             Option playIt = new("Play It as Extra Minion");
             Option returnIt = new("Return It");
 
@@ -1666,8 +1668,7 @@ internal static class Database
 
         void OnDestroyCardHandler(Battle battle, PlayableCard card)
         {
-            var drawnCards = microbotArchive.Controller.Draw(numCardsToDraw);
-            microbotArchive.Controller.Hand.AddRange(drawnCards);
+            microbotArchive.Controller.DrawToHand(numCardsToDraw);
             numCardsToDraw = 0;
         }
 
@@ -1786,6 +1787,60 @@ internal static class Database
 
         return microbotFixer;
     }
+    public static PlayableCard MicrobotGuard()
+    {
+        PlayableCard microbotGuard = new
+        (
+            Robots,
+            PlayableCardType.Minion,
+            "Microbot Guard",
+            [
+                @"1     Microbot Guard    1",
+                @"           ___           ",
+                @"         /\ _ /\         ",
+                @"        |--|O|--|        ",
+                @"         \ | | /         ",
+                @"Destroy a minion on this ",
+                @"base with power less than",
+                @"  the number of minions  ",
+                @"      you have here.     ",
+            ],
+            PlayLocation.Base,
+            1
+        );
+
+        microbotGuard.OnPlay += (battle, baseSlot) =>
+        {
+            if (baseSlot == null) throw new Exception($"No base passed in for {microbotGuard.Name}");
+            SelectCardQuery query1 = new()
+            {
+                CardType = PlayableCardType.Minion,
+                BaseCard = baseSlot.BaseCard,
+                Controllers = [microbotGuard.Controller]
+            };
+            int minionCount = battle.GetFieldCards(query1).Count;
+
+
+            SelectCardQuery query2 = new()
+            {
+                CardType = PlayableCardType.Minion,
+                MaxPower = minionCount - 1,
+                BaseCard = baseSlot.BaseCard
+            };
+            bool validTargetExist = battle.GetFieldCards(query2).Count > 0;
+
+            if (validTargetExist)
+            {
+                PlayableCard? cardToDestroy = battle.SelectFieldCard(microbotGuard, $"Select a card for {microbotGuard.Name} to destroy", query2)?.SelectedCard;
+
+                if (cardToDestroy != null) battle.Destroy(cardToDestroy, cardToDestroy);
+            }
+        };
+
+        return microbotGuard;
+    }
+
+
 
     // WIZARDS
     public static PlayableCard Neophyte()
@@ -1812,6 +1867,7 @@ internal static class Database
         neophyte.OnPlay += (battle, baseSlot) =>
         {
             var cardToReveal = neophyte.Controller.Draw();
+            if (cardToReveal == null) return;
 
             Option playIt = new("Play It as Extra Action");
             Option drawIt = new("Draw It");
@@ -1838,7 +1894,7 @@ internal static class Database
                 // When a card that others can see goes to the hand, deck or discard pile,
                 // it goes to the one belonging to the card’s owner.
                 cardToReveal.ResetController();
-                cardToReveal.Owner.Hand.Add(cardToReveal);
+                cardToReveal.Owner.AddToHand(cardToReveal);
             }
             else if (returnIt.Id == chosenOption)
             {
@@ -1869,11 +1925,7 @@ internal static class Database
             2
         );
 
-        enchantress.OnPlay += (battle, baseslot) =>
-        {
-            var drawnCard = enchantress.Controller.Draw();
-            enchantress.Controller.Hand.Add(drawnCard);
-        };
+        enchantress.OnPlay += (battle, baseslot) => enchantress.Controller.DrawToHand();
 
         return enchantress;
     }
@@ -1992,8 +2044,11 @@ internal static class Database
                 if(player != massEnchantment.Controller)
                 {
                     var card = player.Draw();
-                    revealedCards.Add(card);
-                    cardNames.Add($"{player.Name}'s {card.Name}");
+                    if (card != null)
+                    {
+                        revealedCards.Add(card);
+                        cardNames.Add($"{player.Name}'s {card.Name}");
+                    }
                 }
             }
             string displayText = $"You revealed {string.Join(", ", cardNames)}";
@@ -2044,8 +2099,7 @@ internal static class Database
 
         mysticStudies.OnPlay += (battle, baseslot) =>
         {
-            var drawnCards = mysticStudies.Controller.Draw(2);
-            mysticStudies.Controller.Hand.AddRange(drawnCards);
+            mysticStudies.Controller.DrawToHand(2);
         };
 
         return mysticStudies;
@@ -2084,7 +2138,7 @@ internal static class Database
                     // When a card that others can see goes to the hand, deck or discard pile,
                     // it goes to the one belonging to the card’s owner.
                     card.ResetController();
-                    card.Owner.Hand.Add(card);
+                    card.Owner.AddToHand(card);
                     revealedCards.Remove(card);
                 }
 
@@ -2140,8 +2194,7 @@ internal static class Database
             PlayableCard? cardToDestroy = battle.SelectFieldCard(sacrifice, "Select a card to sacrifice", query)?.SelectedCard;
             if (cardToDestroy != null)
             {
-                List<PlayableCard> drawnCards = sacrifice.Controller.Draw(cardToDestroy.CurrentPower ?? 0);
-                sacrifice.Controller.Hand.AddRange(drawnCards);
+                sacrifice.Controller.DrawToHand(cardToDestroy.CurrentPower ?? 0);
                 battle.Destroy(cardToDestroy, sacrifice);
             }
         };
@@ -2178,7 +2231,7 @@ internal static class Database
             {
                 PlayableCard selectedAction = battle.Select(deckCards, displayText, card => card.CardType == PlayableCardType.Action);
                 if (!scry.Controller.Deck.Draw(selectedAction)) throw new Exception($"{selectedAction.Name} with ID {selectedAction.Id} doesn't exist in {scry.Controller.Name}'s deck");
-                scry.Controller.Hand.Add(selectedAction);
+                scry.Controller.AddToHand(selectedAction);
                 scry.Controller.Deck.Shuffle();
             }
             else
@@ -2268,9 +2321,8 @@ internal static class Database
 
         windsOfChange.OnPlay += (battle, baseslot) =>
         {
-            windsOfChange.Controller.Deck.Shuffle(windsOfChange.Controller.Hand);
-            var drawnCards = windsOfChange.Controller.Draw(5);
-            windsOfChange.Controller.Hand = drawnCards;
+            windsOfChange.Controller.Recard();
+            windsOfChange.Controller.DrawToHand(5);
 
             windsOfChange.Controller.ActionPlays += 1;
         };
@@ -2343,7 +2395,7 @@ internal static class Database
                 bool drawCard = battle.SelectBool([], $"{player.Name}, would you like to draw a card?");
                 if (drawCard)
                 {
-                    player.Hand.Add(player.Draw());
+                    player.DrawToHand();
                 }
             }
 
@@ -2418,7 +2470,7 @@ internal static class Database
     public static readonly Dictionary<Faction, List<Func<PlayableCard>>> PlayableCardsByFactionDict = new()
     {
         //{ Dinosaurs, [MicrobotAlpha, MicrobotArchive, MicrobotFixer, SaucyWench, MicrobotAlpha, MicrobotArchive, MicrobotFixer, SaucyWench, MicrobotAlpha, MicrobotArchive, MicrobotFixer, SaucyWench] },
-        { Dinosaurs, [FirstMate, MicrobotFixer, Zapbot, FirstMate, MicrobotFixer, Zapbot, FirstMate, MicrobotFixer, Zapbot, FirstMate, MicrobotFixer, Zapbot] }
+        { Dinosaurs, [MicrobotGuard, MicrobotGuard, MicrobotGuard, MicrobotGuard, Warbot, Warbot, Warbot] }
     };
 
     //REAL
@@ -2426,7 +2478,7 @@ internal static class Database
     {
         { Dinosaurs, [WarRaptor, WarRaptor, WarRaptor, WarRaptor, ArmoredStego, ArmoredStego, ArmoredStego, Laseratops, Laseratops, KingRex, Augmentation, Augmentation, Howl, Howl, NaturalSelection, Rampage, SurvivalOfTheFittest, ToothClawAndGuns, Upgrade, WildlifePreserve] },
         { Pirates, [FirstMate, FirstMate, FirstMate, FirstMate, SaucyWench, SaucyWench, SaucyWench, Buccaneer, Buccaneer, PirateKing, Broadside, Broadside, Cannon, Dinghy, Dinghy, FullSail, Powderkeg, SeaDogs, Shanghai, Swashbuckling] },
-        { Robots, [Zapbot, Zapbot, Zapbot, Zapbot, Hoverbot, Hoverbot, Hoverbot, Warbot, Warbot, Nukebot, MicrobotAlpha, MicrobotArchive] },
+        { Robots, [Zapbot, Zapbot, Zapbot, Zapbot, Hoverbot, Hoverbot, Hoverbot, Warbot, Warbot, Nukebot, MicrobotAlpha, MicrobotArchive, MicrobotGuard, MicrobotGuard] },
         { Wizards, [Neophyte, Neophyte, Neophyte, Neophyte, Enchantress, Enchantress, Enchantress, Chronomage, Chronomage, Archmage, MassEnchantment, MysticStudies, MysticStudies, Portal, Sacrifice, Scry, Summon, Summon, TimeLoop, WindsOfChange] },
     };
 
