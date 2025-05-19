@@ -155,7 +155,7 @@ internal class Battle
     /// </summary>
     private void StartTurn()
     {
-        _table.ActivePlayer.Player.SetMinionPlays(10);
+        _table.ActivePlayer.Player.SetMinionPlays(1);
 
         _table.ActivePlayer.Player.ActionPlays = 1;
         EventManager.TriggerStartOfTurn(this, _table.ActivePlayer);

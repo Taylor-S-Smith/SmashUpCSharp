@@ -7,6 +7,7 @@ using SmashUp.Backend.API;
 using System.Reflection.Metadata.Ecma335;
 using System.Drawing.Text;
 using SmashUp.Backend.Services;
+using System.Drawing.Printing;
 
 namespace SmashUp.Backend.Repositories;
 
@@ -1779,7 +1780,7 @@ internal static class Database
 
         microbotFixer.OnPlay += (battle, baseSlot) =>
         {
-            if(battle.GetTurnPlays(microbotFixer.Controller) == 1)
+            if (battle.GetTurnPlays(microbotFixer.Controller) == 1)
             {
                 microbotFixer.Controller.AddMinionPlay();
             }
@@ -1795,7 +1796,6 @@ internal static class Database
             PlayableCardType.Minion,
             "Microbot Guard",
             [
-                @"1     Microbot Guard    1",
                 @"           ___           ",
                 @"         /\ _ /\         ",
                 @"        |--|O|--|        ",
@@ -1806,7 +1806,8 @@ internal static class Database
                 @"      you have here.     ",
             ],
             PlayLocation.Base,
-            1
+            1,
+            [Tag.Microbot]
         );
 
         microbotGuard.OnPlay += (battle, baseSlot) =>
@@ -1839,7 +1840,51 @@ internal static class Database
 
         return microbotGuard;
     }
+    public static PlayableCard MicrobotReclaimer()
+    {
+        PlayableCard microbotReclaimer = new
+        (
+            Robots,
+            PlayableCardType.Minion,
+            "Microbot Reclaimer",
+            [
+                @"       |---[o]--\        ",
+                @"      [ ] __|__  \       ",
+                @"         /_____\  D      ",
+                @"  If this is the first   ",
+                @"minion you play this turn",
+                @"  you may play an extra  ",
+                @" minion. Shuffle in deck ",
+                @"any # discarded Microbots"
+            ],
+            PlayLocation.Base,
+            1,
+            [Tag.Microbot]
+        );
 
+        microbotReclaimer.OnPlay += (battle, baseSlot) =>
+        {
+            if (battle.GetTurnPlays(microbotReclaimer.Controller) == 1)
+            {
+                microbotReclaimer.Controller.AddMinionPlay();
+            }
+
+            List<PlayableCard> microbotCards = microbotReclaimer.Controller.DiscardPile.Where(card => card.Tags.Contains(Tag.Microbot)).ToList();
+            if (microbotCards.Count > 0)
+            {
+                List<PlayableCard> chosenCards = battle.SelectMultiple(microbotCards, "Choose any number of Microbots to shuffle into your deck:");
+
+                chosenCards.ForEach(card => microbotReclaimer.Controller.DiscardPile.Remove(card));
+                microbotReclaimer.Controller.Deck.Shuffle(chosenCards);
+            }
+            else
+            {
+                battle.SelectOption([new("CONTINUE")], microbotCards, "You have no microbots in your discard pile");
+            }
+        };
+
+        return microbotReclaimer;
+    }
 
 
     // WIZARDS
@@ -2154,9 +2199,7 @@ internal static class Database
             else
             {
                 battle.SelectOption([new("CONTINUE")], revealedCards, displayText);
-            }
-
-            
+            }          
             
         };
 
@@ -2470,7 +2513,7 @@ internal static class Database
     public static readonly Dictionary<Faction, List<Func<PlayableCard>>> PlayableCardsByFactionDict = new()
     {
         //{ Dinosaurs, [MicrobotAlpha, MicrobotArchive, MicrobotFixer, SaucyWench, MicrobotAlpha, MicrobotArchive, MicrobotFixer, SaucyWench, MicrobotAlpha, MicrobotArchive, MicrobotFixer, SaucyWench] },
-        { Dinosaurs, [MicrobotGuard, MicrobotGuard, MicrobotGuard, MicrobotGuard, Warbot, Warbot, Warbot] }
+        { Dinosaurs, [MicrobotGuard, MicrobotGuard, MicrobotGuard, MicrobotGuard, Warbot, Warbot, Warbot, MicrobotReclaimer, MicrobotReclaimer] }
     };
 
     //REAL
@@ -2478,7 +2521,7 @@ internal static class Database
     {
         { Dinosaurs, [WarRaptor, WarRaptor, WarRaptor, WarRaptor, ArmoredStego, ArmoredStego, ArmoredStego, Laseratops, Laseratops, KingRex, Augmentation, Augmentation, Howl, Howl, NaturalSelection, Rampage, SurvivalOfTheFittest, ToothClawAndGuns, Upgrade, WildlifePreserve] },
         { Pirates, [FirstMate, FirstMate, FirstMate, FirstMate, SaucyWench, SaucyWench, SaucyWench, Buccaneer, Buccaneer, PirateKing, Broadside, Broadside, Cannon, Dinghy, Dinghy, FullSail, Powderkeg, SeaDogs, Shanghai, Swashbuckling] },
-        { Robots, [Zapbot, Zapbot, Zapbot, Zapbot, Hoverbot, Hoverbot, Hoverbot, Warbot, Warbot, Nukebot, MicrobotAlpha, MicrobotArchive, MicrobotGuard, MicrobotGuard] },
+        { Robots, [Zapbot, Zapbot, Zapbot, Zapbot, Hoverbot, Hoverbot, Hoverbot, Warbot, Warbot, Nukebot, MicrobotAlpha, MicrobotArchive, MicrobotFixer, MicrobotFixer, MicrobotGuard, MicrobotGuard, MicrobotReclaimer, MicrobotReclaimer] },
         { Wizards, [Neophyte, Neophyte, Neophyte, Neophyte, Enchantress, Enchantress, Enchantress, Chronomage, Chronomage, Archmage, MassEnchantment, MysticStudies, MysticStudies, Portal, Sacrifice, Scry, Summon, Summon, TimeLoop, WindsOfChange] },
     };
 

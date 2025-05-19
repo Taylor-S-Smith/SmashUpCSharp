@@ -22,7 +22,7 @@ internal class Application()
         }
         else if (result == StartPageResult.StartGame)
         {
-            Battle battle = new(new ConsoleApp2PlayerTestUI(), new GlobalEventManager(), new Random());
+            Battle battle = new(new ConsoleApp1PlayerTestUI(), new GlobalEventManager(), new Random());
             battle.StartBattle();
         }
         else if (result == StartPageResult.ShowCollection)
