@@ -9,10 +9,12 @@ namespace SmashUp.Frontend.Presenters;
 internal class ConsoleAppBattleUI() : IFrontendBattleAPI
 {
     private Table _table = null!;
-    private static readonly Option _showDiscardButton = new("VIEW DISCARD");
+    private static readonly Option _discardPileButton = new("DISCARD PILE");
     private static readonly Option _endTurnButton = new("END TURN");
-    private static readonly Option _showDeckButton = new("VIEW DECK");
-    private static readonly List<Option> _buttons = [_showDiscardButton, _endTurnButton, _showDeckButton];
+    private static readonly Option _deckButton = new("DECK");
+    private static readonly Option _opponentButton = new("OPPONENT");
+    private static readonly Option _abilitiesButton = new("ABILITIES");
+    private static readonly List<Option> _buttons = [_discardPileButton, _endTurnButton, _deckButton];
     private static readonly List<Guid> _buttonIds = _buttons.Select(x => x.Id).ToList();
 
     public virtual List<(string, List<Faction>)> ChooseFactions(List<string> playerNames, List<Faction> factionOptions)
@@ -68,11 +70,11 @@ internal class ConsoleAppBattleUI() : IFrontendBattleAPI
             {
                 return null;
             }
-            else if (chosenId == _showDiscardButton.Id)
+            else if (chosenId == _discardPileButton.Id)
             {
                 ViewCards(_table.ActivePlayer.Player.DiscardPile.AsCards());
             }
-            else if (chosenId == _showDeckButton.Id)
+            else if (chosenId == _deckButton.Id)
             {
                 Console.WriteLine(string.Join(", ", _table.ActivePlayer.Player.Deck.GetCardNames()));
                 Console.ReadLine();

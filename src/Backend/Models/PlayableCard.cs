@@ -1,6 +1,5 @@
-﻿using System;
+﻿using LinqKit;
 using SmashUp.Backend.GameObjects;
-using SmashUp.Backend.Services;
 
 namespace SmashUp.Backend.Models;
 
@@ -35,7 +34,9 @@ internal class PlayableCard : Card
         Microbot,
         TempMicrobot
     }
-    public List<Tag> Tags { get; set; } = [];
+    public static List<Tag> TempTags = [Tag.TempMicrobot];
+    private List<Tag> _tags = new();
+    public IReadOnlyList<Tag> Tags => _tags;
 
     /// <summary>
     /// Anything that would be considered "Affect"ing a card
@@ -63,6 +64,9 @@ internal class PlayableCard : Card
     }
     public List<Protection> Protections = [];
 
+    /// <summary>
+    /// This event is ONLY subscribed to by bases to internally manage breakpoints
+    /// </summary>
     public event Action<int> OnPowerChange = delegate { };
 
 
@@ -70,41 +74,71 @@ internal class PlayableCard : Card
     /// <summary>
     /// Called immmediatly after card is in play, before OnPlay
     /// </summary>
-    public void TriggerAfterEnterBattleField(Battle battle) => AfterEnterBattleField(battle);
-    public event Action<Battle> AfterEnterBattleField = delegate { };
-
-    /// <summary>
-    /// Is called immediatly after the card is played. If minion or modifier, it will be called after AfterEnterBattleField. If standard action it will be immediatly before it is discarded
-    /// </summary>
-    public void TriggerOnPlay(Battle battle, BaseSlot? baseSlot=null) => OnPlay(battle, baseSlot);
-    public event Action<Battle, BaseSlot?> OnPlay = delegate { };
-
+    public Action<Battle> EnterBattlefield = delegate { };
     /// <summary>
     /// Gets called immediatly after the card is added to the territory list
     /// </summary>
-    public void TriggerAfterAddToBase(Battle battle, BaseSlot baseSlot) => OnAddToBase(battle, baseSlot);
-    public event Action<Battle, BaseSlot> OnAddToBase = delegate { };
+    public Action<Battle, BaseSlot> EnterBase = delegate { };
+    /// <summary>
+    /// Is called immediatly after the card is played. If minion or modifier, it will be called after AfterEnterBattleField. If standard action it will be immediatly before it is discarded
+    /// </summary>
+    public Action<Battle, BaseSlot?> OnPlay = delegate { };
     /// <summary>
     /// Gets called immediatly after the card is removed to the territory list
     /// </summary>
-    public void TriggerOnRemoveFromBase(Battle battle, BaseSlot baseSlot) => OnRemoveFromBase(battle, baseSlot);
-    public event Action<Battle, BaseSlot> OnRemoveFromBase = delegate { };
+    public Action<Battle, BaseSlot> ExitBase = delegate { };
     /// <summary>
-    /// After card is removed from battlefield, but before it exists in the discard pile
+    /// After card is removed from battlefield, but before it exists any other location (e.g. discard pile, hand, etc.)
+    /// By Default, this includes setting power to printed power, and resetting the controller (See Constructor)
     /// </summary>
-    public void TriggerAfterRemoveFromBattlefield(Battle battle) => AfterRemoveFromBattlefield(battle);
-    public event Action<Battle> AfterRemoveFromBattlefield = delegate { };
-    public void TriggerAfterDestroyed(Battle battle, BaseSlot baseSlot) => AfterDestroyed(battle, baseSlot);
-    public event Action<Battle, BaseSlot> AfterDestroyed = delegate { };
-    public void TriggerOnProtect(Battle battle) => OnProtect(battle);
-    public event Action<Battle> OnProtect = delegate { };
-    public void TriggerOnAttach(Battle battle, PlayableCard cardAttachedTo) => OnAttach(battle, cardAttachedTo);
-    public event Action<Battle, PlayableCard> OnAttach = delegate { };
-    public void TriggerOnDetach(Battle battle, PlayableCard cardDetatchedFrom) => OnDetach(battle, cardDetatchedFrom);
-    public event Action<Battle, PlayableCard> OnDetach = delegate { };
+    public Action<Battle> ExitBattlefield = delegate { };
+    /// <summary>
+    /// After card is placed in discard pile from a DESTROY effect
+    /// </summary>
+    public Action<Battle, BaseSlot> OnDestroyed = delegate { };
 
-    // First Player is the current Controller, the second is the one we are changing to
-    public event Action<Battle, Player, Player> OnChangeController = delegate { };
+    /// <summary>
+    /// After this card successfully prevents an effect from occuring to a card
+    /// </summary>
+    public Action<Battle> OnProtect = delegate { };
+    /// <summary>
+    /// After the card is attached to a minion
+    /// </summary>
+    public Action<Battle, PlayableCard> OnAttach = delegate { };
+    /// <summary>
+    /// After the card is detached from a minion
+    /// </summary>
+    public Action<Battle, PlayableCard> OnDetach = delegate { };
+    /// <summary>
+    /// After a change in controller takes place. First Player is the current Controller, the second is the one we are changing to
+    /// </summary>
+    public Action<Battle, Player, Player> OnChangeController = delegate { };
+
+
+    public PlayableCard(Faction faction, PlayableCardType cardType, string name, string[] graphic, PlayLocation playLocation, int? power = null, List<Tag>? tags=null) : base(faction, name, graphic)
+    {
+        CardType = cardType;
+        PrintedPower = power;
+        CurrentPower = power;
+        PlayLocation = playLocation;
+        _tags = tags ?? [];
+
+        ExitBattlefield = (battle) =>
+        {
+            foreach (var tag in _tags)
+            {
+                if(TempTags.Contains(tag))
+                {
+                    _tags.Remove(tag);
+                }
+            }
+
+            CurrentPower = PrintedPower;
+
+            ResetController();
+        };
+    }
+
 
     /// <summary>
     /// Use this whenever a card directly changes the power of another card. 
@@ -148,6 +182,16 @@ internal class PlayableCard : Card
     {
         return Attachments.Remove(cardToDetach);
     }
+    public void AddTag(Battle battle, Tag tag)
+    {
+        _tags.Add(tag);
+        battle.EventManager.TriggerAfterAddTag(battle, this, tag);
+    }
+    public void RemoveTag(Battle battle, Tag tag)
+    {
+        bool removed = _tags.Remove(tag);
+        if(removed) battle.EventManager.TriggerAfterRemoveTag(battle, this, tag);
+    }
 
     public void SetOwner(Player owner)
     {
@@ -156,30 +200,17 @@ internal class PlayableCard : Card
     }
     public void ChangeController(Battle battle, Player newController)
     {
-        OnChangeController.Invoke(battle, Controller, newController);
+        var oldController = Controller;
         Controller = newController;
+        OnChangeController.Invoke(battle, oldController, newController);
     }
 
     /// <summary>
-    /// Reset's the controller to be the same as the owner
+    /// Sets the controller to be the same as the owner
     /// Does NOT count as affecting it, similar to an expired effect
     /// </summary>
     internal void ResetController()
     {
         Controller = Owner;
-    }
-
-    public PlayableCard(Faction faction, PlayableCardType cardType, string name, string[] graphic, PlayLocation playLocation, int? power=null) : base(faction, name, graphic)
-    {
-        CardType = cardType;
-        PrintedPower = power;
-        CurrentPower = power;
-        PlayLocation = playLocation;
-
-        AfterRemoveFromBattlefield = (eventManager) =>
-        {
-            CurrentPower = PrintedPower;
-            ResetController();
-        };
     }
 }

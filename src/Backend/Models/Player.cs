@@ -106,7 +106,8 @@ internal class Player : Identifiable
     }
     public void SetMinionPlays(int numMinionPlays=1)
     {
-        for(int i = 0; i < numMinionPlays; i++)
+        MinionPlayQueue.Clear();
+        for (int i = 0; i < numMinionPlays; i++)
         {
             MinionPlayQueue.Enqueue(new(null), DEFAULT_MINION_PLAY_PRIORITY);
         }

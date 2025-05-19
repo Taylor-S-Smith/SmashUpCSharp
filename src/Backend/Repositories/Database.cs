@@ -6,6 +6,7 @@ using LinqKit;
 using SmashUp.Backend.API;
 using System.Reflection.Metadata.Ecma335;
 using System.Drawing.Text;
+using SmashUp.Backend.Services;
 
 namespace SmashUp.Backend.Repositories;
 
@@ -160,43 +161,56 @@ internal static class Database
             2
         );
 
-        void ChangePowerForEachWarRaptorOnBase(Battle battle, BaseSlot baseSlot, int amount = 1)
+        BaseSlot? currentBaseSlot = null;
+
+        void ChangePowerForEachWarRaptorOnBase(Battle battle, BaseSlot baseSlot, int amount)
         {
             int currRaptorCount = baseSlot.Territories.SelectMany(x => x.Cards).Where(x => x.Name == WAR_RAPTOR_NAME).ToList().Count;
             warRaptor.ApplyPowerChange(battle, warRaptor, currRaptorCount*amount);
         }
 
-        void addCardHandler(Battle battle, PlayableCard card)
+        void addCardHandler(Battle battle, PlayableCard card, BaseSlot baseSlot)
         {
-            // It already gains power for itself OnPlay, we don't want to double count it
-            if (card.Name == WAR_RAPTOR_NAME && card.Id != warRaptor.Id)
+            // It already gains power for itself when it enters the base,
+            // since global events trigger after card events not checking
+            // for itself would double count it
+            if (baseSlot == currentBaseSlot && card.Name == WAR_RAPTOR_NAME && card.Id != warRaptor.Id)
                 warRaptor.ApplyPowerChange(battle, warRaptor, 1);
         }
 
-        void removeCardHandler(Battle battle, PlayableCard card)
+        void removeCardHandler(Battle battle, PlayableCard card, BaseSlot baseSlot)
         {
-            if (card.Name == WAR_RAPTOR_NAME)
+            if (baseSlot == currentBaseSlot && card.Name == WAR_RAPTOR_NAME)
                 warRaptor.ApplyPowerChange(battle, warRaptor, -1);
         }
 
-        warRaptor.OnAddToBase += (battle, baseSlot) =>
+        warRaptor.EnterBattlefield += (battle) =>
         {
-            ChangePowerForEachWarRaptorOnBase(battle, baseSlot);
-            // Set Up Listeners for future War Raptor Changes
-            baseSlot.BaseCard.OnAddCard += addCardHandler;
-            baseSlot.BaseCard.OnRemoveCard += removeCardHandler;
+            // Listen for any changes in war raptor counts
+            battle.EventManager.CardEnteredBase += addCardHandler;
+            battle.EventManager.CardExitedBase += removeCardHandler;
+        };
+        warRaptor.ExitBattlefield += (battle) =>
+        {
+            // Remove listeners
+            battle.EventManager.CardEnteredBase -= addCardHandler;
+            battle.EventManager.CardExitedBase -= removeCardHandler;
         };
 
-        warRaptor.OnRemoveFromBase += (battle, baseSlot) =>
+        warRaptor.EnterBase += (battle, baseSlot) =>
         {
-            //Since this is called after it is gone from the base,
-            //we need to remove one extra power to account for iteself
-            ChangePowerForEachWarRaptorOnBase(battle, baseSlot, -1);
-            warRaptor.ApplyPowerChange(battle, warRaptor, -1);
+            currentBaseSlot = baseSlot;
+            ChangePowerForEachWarRaptorOnBase(battle, baseSlot, 1);
+        };
 
-            // Remove Listeners
-            baseSlot.BaseCard.OnAddCard -= addCardHandler;
-            baseSlot.BaseCard.OnRemoveCard -= removeCardHandler;
+        warRaptor.ExitBase += (battle, baseSlot) =>
+        {
+            //This line is not technically needed, but I will include it to ensure
+            //that it is null when not on the field, which is more intuitive
+            currentBaseSlot = null;
+            ChangePowerForEachWarRaptorOnBase(battle, baseSlot, -1);
+            // Remove one more to account for itself
+            warRaptor.ApplyPowerChange(battle, warRaptor, -1);
         };
 
         return warRaptor;
@@ -245,7 +259,7 @@ internal static class Database
             battle.EventManager.EndOfTurn += endTurnHandler;
         };
 
-        armoredStego.AfterRemoveFromBattlefield += (battle) =>
+        armoredStego.ExitBattlefield += (battle) =>
         {
             battle.EventManager.StartOfTurn -= turnStartHandler;
             battle.EventManager.EndOfTurn -= endTurnHandler;
@@ -640,6 +654,8 @@ internal static class Database
             PlayLocation.Base
         );
 
+        BaseSlot? currentBaseSlot = null;
+
         List<Protection> protectionsGranted = [];
         foreach (var protectionType in Enum.GetValues(typeof(EffectType)).Cast<EffectType>())
         {
@@ -657,18 +673,20 @@ internal static class Database
             }
         };
 
-        void AddProtectionsToCard(Battle battle, PlayableCard card)
+        void AddProtectionsToCard(Battle battle, PlayableCard card, BaseSlot slot)
         {
-            if(card.Controller == wildlifePreserve.Controller) card.Protections.AddRange(protectionsGranted);
+            if(card.Controller == wildlifePreserve.Controller && currentBaseSlot == slot) card.Protections.AddRange(protectionsGranted);
         }
 
-        void RemoveProtectionsFromCard(Battle battle, PlayableCard card)
+        void RemoveProtectionsFromCard(Battle battle, PlayableCard card, BaseSlot slot)
         {
-            if (card.Controller == wildlifePreserve.Controller) protectionsGranted.ForEach(x => card.Protections.Remove(x));
+            if (card.Controller == wildlifePreserve.Controller && currentBaseSlot == slot) protectionsGranted.ForEach(x => card.Protections.Remove(x));
         }
 
-        wildlifePreserve.OnAddToBase += (battle,  baseSlot) =>
+        wildlifePreserve.EnterBase += (battle,  baseSlot) =>
         {
+            currentBaseSlot = baseSlot;
+
             // Update protections to protect against active opponents
             List<Player> otherPlayers = battle.GetPlayers().Where(x => x != wildlifePreserve.Controller).ToList();
             foreach (var protection in protectionsGranted)
@@ -683,39 +701,41 @@ internal static class Database
                                                       .Where(x => x.CardType == PlayableCardType.Minion)
                                                       .ToList();
 
-            minionsOnBase.ForEach(x => AddProtectionsToCard(battle, x));
+            minionsOnBase.ForEach(x => AddProtectionsToCard(battle, x, baseSlot));
 
 
-            baseSlot.BaseCard.OnAddCard += AddProtectionsToCard;
-            baseSlot.BaseCard.OnRemoveCard += RemoveProtectionsFromCard;
+            battle.EventManager.CardEnteredBase += AddProtectionsToCard;
+            battle.EventManager.CardExitedBase += RemoveProtectionsFromCard;
 
             // Remove any actions from other players on your minions
             foreach (var minion in minionsOnBase)
             {
                 if(minion.Controller == wildlifePreserve.Controller)
                 {
+                    List<PlayableCard> cardsToDiscard = [];
                     foreach(var action in minion.Attachments)
                     {
-                        if (action.Controller != wildlifePreserve.Controller)
-                        {
-                            battle.Discard(action);
-                        }
+                        if (action.Controller != wildlifePreserve.Controller) cardsToDiscard.Add(action);
                     }
+
+                    cardsToDiscard.ForEach(x => battle.DiscardFromField(x));
                 }
             }            
         };
 
-        wildlifePreserve.OnRemoveFromBase += (battle, baseSlot) =>
+        wildlifePreserve.ExitBase += (battle, baseSlot) =>
         {
             List<PlayableCard> protectedCards = battle.GetBaseSlots()
                                                       .Single(slot => slot == baseSlot)
                                                       .Cards
                                                       .ToList();
 
-            protectedCards.ForEach(x => RemoveProtectionsFromCard(battle, x));
+            protectedCards.ForEach(x => RemoveProtectionsFromCard(battle, x, baseSlot));
 
-            baseSlot.BaseCard.OnAddCard -= AddProtectionsToCard;
-            baseSlot.BaseCard.OnRemoveCard -= RemoveProtectionsFromCard;
+            battle.EventManager.CardEnteredBase -= AddProtectionsToCard;
+            battle.EventManager.CardExitedBase -= RemoveProtectionsFromCard;
+
+            currentBaseSlot = null;
         };      
 
         return wildlifePreserve;
@@ -793,27 +813,34 @@ internal static class Database
             2
         );
 
-        BaseCard? MoveToAnotherBase(Battle battle, BaseSlot slot, ScoreResult scoreResult)
+        BaseSlot? currentBaseSlot = null;
+
+        void HandleBaseScore(Battle battle, BaseSlot slotScoring)
         {
-            var currentBase = slot.BaseCard;
-            if (battle.SelectBool([firstMate], $"{firstMate.Controller.Name}, would you like to move First Mate to another base?"))
+            if (currentBaseSlot == slotScoring && battle.SelectBool([firstMate], $"{firstMate.Controller.Name}, would you like to move First Mate to another base?"))
             {
-                var validBases = battle.GetBaseSlots().Select(x => x.BaseCard).Where(x => x != currentBase).ToList();
+                var validBases = battle.GetBaseSlots().Select(x => x.BaseCard).Where(x => x != currentBaseSlot.BaseCard).ToList();
                 BaseCard chosenBase = battle.Select(validBases, $"{firstMate.Controller}, select a base to move First Mate to:");
                 battle.Move(firstMate, chosenBase, firstMate);
             }
-
-            return null;
         }
 
-        firstMate.OnAddToBase += (battle, baseSlot) => 
+        firstMate.EnterBattlefield += (battle) =>
         {
-            baseSlot.BaseCard.AfterBaseScores += MoveToAnotherBase;
+            battle.EventManager.AfterBaseScores += HandleBaseScore;
+        };
+        firstMate.ExitBattlefield += (battle) =>
+        {
+            battle.EventManager.AfterBaseScores -= HandleBaseScore;
         };
 
-        firstMate.OnRemoveFromBase += (battle, baseSlot) =>
+        firstMate.EnterBase += (battle, baseSlot) => 
         {
-            baseSlot.BaseCard.AfterBaseScores -= MoveToAnotherBase;
+            currentBaseSlot = baseSlot;
+        };
+        firstMate.ExitBase += (battle, baseSlot) =>
+        {
+            currentBaseSlot = null;
         };
 
         return firstMate;
@@ -845,7 +872,7 @@ internal static class Database
             SelectCardQuery query = new()
             {
                 CardType = PlayableCardType.Minion,
-                MaxPower = 2,
+                //MaxPower = 2,
                 BaseCard = baseSlot.BaseCard
             };
 
@@ -915,25 +942,32 @@ internal static class Database
             5
         );
 
+        IEnumerable<BaseCard> otherBases = [];
+
         void OnBeforeScoresHandler(Battle battle, BaseSlot slot)
         {
             var baseAboutToScore = slot.BaseCard;
-            if (battle.SelectBool([pirateKing], $"{pirateKing.Controller.Name}, would you like to move {pirateKing.Name} to {slot.BaseCard.Name} before it scores?"))
+            if (otherBases.Contains(baseAboutToScore) && battle.SelectBool([pirateKing], $"{pirateKing.Controller.Name}, would you like to move {pirateKing.Name} to {slot.BaseCard.Name} before it scores?"))
             {
                 battle.Move(pirateKing, baseAboutToScore, pirateKing);
             }
         }
 
-        pirateKing.OnAddToBase += (battle, baseSlot) =>
+        pirateKing.EnterBattlefield += (battle) =>
         {
-            var otherBases = battle.GetBaseSlots().Select(x => x.BaseCard).Where(x => x != baseSlot.BaseCard);
-            otherBases.ForEach(x => x.BeforeBaseScores += OnBeforeScoresHandler);
+            battle.EventManager.BeforeBaseScores += OnBeforeScoresHandler;
         };
-
-        pirateKing.OnRemoveFromBase += (battle, baseSlot) =>
+        pirateKing.ExitBattlefield += (battle) =>
         {
-            var otherBases = battle.GetBaseSlots().Select(x => x.BaseCard).Where(x => x != baseSlot.BaseCard);
-            otherBases.ForEach(x => x.BeforeBaseScores -= OnBeforeScoresHandler);
+            battle.EventManager.BeforeBaseScores -= OnBeforeScoresHandler;
+        };
+        pirateKing.EnterBase += (battle, baseSlot) =>
+        {
+            otherBases = battle.GetBaseSlots().Select(x => x.BaseCard).Where(x => x != baseSlot.BaseCard);
+        };
+        pirateKing.ExitBase += (battle, baseSlot) =>
+        {
+            otherBases = [];
         };
 
         return pirateKing;
@@ -1070,11 +1104,10 @@ internal static class Database
                 @" Special: Before a base  ",
                 @"scores, you may play this",
             ],
-            PlayLocation.Discard
-        )
-        {
-            Tags = [Tag.SpecialBeforeScores]
-        };
+            PlayLocation.Discard,
+            null,
+            [Tag.SpecialBeforeScores]
+        );
 
         fullSail.OnPlay += (battle, baseSlot) =>
         {
@@ -1347,7 +1380,7 @@ internal static class Database
             [4, 3, 2]
         );
 
-        tortuga.AfterReplaced += (battle, slot, scoreResults) =>
+        tortuga.OnReplaced += (battle, slot, scoreResults) =>
         {
             var runnersUp = scoreResults.Second;
 
@@ -1499,7 +1532,7 @@ internal static class Database
             5
         );
 
-        nukebot.AfterDestroyed += (battle, baseSlot) =>
+        nukebot.OnDestroyed += (battle, baseSlot) =>
         {
             //Since they are all destroyed at the same time, we need to query for the
             //other minions before resolving the destruction of the chosen minion
@@ -1523,7 +1556,6 @@ internal static class Database
             PlayableCardType.Minion,
             "Microbot Alpha",
             [
-                @"1    Microbot Alpha     1",
                 @"          _[o]_          ",
                 @"       ]-|_ | _|-[       ",
                 @"          _|_|_          ",
@@ -1534,57 +1566,54 @@ internal static class Database
                 @"  minions are Microbots. ",
             ],
             PlayLocation.Base,
-            1
-        )
-        {
-            Tags = [Tag.Microbot]
-        };
+            1,
+            [Tag.Microbot]
+        );
 
-        void addCardHandler(Battle battle, PlayableCard card)
+        void CardEnteredBattlefieldHandler(Battle battle, PlayableCard card)
         {
             if(card.Controller == microbotAlpha.Controller)
             {
-                // Add a temp microbot tag
-                card.Tags.Add(Tag.TempMicrobot);
+                // Add a temp microbot tag if not already microbot
+                if (!card.Tags.Contains(Tag.Microbot)) card.AddTag(battle, Tag.TempMicrobot);
 
                 // Increase own power
                 microbotAlpha.ApplyPowerChange(battle, microbotAlpha, 1);
             }
         }
-
-        void removeCardHandler(Battle battle, PlayableCard card)
+        void CardExitedBattlefieldHandler(Battle battle, PlayableCard card)
         {
             if (card.Controller == microbotAlpha.Controller)
             {
-                // Remove temp microbot tag
-                card.Tags.Remove(Tag.TempMicrobot);
-
                 // Decrease own power
                 microbotAlpha.ApplyPowerChange(battle, microbotAlpha, -1);
             }
         }
 
-        microbotAlpha.AfterEnterBattleField += (battle) =>
+        microbotAlpha.EnterBattlefield += (battle) =>
         {
             // Get all controller's minions
             SelectCardQuery query = new()
             {
-                Controllers = [microbotAlpha.Controller]
+                Controllers = [microbotAlpha.Controller],
+                CardsToExclude = [microbotAlpha]
             };
-            var cards = battle.GetFieldCards(query).Where(x => x != microbotAlpha);
+            var cards = battle.GetFieldCards(query);
 
-            // Add temp microbot tag
-            cards.ForEach(x => x.Tags.Add(Tag.TempMicrobot));
+            // Add temp microbot tag to all who are not already microbots
+            foreach (var card in cards)
+            {
+                if (!card.Tags.Contains(Tag.Microbot)) card.AddTag(battle, Tag.TempMicrobot);
+            }
 
-            // Increase power for each, except self
-            microbotAlpha.ApplyPowerChange(battle, microbotAlpha, cards.Count() - 1);
+            // Increase power for each, except self since it is accouted for in the addCardHandler() which is called right after
+            microbotAlpha.ApplyPowerChange(battle, microbotAlpha, cards.Count - 1);
 
             // Add Listeners
-            battle.EventManager.AfterAddCard += addCardHandler;
-            battle.EventManager.AfterRemoveCard += removeCardHandler;
+            battle.EventManager.CardEnteredBattlefield += CardEnteredBattlefieldHandler;
+            battle.EventManager.CardExitedBattlefield += CardExitedBattlefieldHandler;
         };
-
-        microbotAlpha.AfterRemoveFromBattlefield += (battle) =>
+        microbotAlpha.ExitBattlefield += (battle) =>
         {
             // Get all controller's minions
             SelectCardQuery query = new()
@@ -1593,15 +1622,12 @@ internal static class Database
             };
             var cards = battle.GetFieldCards(query).Where(x => x != microbotAlpha);
 
-            // Remove temp microbot tag
-            cards.ForEach(x => x.Tags.Remove(Tag.TempMicrobot));
-
-            // Decrease power for each
-            microbotAlpha.ApplyPowerChange(battle, microbotAlpha, cards.Count() - 1);
+            // Remove one instance of Tag.TempMicrobot
+            cards.ForEach(x => x.RemoveTag(battle, Tag.TempMicrobot));
 
             // Remove Listeners
-            battle.EventManager.AfterAddCard -= addCardHandler;
-            battle.EventManager.AfterRemoveCard -= removeCardHandler;
+            battle.EventManager.CardEnteredBattlefield -= CardEnteredBattlefieldHandler;
+            battle.EventManager.CardExitedBattlefield -= CardExitedBattlefieldHandler;
         };
 
         return microbotAlpha;
@@ -1614,7 +1640,6 @@ internal static class Database
             PlayableCardType.Minion,
             "Microbot Archive",
             [
-                @"1   Microbot Archive    1",
                 @"            [=}          ",
                 @"         ___|_           ",
                 @"        /   _ \--\o      ",
@@ -1625,36 +1650,141 @@ internal static class Database
                 @"including this, draw card",
             ],
             PlayLocation.Base,
-            1
-        )
-        {
-            Tags = [Tag.Microbot]
-        };
+            1,
+            [Tag.Microbot]
+        );
 
-        bool IsMicrobot(PlayableCard card)
-        {
-            return card.Tags.Contains(Tag.Microbot) || card.Tags.Contains(Tag.TempMicrobot);
-        }
+        int numCardsToDraw = 0;
 
-        void removeCardHandler(Battle battle, PlayableCard card)
+        void BeforeDestroyCardHandler(Battle battle, PlayableCard card)
         {
-            if (card.Controller == microbotArchive.Controller && IsMicrobot(card))
+            if (card.Controller == microbotArchive.Controller && (card.Tags.Contains(Tag.Microbot) || card.Tags.Contains(Tag.TempMicrobot)))
             {
-                card.Controller.Hand.Add(card.Controller.Draw());
+                numCardsToDraw++;
             }
         }
 
-        microbotArchive.AfterEnterBattleField += (battle) =>
+        void OnDestroyCardHandler(Battle battle, PlayableCard card)
         {
-            battle.EventManager.AfterRemoveCard += removeCardHandler;
+            var drawnCards = microbotArchive.Controller.Draw(numCardsToDraw);
+            microbotArchive.Controller.Hand.AddRange(drawnCards);
+            numCardsToDraw = 0;
+        }
+
+        microbotArchive.OnDestroyed += (battle, slot) => OnDestroyCardHandler(battle, microbotArchive);
+
+        microbotArchive.EnterBattlefield += (battle) =>
+        {
+            battle.EventManager.BeforeDestroyCard += BeforeDestroyCardHandler;
+            battle.EventManager.OnDestroyCard += OnDestroyCardHandler;
         };
 
-        microbotArchive.AfterRemoveFromBattlefield += (battle) =>
+        microbotArchive.ExitBattlefield += (battle) =>
         {
-            battle.EventManager.AfterRemoveCard -= removeCardHandler;
+            battle.EventManager.BeforeDestroyCard -= BeforeDestroyCardHandler;
+            battle.EventManager.OnDestroyCard -= OnDestroyCardHandler;
         };
 
         return microbotArchive;
+    }
+    public static PlayableCard MicrobotFixer()
+    {
+        PlayableCard microbotFixer = new
+        (
+            Robots,
+            PlayableCardType.Minion,
+            "Microbot Fixer",
+            [
+                @"     o-\  __|_           ",
+                @"        \| o  |-[        ",
+                @"      }--|____|--X       ",
+                @"  If this is the first   ",
+                @"minion you play this turn",
+                @"  you may play an extra  ",
+                @"  minion. Ongoing: Your  ",
+                @" Microbots have +1 power ",
+            ],
+            PlayLocation.Base,
+            1,
+            [Tag.Microbot]
+        );
+
+        void addCardHandler(Battle battle, PlayableCard card)
+        {
+            if (card.Controller == microbotFixer.Controller && card.Tags.Contains(Tag.Microbot))
+            {
+                card.ApplyPowerChange(battle, microbotFixer, 1);
+            }
+        }
+        void tagAddHandler(Battle battle, PlayableCard card, Tag tag)
+        {
+            if (card.Controller == microbotFixer.Controller && tag == Tag.TempMicrobot)
+            {
+                // Only apply if it wasn't already a microbot
+                if(!card.Tags.Contains(Tag.Microbot) && !(card.Tags.Where(x => x == Tag.TempMicrobot).Count() > 1)) card.ApplyPowerChange(battle, microbotFixer, 1);
+            }
+        }
+        void tagRemoveHandler(Battle battle, PlayableCard card, Tag tag)
+        {
+            if (card.Controller == microbotFixer.Controller && tag == Tag.TempMicrobot)
+            {
+                //Make sure it isn't still a microbot
+                if (!card.Tags.Contains(Tag.Microbot) && !card.Tags.Contains(Tag.TempMicrobot)) card.ExpirePowerChange(-1);
+            }
+        }
+
+        microbotFixer.EnterBattlefield += (battle) =>
+        {
+            // Get all controller's microbots
+            SelectCardQuery query = new()
+            {
+                Controllers = [microbotFixer.Controller],
+                Tags = [Tag.Microbot, Tag.TempMicrobot]
+            };
+            var cards = battle.GetFieldCards(query);
+
+            // Add +1 power
+            foreach (var card in cards)
+            {
+                card.ApplyPowerChange(battle, microbotFixer, 1);
+            }
+
+            // Add Listeners
+            battle.EventManager.CardEnteredBattlefield += addCardHandler;
+            battle.EventManager.AfterAddTag += tagAddHandler;
+            battle.EventManager.AfterRemoveTag += tagRemoveHandler;
+        };
+        microbotFixer.ExitBattlefield += (battle) =>
+        {
+            // Get all controller's microbots
+            SelectCardQuery query = new()
+            {
+                Controllers = [microbotFixer.Controller],
+                Tags = [Tag.Microbot, Tag.TempMicrobot]
+            };
+            var cards = battle.GetFieldCards(query);
+
+            // Remove power
+            foreach (var card in cards)
+            {
+                card.ExpirePowerChange(-1);
+            }
+
+            // Remove Listeners
+            battle.EventManager.CardEnteredBattlefield -= addCardHandler;
+            battle.EventManager.AfterAddTag -= tagAddHandler;
+            battle.EventManager.AfterRemoveTag -= tagRemoveHandler;
+        };
+
+        microbotFixer.OnPlay += (battle, baseSlot) =>
+        {
+            if(battle.GetTurnPlays(microbotFixer.Controller) == 1)
+            {
+                microbotFixer.Controller.AddMinionPlay();
+            }
+        };
+
+        return microbotFixer;
     }
 
     // WIZARDS
@@ -1813,7 +1943,7 @@ internal static class Database
             battle.EventManager.StartOfTurn += turnStartHandler;
         };
 
-        archmage.AfterRemoveFromBattlefield += (battle) =>
+        archmage.ExitBattlefield += (battle) =>
         {
             battle.EventManager.StartOfTurn -= turnStartHandler;
         };
@@ -2287,7 +2417,8 @@ internal static class Database
     //TEST
     public static readonly Dictionary<Faction, List<Func<PlayableCard>>> PlayableCardsByFactionDict = new()
     {
-        { Dinosaurs, [SaucyWench, SaucyWench, SaucyWench, MicrobotAlpha, MicrobotAlpha, MicrobotAlpha, MicrobotArchive, MicrobotArchive, MicrobotArchive, FirstMate, FirstMate, FirstMate] }
+        //{ Dinosaurs, [MicrobotAlpha, MicrobotArchive, MicrobotFixer, SaucyWench, MicrobotAlpha, MicrobotArchive, MicrobotFixer, SaucyWench, MicrobotAlpha, MicrobotArchive, MicrobotFixer, SaucyWench] },
+        { Dinosaurs, [FirstMate, MicrobotFixer, Zapbot, FirstMate, MicrobotFixer, Zapbot, FirstMate, MicrobotFixer, Zapbot, FirstMate, MicrobotFixer, Zapbot] }
     };
 
     //REAL
@@ -2295,7 +2426,7 @@ internal static class Database
     {
         { Dinosaurs, [WarRaptor, WarRaptor, WarRaptor, WarRaptor, ArmoredStego, ArmoredStego, ArmoredStego, Laseratops, Laseratops, KingRex, Augmentation, Augmentation, Howl, Howl, NaturalSelection, Rampage, SurvivalOfTheFittest, ToothClawAndGuns, Upgrade, WildlifePreserve] },
         { Pirates, [FirstMate, FirstMate, FirstMate, FirstMate, SaucyWench, SaucyWench, SaucyWench, Buccaneer, Buccaneer, PirateKing, Broadside, Broadside, Cannon, Dinghy, Dinghy, FullSail, Powderkeg, SeaDogs, Shanghai, Swashbuckling] },
-        { Robots, [Zapbot, Zapbot, Zapbot, Zapbot, Hoverbot, Hoverbot, Hoverbot, Warbot, Warbot, MicrobotAlpha, MicrobotArchive] },
+        { Robots, [Zapbot, Zapbot, Zapbot, Zapbot, Hoverbot, Hoverbot, Hoverbot, Warbot, Warbot, Nukebot, MicrobotAlpha, MicrobotArchive] },
         { Wizards, [Neophyte, Neophyte, Neophyte, Neophyte, Enchantress, Enchantress, Enchantress, Chronomage, Chronomage, Archmage, MassEnchantment, MysticStudies, MysticStudies, Portal, Sacrifice, Scry, Summon, Summon, TimeLoop, WindsOfChange] },
     };
 

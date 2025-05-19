@@ -1,3 +1,10 @@
+Should decreasing power from ongoing effect be considerd affecting oneself? Or just increasing?
+
+alpha and archive should conflict (but we should change it so they don't)
+If alpha played first, no card drawn
+If archive played first, drawn
+
+
 Keep in mind:
 - Madness interacts strangely with mass enchant
 - If you try to play a special card with mass enchant, it will discard without effect if it's condition is not met
@@ -14,12 +21,14 @@ Misc Tests to one day write:
 - Wizard base puts cards on top of base deck in correct order
 
 Event Approach Rules: 
+- Only functions marked by  the 'event' keyword can be listened to. Otherwise we only add functionality through an instantiated object
 - Each event should only ever be triggered in ONE place
 - When calling class events you should call the most specific one applicable.
-- We tigger events in the order of PlayableCard, Base, Global. 
+- We tigger events in the order of PlayableCard, Base, Global. (NOTE: Should this order be reversed for exiting base/battlefield?)
 - When Listening, listen to the most specific one. No need to recieve global death info if per base works just as well
-- "On" suggests that it is triggered in the in-between state. E.g. remvoed from battlefield, but not in discard pile
-- "Before" suggests that the action specified has not happened yet, but other events (such as removing from hand) could have occured
+- "BeforeAttempt" suggests that an action will be attempted, but it is unclear if it will actually happen or not
+- "Before" suggests that the action specified has not happened yet, but is assured to happen. Other related events (such as removing from hand in the case of discard) could have already occured, but not the specified one
+- "On" suggests that it is triggered in the in-between state. E.g. removed from battlefield, but not in discard pile
 - "After" suggests that the action specified has been fully resolved up to this point. E.g. the card exists in the battlefield (However, there is nuance to this. See above for order on timing resolutions for multiple event types)
  
 Disclaimer:

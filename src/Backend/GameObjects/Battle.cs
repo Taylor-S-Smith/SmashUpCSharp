@@ -6,6 +6,7 @@ using SmashUp.Backend.API;
 using FluentResults;
 using LinqKit;
 using System.Linq;
+using System.Numerics;
 
 namespace SmashUp.Backend.GameObjects;
 
@@ -31,6 +32,32 @@ internal class Battle
     private const int WINNING_VP = 15;
 
     private List<Faction> factionsRepresented = [];
+
+    class PlayTracker()
+    {
+        private Dictionary<Player, int> playDict = [];
+
+        public void AddPlayers(List<Player> players)
+        {
+            players.ForEach(player => playDict.Add(player, 0));
+        }
+
+        internal void AddPlay(Player player)
+        {
+            playDict[player]++;
+        }
+        public int GetPlayerPlays(Player player)
+        {
+            return playDict[player];
+        }
+        public void Clear()
+        {
+            playDict.ForEach(x => playDict[x.Key] = 0);
+        }
+    }
+
+    private PlayTracker plays = new();
+
 
     public Battle(IFrontendBattleAPI userInputHandler, GlobalEventManager eventManager, Random random)
     {
@@ -60,7 +87,7 @@ internal class Battle
 
         factionsRepresented = factionChoices.SelectMany(choice => choice.Factions).ToList();
 
-        //Build Player Decks
+        //Build Players and Decks
         foreach (var choice in factionChoices)
         {
             string playerName = choice.PlayerName;
@@ -70,6 +97,8 @@ internal class Battle
             var player = new Player(playerName, cards);
             players.Add(player);
         }
+        plays.AddPlayers(players);
+
 
         //Build the Base Deck
         List<Faction> allFactions = factionChoices.SelectMany(x => x.Factions).ToList();
@@ -126,7 +155,7 @@ internal class Battle
     /// </summary>
     private void StartTurn()
     {
-        _table.ActivePlayer.Player.SetMinionPlays(10);
+        _table.ActivePlayer.Player.SetMinionPlays(1);
 
         _table.ActivePlayer.Player.ActionPlays = 1;
         EventManager.TriggerStartOfTurn(this, _table.ActivePlayer);
@@ -151,9 +180,10 @@ internal class Battle
 
             if (cardToPlay != null)
             {
-                Result result = ValidatePlay(_table.ActivePlayer.Player, cardToPlay);
+                Result result = ValidatePlay(cardToPlay);
                 if (result.IsSuccess)
                 {
+                    plays.AddPlay(cardToPlay.Controller);
                     _table.ActivePlayer.Player.RemoveFromHand(cardToPlay);
                     PlayCard(cardToPlay);
                 }
@@ -195,7 +225,8 @@ internal class Battle
             // Step 3: Play/invoke "before scoring" abilities
 
             // 3a. Invoke mandatory abilities
-            slotToScore.BaseCard.TriggerBeforeBaseScores(this, slotToScore);
+            slotToScore.BaseCard.BeforeBaseScores(this, slotToScore);
+            EventManager.TriggerBeforeBaseScores(this, slotToScore);
 
             // 3b: Invoke optional abilities, give each player an opportunity to play "Before Scores" specials
             //     starting with the current player and going clockwise (in this case in order players were added)
@@ -241,7 +272,8 @@ internal class Battle
 
             // Step 5: Award treasures
             // Step 6: Play/invoke "after scoring" abilities
-            BaseCard? newBase = slotToScore.BaseCard.TriggerAfterBaseScores(this, slotToScore, scoreResult);
+            BaseCard? newBase = slotToScore.BaseCard.AfterBaseScores(this, slotToScore, scoreResult);
+            EventManager.TriggerAfterBaseScores(this, slotToScore);
 
             // Step 7: Discard all the cards on the base
             List<PlayableCard> cardsToDiscard = slotToScore.Cards;
@@ -257,7 +289,7 @@ internal class Battle
             else slotToScore.BaseCard = _table.DrawBaseCard();
 
             // Trigger After Replaced Abilities
-            oldBase.TriggerAfterReplaced(this, slotToScore, scoreResult);
+            oldBase.OnReplaced(this, slotToScore, scoreResult);
         }
     }
 
@@ -326,6 +358,7 @@ internal class Battle
     {
         EventManager.TriggerEndOfTurn(this, _table.ActivePlayer);
         CheckEndOfGame();
+        plays.Clear();
     }
     private void CheckEndOfGame()
     {
@@ -375,15 +408,15 @@ internal class Battle
             PlayCardToDiscard(cardToPlay);
         }
     }
-    private static Result ValidatePlay(Player player, PlayableCard cardToPlay)
+    private static Result ValidatePlay(PlayableCard cardToPlay)
     {
         if (cardToPlay.CardType == PlayableCardType.Minion)
         {
-            return player.HasMinionPlay(cardToPlay.CurrentPower ?? 0);
+            return cardToPlay.Controller.HasMinionPlay(cardToPlay.CurrentPower ?? 0);
         }
         else if (cardToPlay.CardType == PlayableCardType.Action)
         {
-            if (player.ActionPlays == 0) return Result.Fail("You don't have any more action plays");
+            if (cardToPlay.Controller.ActionPlays == 0) return Result.Fail("You don't have any more action plays");
         }
         return Result.Ok();
     }
@@ -405,28 +438,35 @@ internal class Battle
         Guid chosenBaseId = _userInput.SelectBaseCard(validBaseIds, cardToPlay, $"Choose a base to play {cardToPlay.Name} on");
         BaseCard chosenBase = GetBaseCardById(chosenBaseId);
 
+        // Enter Battlefield effects - This triggers maintenance effects,
+        // such as subscribing to global events. It is NOT 'On Play' or
+        // other card timings directly referenced by card text
+        cardToPlay.EnterBattlefield(this);
+        EventManager.TriggerCardEnteredBattlefield(this, cardToPlay);
+
         // Add Card to territory
         // NOTE: It is a rules req that the card exists in the base BEFORE on play is triggered
         // Which happens before add to base effects, which means that it can't be triggered in a
-        // more primitive funciton in the table
+        // more primitive function in the table
         BaseSlot slot = _table.GetBaseSlots().Where(x => x.BaseCard == chosenBase).Single();
         AddCardToBase(cardToPlay, slot);
 
         // Activate Card Ability
-        cardToPlay.TriggerOnPlay(this, slot);
+        cardToPlay.OnPlay(this, slot);
     }
     private void AddCardToBase(PlayableCard cardToPlay, BaseSlot slot)
     {
         PlayerTerritory territory = slot.Territories.Where(x => x.player == cardToPlay.Controller).Single();
         territory.Cards.Add(cardToPlay);
-        cardToPlay.TriggerAfterEnterBattleField(this);
-        EventManager.TriggerAfterAddCard(this, cardToPlay);
-        cardToPlay.TriggerAfterAddToBase(this, slot);
-        slot.BaseCard.TriggerAfterAddCard(this, cardToPlay);
+
+        // Enter Base effects
+        cardToPlay.EnterBase(this, slot);
+        slot.BaseCard.OnAddCard(cardToPlay);
+        EventManager.TriggerCardEnteredBase(this, cardToPlay, slot);
     }
     private void PlayCardToDiscard(PlayableCard cardToPlay)
     {
-        cardToPlay.TriggerOnPlay(this);
+        cardToPlay.OnPlay(this, null);
         Discard(cardToPlay);
     }
     private void PlayCardToMinion(PlayableCard cardToPlay)
@@ -442,7 +482,7 @@ internal class Battle
             if (AttemptToAffect(cardToAttachTo, EffectType.Attach, PlayableCardType.Action, cardToPlay.Controller))
             {
                 cardToAttachTo.Attach(cardToPlay);
-                cardToPlay.TriggerOnAttach(this, cardToAttachTo);
+                cardToPlay.OnAttach(this, cardToAttachTo);
             }
             else
             {
@@ -457,42 +497,49 @@ internal class Battle
     {
         if (AttemptToAffect(cardToDestroy, EffectType.Destroy, affector.CardType, affector.Controller))
         {
-            var baseSlot = RemoveCardFromBattleField(cardToDestroy);
-            Discard(cardToDestroy);
-            cardToDestroy.TriggerAfterDestroyed(this, baseSlot);
-            baseSlot.BaseCard.TriggerAfterDestroyCard(cardToDestroy);
+            EventManager.TriggerBeforeDestroyCard(this, cardToDestroy);
+            var baseSlot = DiscardFromField(cardToDestroy);
+            cardToDestroy.OnDestroyed(this, baseSlot);
+            if(cardToDestroy.CardType == PlayableCardType.Minion) baseSlot.BaseCard.AfterMinionDestroyed(cardToDestroy);
+            EventManager.TriggerOnDestroyCard(this, cardToDestroy);
         }
     }
+
+    public BaseSlot DiscardFromField(PlayableCard cardToDiscard)
+    {
+        var baseSlot = RemoveCardFromBattleField(cardToDiscard);
+        Discard(cardToDiscard);
+        return baseSlot;
+    }
+
     /// <summary>
     /// Discarding puts the card in it's owner's discard pile, it does not count as affecting the card
     /// This does NOT remove the card from it's old location
     /// </summary>
-    public void Discard(PlayableCard cardToPlay)
+    private void Discard(PlayableCard cardToPlay)
     {
-        cardToPlay.TriggerAfterRemoveFromBattlefield(this);
         cardToPlay.Owner.DiscardPile.Add(cardToPlay);
     }
     public void Move(PlayableCard cardToMove, BaseCard newBase, PlayableCard affector)
     {
         if (AttemptToAffect(cardToMove, EffectType.Move, affector.CardType, affector.Controller))
         {
-            // We don't replace the two methods with a call RemoveCardFromBattleField() since we don't want to tigger any leave battlefield effects
-            BaseSlot baseSlot = GetBaseSlot(cardToMove);
-            RemoveCardFromBase(cardToMove, baseSlot);
-            var newBaseSlot = GetBaseSlotById(newBase.Id);
-            AddCardToBase(cardToMove, newBaseSlot);
+            PerformMove(cardToMove, newBase);
         }
     }
     public void Move(PlayableCard cardToMove, BaseCard newBase, Player affector)
     {
         if (AttemptToAffect(cardToMove, EffectType.Move, null, affector))
         {
-            // We don't replace the two methods with a call RemoveCardFromBattleField() since we don't want to tigger any leave battlefield effects
-            BaseSlot baseSlot = GetBaseSlot(cardToMove);
-            RemoveCardFromBase(cardToMove, baseSlot);
-            var newBaseSlot = GetBaseSlotById(newBase.Id);
-            AddCardToBase(cardToMove, newBaseSlot);
+            PerformMove(cardToMove, newBase);
         }
+    }
+    private void PerformMove(PlayableCard cardToMove, BaseCard newBase)
+    {
+        BaseSlot oldBaseSlot = GetBaseSlot(cardToMove);
+        RemoveCardFromBase(cardToMove, oldBaseSlot);
+        var newBaseSlot = GetBaseSlotById(newBase.Id);
+        AddCardToBase(cardToMove, newBaseSlot);
     }
 
     /// <summary>
@@ -519,7 +566,7 @@ internal class Battle
                 protector = Select(protections.Select(x => x.GrantedBy).ToList(), $"{cardToAffect.Controller.Name}, {cardToAffect.Name} is being protected by multiple cards, choose which one to recieve protection from:");
             }
 
-            protector.TriggerOnProtect(this);
+            protector.OnProtect(this);
             return false;
         }
     }
@@ -534,7 +581,8 @@ internal class Battle
         {
             if (RemoveCardFromBase(cardToRemove, slot))
             {
-                EventManager.TriggerAfterRemoveCard(this, cardToRemove);
+                EventManager.TriggerCardExitedBattlefield(this, cardToRemove);
+                cardToRemove.ExitBattlefield(this);
                 return slot;
             }
         }
@@ -549,8 +597,9 @@ internal class Battle
             if (territory.Cards.Remove(cardToRemove))
             {
                 // Trigger leave of base
-                cardToRemove.TriggerOnRemoveFromBase(this, slot);
-                slot.BaseCard.TriggerOnRemoveCard(this, cardToRemove);
+                cardToRemove.ExitBase(this, slot);
+                slot.BaseCard.RemoveCard(cardToRemove);
+                EventManager.TriggerCardExitedBase(this, cardToRemove, slot);
                 return true;
             }
             else
@@ -561,8 +610,9 @@ internal class Battle
                     if (card.Detach(cardToRemove))
                     {
                         //Trigger on detach
-                        cardToRemove.TriggerOnDetach(this, card);
-                        slot.BaseCard.TriggerOnRemoveCard(this, cardToRemove);
+                        cardToRemove.OnDetach(this, card);
+                        slot.BaseCard.RemoveCard(cardToRemove);
+                        EventManager.TriggerCardExitedBase(this, cardToRemove, slot);
                         return true;
                     }
                 }
@@ -649,6 +699,7 @@ internal class Battle
         public BaseCard? BaseCard { get; set; }
         public int? MaxPower { get; set; }
         public List<Player> Controllers { get; set; } = [];
+        public List<Tag> Tags { get; set; } = []; 
         public List<PlayableCard> CardsToExclude { get; set; } = [];
     }
     public record SelectFieldCardResult(PlayableCard? SelectedCard, BaseCard? SelectedCardBase, ResultType Type);
@@ -676,6 +727,7 @@ internal class Battle
         if (query.CardType != null) cardPred.And((PlayableCard card) => card.CardType == query.CardType);
         if (query.Faction != null) cardPred.And((PlayableCard card) => card.Faction == query.Faction);
         if (query.MaxPower != null) cardPred.And((PlayableCard card) => card.CurrentPower <= query.MaxPower);
+        if (query.Tags.Count > 0) cardPred.And((PlayableCard card) => query.Tags.Any(tag => card.Tags.Contains(tag)));
         if (query.Controllers.Count > 0) cardPred.And((PlayableCard card) => query.Controllers.Contains(card.Controller));
         return cardPred;
     }
@@ -805,5 +857,10 @@ internal class Battle
     public List<Faction> GetFactions()
     {
         return Repository.GetFactions().OrderBy(x => !factionsRepresented.Contains(x)).ToList();
+    }
+
+    public int GetTurnPlays(Player player)
+    {
+        return plays.GetPlayerPlays(player);
     }
 }
