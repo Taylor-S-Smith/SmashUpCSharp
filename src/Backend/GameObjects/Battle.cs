@@ -184,7 +184,6 @@ internal class Battle
                 Result result = ValidatePlay(cardToPlay);
                 if (result.IsSuccess)
                 {
-                    plays.AddPlay(cardToPlay.Controller);
                     _table.ActivePlayer.Player.RemoveFromHand(cardToPlay);
                     PlayCard(cardToPlay);
                 }
@@ -398,6 +397,7 @@ internal class Battle
     }
     private void ResolveCardPlay(PlayableCard cardToPlay)
     {
+        plays.AddPlay(cardToPlay.Controller);
         if (cardToPlay.PlayLocation == PlayLocation.Base)
         {
             PlayCardToBase(cardToPlay);

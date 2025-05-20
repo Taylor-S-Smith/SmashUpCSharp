@@ -93,7 +93,6 @@ internal class ConsoleAppBattleUI() : IFrontendBattleAPI
                 //Switch to "Display Single Card Info" mode
                 var cardToDisplay = selectableFieldCards.SelectMany(x => x).Where(x => x.Id == chosenId).Single();
                 new BattlePage(_table.GetBaseSlots(), _table.ActivePlayer.Player, [cardToDisplay], _buttons, new Targeter([])).Run();
-                page.Run();
             }
         }
     }
