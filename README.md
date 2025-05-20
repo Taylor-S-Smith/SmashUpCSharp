@@ -10,9 +10,7 @@ You can run the code by either cloning the repo using a free IDE such as [Visual
 
 # Features
 
-The classic Smash-Up experience is functionaly complete!
-
-It features the following factions:
+The classic Smash-Up experience is functionaly complete! It has the following factions:
 - Dinosaurs
 - Pirates
 - Robots
