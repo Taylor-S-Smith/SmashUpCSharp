@@ -8,6 +8,8 @@ using System.Reflection.Metadata.Ecma335;
 using System.Drawing.Text;
 using SmashUp.Backend.Services;
 using System.Drawing.Printing;
+using System.Numerics;
+using static SmashUp.Backend.Models.ScoreResult;
 
 namespace SmashUp.Backend.Repositories;
 
@@ -1331,11 +1333,11 @@ internal static class Database
 
         theGreyOpal.AfterBaseScores += (battle, slot, scoreResult) =>
         {
-            var winners = scoreResult.First;
+            var winnerScores = scoreResult.First;
             var playersWithMinionHereNotWinner = battle.GetPlayers()
                                                        .Where(player => slot.Cards.Any(card => card.Controller == player &&
                                                                                        card.CardType == PlayableCardType.Minion &&
-                                                                                       !winners.Contains(card.Controller)));
+                                                                                       !winnerScores.Select(score => score.Player).Contains(card.Controller)));
             foreach (var player in playersWithMinionHereNotWinner)
             {
                 bool moveMinion = battle.SelectBool([], $"{player.Name}, would you like to move one of your minions from {theGreyOpal.Name}?");
@@ -1385,8 +1387,9 @@ internal static class Database
         {
             var runnersUp = scoreResults.Second;
 
-            foreach (var player in runnersUp)
+            foreach (var playerScore in runnersUp)
             {
+                Player player = playerScore.Player;
                 bool moveMinion = battle.SelectBool([], $"{player.Name}, would you like to move one of your minions to {slot.BaseCard.Name}?");
                 if (moveMinion)
                 {
@@ -1928,6 +1931,41 @@ internal static class Database
 
         return techCenter;
     }
+    
+    public static BaseCard Factory436_1337()
+    {
+        BaseCard factory436_1337 = new
+        (
+            Pirates,
+            "Factory 436-1337",
+            [
+
+
+                "       2      2      1      ",
+                "                            ",
+                "                            ",
+                " When this base scores, the ",
+                "winner gains 1 VP for every ",
+                "5 power that player has here",
+
+            ],
+            22,
+            [2, 2, 1]
+        );
+
+        factory436_1337.WhenBaseScores += (battle, scoreResults) =>
+        {
+            List<PlayerScore> winnerScores = scoreResults.First;
+
+            foreach(PlayerScore score in winnerScores)
+            {
+                score.Player.GainVP(score.TotalPower / 5);
+            }
+                
+        };
+
+        return factory436_1337;
+    }
 
 
     // WIZARDS
@@ -2438,12 +2476,12 @@ internal static class Database
         {
             var winners = scoreResult.First;
             List<BaseCard> bases = battle.DrawBases(3);
-            BaseCard chosenBase = battle.Select(bases, $"{string.Join(" and ", winners.Select(x => x.Name))}, choose a base to replace School of Wizardry");
+            BaseCard chosenBase = battle.Select(bases, $"{string.Join(" and ", winners.Select(x => x.Player.Name))}, choose a base to replace School of Wizardry");
             bases.Remove(chosenBase);
             if (bases.Count > 1)
             {
                 // This wil reorder them according to selection
-                bases = battle.SelectMultiple(bases, $"{string.Join(" and ", winners.Select(x => x.Name))}, choose bases in the order they should put back on the deck (e.i. the last one chosen will be the next one drawn).", bases.Count);
+                bases = battle.SelectMultiple(bases, $"{string.Join(" and ", winners.Select(x => x.Player.Name))}, choose bases in the order they should put back on the deck (e.i. the last one chosen will be the next one drawn).", bases.Count);
             }
             battle.PutBasesToTop(bases);
 
@@ -2556,7 +2594,7 @@ internal static class Database
     public static readonly Dictionary<Faction, List<Func<PlayableCard>>> PlayableCardsByFactionDict = new()
     {
         //{ Dinosaurs, [MicrobotAlpha, MicrobotArchive, MicrobotFixer, SaucyWench, MicrobotAlpha, MicrobotArchive, MicrobotFixer, SaucyWench, MicrobotAlpha, MicrobotArchive, MicrobotFixer, SaucyWench] },
-        { Dinosaurs, [TechCenter, TechCenter, TechCenter, TechCenter, TechCenter, Zapbot, Zapbot, Zapbot, Zapbot, Zapbot, Zapbot, Zapbot, Zapbot] }
+        { Robots, [WarRaptor, WarRaptor, WarRaptor, WarRaptor, Zapbot, Zapbot, Zapbot, Zapbot, Zapbot, Zapbot, Zapbot, Zapbot] }
     };
 
     //REAL
@@ -2564,7 +2602,7 @@ internal static class Database
     {
         { Dinosaurs, [WarRaptor, WarRaptor, WarRaptor, WarRaptor, ArmoredStego, ArmoredStego, ArmoredStego, Laseratops, Laseratops, KingRex, Augmentation, Augmentation, Howl, Howl, NaturalSelection, Rampage, SurvivalOfTheFittest, ToothClawAndGuns, Upgrade, WildlifePreserve] },
         { Pirates, [FirstMate, FirstMate, FirstMate, FirstMate, SaucyWench, SaucyWench, SaucyWench, Buccaneer, Buccaneer, PirateKing, Broadside, Broadside, Cannon, Dinghy, Dinghy, FullSail, Powderkeg, SeaDogs, Shanghai, Swashbuckling] },
-        { Robots, [Zapbot, Zapbot, Zapbot, Zapbot, Hoverbot, Hoverbot, Hoverbot, Warbot, Warbot, Nukebot, MicrobotAlpha, MicrobotArchive, MicrobotFixer, MicrobotFixer, MicrobotGuard, MicrobotGuard, MicrobotReclaimer, MicrobotReclaimer] },
+        { Robots, [Zapbot, Zapbot, Zapbot, Zapbot, Hoverbot, Hoverbot, Hoverbot, Warbot, Warbot, Nukebot, MicrobotAlpha, MicrobotArchive, MicrobotFixer, MicrobotFixer, MicrobotGuard, MicrobotGuard, MicrobotReclaimer, MicrobotReclaimer, TechCenter, TechCenter] },
         { Wizards, [Neophyte, Neophyte, Neophyte, Neophyte, Enchantress, Enchantress, Enchantress, Chronomage, Chronomage, Archmage, MassEnchantment, MysticStudies, MysticStudies, Portal, Sacrifice, Scry, Summon, Summon, TimeLoop, WindsOfChange] },
     };
 
@@ -2572,6 +2610,7 @@ internal static class Database
     {
         { Dinosaurs, [JungleOasis, TarPits] },
         { Pirates, [TheGreyOpal, Tortuga] },
+        { Robots, [Factory436_1337] },
         { Wizards, [SchoolOfWizardry, TheGreatLibrary] }
     };
 }

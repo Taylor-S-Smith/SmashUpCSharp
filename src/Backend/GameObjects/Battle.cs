@@ -7,6 +7,7 @@ using FluentResults;
 using LinqKit;
 using System.Linq;
 using System.Numerics;
+using static SmashUp.Backend.Models.ScoreResult;
 
 namespace SmashUp.Backend.GameObjects;
 
@@ -236,7 +237,7 @@ internal class Battle
             // Step 4: Award VPs and play/invoke "when scoring" abilities
 
             // Order players by position
-            Dictionary<int, List<Player>> scoreDict = [];
+            Dictionary<int, List<Player>> playersByScore = [];
             foreach (Player player in _table.Players)
             {
                 // Must have at least one minion on the base, or at least 1 total power on the base to receive VP
@@ -244,21 +245,19 @@ internal class Battle
                 int totalPower = playersCards.Sum(x => x.CurrentPower) ?? 0;
                 if (playersCards.Any(card => card.CardType == PlayableCardType.Minion) || totalPower > 0)
                 {
-                    scoreDict.TryGetValue(totalPower, out List<Player>? players);
-
-                    if (players != null) players.Add(player);
-                    else scoreDict.Add(totalPower, [player]);
+                    if (playersByScore.TryGetValue(totalPower, out List<Player>? players)) players.Add(player);
+                    else playersByScore.Add(totalPower, [player]);
                 }
             }
 
             // Award points
             int baseAwardIndex = 0;
             int playerPostitionIndex = 0;
-            List<int> powerVals = scoreDict.Keys.OrderDescending().ToList();
+            List<int> powerVals = playersByScore.Keys.OrderDescending().ToList();
 
             while (baseAwardIndex < slotToScore.BaseCard.PointSpread.Length && baseAwardIndex < powerVals.Count)
             {
-                List<Player> players = scoreDict[powerVals[playerPostitionIndex]];
+                List<Player> players = playersByScore[powerVals[playerPostitionIndex]];
                 playerPostitionIndex++;
                 foreach (Player player in players)
                 {
@@ -268,7 +267,11 @@ internal class Battle
                 baseAwardIndex += players.Count;
             }
 
-            ScoreResult scoreResult = new(scoreDict[powerVals[0]], powerVals.Count > 1 ? scoreDict[powerVals[1]] : [], powerVals.Count > 2 ? scoreDict[powerVals[2]] : []);
+            ScoreResult scoreResult = new(playersByScore);
+
+            // When Base scores
+            slotToScore.BaseCard.WhenBaseScores(this, scoreResult);
+
 
             // Step 5: Award treasures
             // Step 6: Play/invoke "after scoring" abilities

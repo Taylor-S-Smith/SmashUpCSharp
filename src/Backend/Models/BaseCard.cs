@@ -2,7 +2,41 @@
 
 namespace SmashUp.Backend.Models;
 
-internal record ScoreResult(List<Player> First, List<Player> Second, List<Player> Third);
+internal class ScoreResult
+{
+    public record PlayerScore(Player Player, int TotalPower);
+
+    public List<PlayerScore> First;
+    public List<PlayerScore> Second;
+    public List<PlayerScore> Third;
+    public List<PlayerScore> Others;
+
+    public ScoreResult(Dictionary<int, List<Player>> playersByScore)
+    {
+        var orderedScores = playersByScore.OrderByDescending(x => x.Key).ToList();
+
+        First = [];
+        Second = [];
+        Third = [];
+        Others = [];
+
+        for (int i = 0; i < orderedScores.Count; i++)
+        {
+            var (score, players) = (orderedScores[i].Key, orderedScores[i].Value);
+            var converted = players.Select(p => new PlayerScore(p, score));
+
+            if (i == 0)
+                First = converted.ToList();
+            else if (i == 1)
+                Second = converted.ToList();
+            else if (i == 2)
+                Third = converted.ToList();
+            else
+                Others.AddRange(converted);
+        }
+    }
+}
+
 
 internal class BaseCard : Card
 {
@@ -26,6 +60,7 @@ internal class BaseCard : Card
     public Action<PlayableCard> RemoveCard;
     public Action<PlayableCard> AfterMinionDestroyed = delegate { };
     public Action<Battle, BaseSlot> BeforeBaseScores = delegate { };
+    public Action<Battle, ScoreResult> WhenBaseScores = delegate { };
 
     /// <summary>
     /// Return the base that will replace that one that scored, or NULL to draw a new one normally
