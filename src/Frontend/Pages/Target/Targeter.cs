@@ -31,7 +31,7 @@ internal class Targeter
                 }
             }
 
-            _logicInControl = startingLogic ?? targetLogics[0];
+            _logicInControl = startingLogic ?? targetLogics[^1];
         }
     }
 
