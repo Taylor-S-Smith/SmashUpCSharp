@@ -1,9 +1,5 @@
 Should decreasing power from ongoing effect be considerd affecting oneself? Or just increasing?
 
-alpha and archive should conflict (but we should change it so they don't)
-If alpha played first, no card drawn
-If archive played first, drawn
-
 
 Keep in mind:
 - Madness interacts strangely with mass enchant

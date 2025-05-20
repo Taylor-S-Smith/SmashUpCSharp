@@ -14,7 +14,7 @@ internal class ConsoleAppBattleUI() : IFrontendBattleAPI
     private static readonly Option _deckButton = new("DECK");
     private static readonly Option _opponentButton = new("OPPONENT");
     private static readonly Option _abilitiesButton = new("ABILITIES");
-    private static readonly List<Option> _buttons = [_discardPileButton, _endTurnButton, _deckButton];
+    private static readonly List<Option> _buttons = [_endTurnButton, _discardPileButton, _deckButton];
     private static readonly List<Guid> _buttonIds = _buttons.Select(x => x.Id).ToList();
 
     public virtual List<(string, List<Faction>)> ChooseFactions(List<string> playerNames, List<Faction> factionOptions)
@@ -54,8 +54,13 @@ internal class ConsoleAppBattleUI() : IFrontendBattleAPI
             var PlayFieldTargeter = new Select2DOption(selectableFieldCards.Select(x => x.Select(y => y.Id).ToList()).ToList());
             targetLogics.Add(PlayFieldTargeter);
         }
-        var handTargeter = new SelectOption(handCards.Select(x => x.Id).ToList());
-        targetLogics.Add(handTargeter);
+
+        SelectOption? handTargeter = null;
+        if(handCards.Count > 0)
+        {
+            handTargeter = new SelectOption(handCards.Select(x => x.Id).ToList());
+            targetLogics.Add(handTargeter);
+        }
         var endButtonTargeter = new SelectOption(_buttonIds);
         targetLogics.Add(endButtonTargeter);
 
@@ -115,12 +120,12 @@ internal class ConsoleAppBattleUI() : IFrontendBattleAPI
         return new BattlePage(_table.GetBaseSlots(), _table.ActivePlayer.Player, displayables, _buttons, new Targeter([new SelectOption(validBaseIds)]), displayText).Run();
     }
 
-    public List<Guid> Select(List<Displayable> display, List<Displayable> validOptions, string displayText, int? numToReturn)
+    public List<Guid> Select(List<Displayable> optionsToDisplay, List<Displayable> validOptions, string displayText, int? numToReturn)
     {
         List<Guid> selectedOptions = [];
         Option done = new("I AM DONE");
         List<Option> buttons = [];
-        SelectOption optionsTargeter = new(display.Select(x => x.Id).ToList());
+        SelectOption optionsTargeter = new(optionsToDisplay.Select(x => x.Id).ToList());
         List<TargetLogic> targetLogics = [optionsTargeter];
 
         if (numToReturn == null) // User can click on any number of valid targets, they break the loop on button
@@ -130,9 +135,9 @@ internal class ConsoleAppBattleUI() : IFrontendBattleAPI
             targetLogics.Add(endButtonTargeter);
         }
 
-        var page = new BattlePage(_table.GetBaseSlots(), _table.ActivePlayer.Player, display, buttons, new Targeter(targetLogics), displayText);
+        var page = new BattlePage(_table.GetBaseSlots(), _table.ActivePlayer.Player, optionsToDisplay, buttons, new Targeter(targetLogics), displayText);
 
-        while (display.Count > 0 && (numToReturn == null || selectedOptions.Count < numToReturn))
+        while (optionsToDisplay.Count > 0 && (numToReturn == null || selectedOptions.Count < numToReturn))
         {
             Guid chosenOptionId = page.Run();
             if (chosenOptionId == done.Id) break;
@@ -141,7 +146,7 @@ internal class ConsoleAppBattleUI() : IFrontendBattleAPI
                 selectedOptions.Add(chosenOptionId);
 
                 // Remove from list so graphic doesn't appear
-                display.Remove(display.Where(x => x.Id == chosenOptionId).Single());
+                optionsToDisplay.Remove(optionsToDisplay.Where(x => x.Id == chosenOptionId).Single());
                 // Remove from targeter so the targetIndex doesn't overflow
                 optionsTargeter.RemoveOption(chosenOptionId);
             }
