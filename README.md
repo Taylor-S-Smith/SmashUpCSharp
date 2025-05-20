@@ -1,6 +1,6 @@
 # SmashUp C#
 
-Smash-Up is a shuffle-building card game for 2-4 players. Here it is recreated from scratch as a console app using C#.
+Smash-Up is a shuffle-building card game for 2-4 players. Here it is recreated from scratch as a C# console app.
 
 # How to Play
 
