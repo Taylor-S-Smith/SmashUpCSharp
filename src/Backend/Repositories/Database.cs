@@ -2622,7 +2622,7 @@ internal static class Database
     public static readonly Dictionary<Faction, List<Func<PlayableCard>>> PlayableCardsByFactionDict = new()
     {
         //{ Dinosaurs, [MicrobotAlpha, MicrobotArchive, MicrobotFixer, SaucyWench, MicrobotAlpha, MicrobotArchive, MicrobotFixer, SaucyWench, MicrobotAlpha, MicrobotArchive, MicrobotFixer, SaucyWench] },
-        { Robots, [Hoverbot, MicrobotFixer, MicrobotFixer, MicrobotFixer, MicrobotFixer, MicrobotFixer, MicrobotFixer] },
+        { Robots, [Zapbot] },
     };
 
     //REAL

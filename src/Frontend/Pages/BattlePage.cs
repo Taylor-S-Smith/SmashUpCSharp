@@ -41,6 +41,7 @@ namespace SmashUp.Frontend.Pages
 
         // STATIC VARIABLES
         readonly int CARD_FIELD_SIZE = 15;
+        readonly int INPUT_FIELD_HEIGHT = 13;
 
         protected override StringBuilder GenerateRender(int consoleWidth, int consoleHeight)
         {
@@ -248,15 +249,28 @@ namespace SmashUp.Frontend.Pages
             }
 
             int cardHeight = CardGraphicsToDisplay.Length > 0 ? CardGraphicsToDisplay.Max(graphic => graphic.Length) : 0;
-            string[] inputField = new string[cardHeight + 2];
+            //string[] inputField = new string[cardHeight + 2];
+            string[] inputField = new string[INPUT_FIELD_HEIGHT];
 
             //Display Text Field
             inputField[0] = _displayText;
             inputField[1] = "";
 
-            for (int i = 0; i < cardHeight; i++)
+            int cardFieldHeight = INPUT_FIELD_HEIGHT - 2;
+            int upperPadding = (cardFieldHeight - cardHeight) / 2;
+            int lowerPadding = (cardFieldHeight - cardHeight) / 2;
+            // Account for odd number heights
+            if (upperPadding + lowerPadding + cardHeight != cardFieldHeight) lowerPadding++;
+
+            for (int i = 0; i < cardFieldHeight; i++)
             {
                 StringBuilder lineBuilder = new();
+
+                if(i < upperPadding || cardFieldHeight - i <= lowerPadding)
+                {
+                    inputField[i + 2] = "";
+                    continue;
+                }
 
                 for (int j = 0; j < CardGraphicsToDisplay.Length; j++)
                 {
