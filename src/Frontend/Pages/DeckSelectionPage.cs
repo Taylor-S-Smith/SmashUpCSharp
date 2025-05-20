@@ -44,7 +44,7 @@ namespace SmashUp.Frontend.Pages
                     _selectedFactions.Add(_factionOptions[_selectedOption]);
                     if (_factionIndex == NUM_FACTIONS)
                     {
-                        _allSelections.Add((_playerNames[_playerIndex], _selectedFactions));
+                        _allSelections.Add((_playerNames[_playerIndex], _selectedFactions.ToList()));
                         _playerIndex++;
                         if (_playerIndex == _playerNames.Count)
                         {
@@ -55,9 +55,6 @@ namespace SmashUp.Frontend.Pages
                     }
                     _factionIndex++;
                     _needToRender = true;
-                    break;
-                case UserKeyPress.Escape:
-                    Console.WriteLine("Escaping game...");
                     break;
             }
 

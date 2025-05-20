@@ -14,7 +14,7 @@ internal class ConsoleAppBattleUI() : IFrontendBattleAPI
     private static readonly Option _deckButton = new("DECK");
     private static readonly Option _opponentButton = new("OPPONENT");
     private static readonly Option _abilitiesButton = new("ABILITIES");
-    private static readonly List<Option> _buttons = [_endTurnButton, _discardPileButton, _deckButton];
+    private static readonly List<Option> _buttons = [_endTurnButton, _discardPileButton];
     private static readonly List<Guid> _buttonIds = _buttons.Select(x => x.Id).ToList();
 
     public virtual List<(string, List<Faction>)> ChooseFactions(List<string> playerNames, List<Faction> factionOptions)

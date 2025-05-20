@@ -35,9 +35,6 @@ internal class PlayerNumPage : ValuePage<int>
                 break;
             case UserKeyPress.Confirm:
                 return SelectedOption + 2;
-            case UserKeyPress.Escape:
-                Console.WriteLine("Escaping game...");
-                break;
         }
 
         return null;

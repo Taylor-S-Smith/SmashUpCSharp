@@ -40,38 +40,41 @@ namespace SmashUp.Frontend.Pages
         private readonly string _displayText = displayText;
 
         // STATIC VARIABLES
-        readonly int CARD_FIELD_SIZE = 15;
         readonly int INPUT_FIELD_HEIGHT = 13;
 
         protected override StringBuilder GenerateRender(int consoleWidth, int consoleHeight)
         {
+            int displayVerticalPaddingLength = (int)(consoleHeight * .04);
+            int displayWidth = (int)(consoleWidth - (consoleWidth * .12) - 1);
+            int displayHeight = consoleHeight - displayVerticalPaddingLength - 1;
             int baseFieldPadding = 1;
             int statFieldPadding = 1;
             int otherRenderGraphicsLength = 1;
 
             //Initalize vars and generate fields
             StringBuilder? renderBuffer = null;
-            var baseField = GenerateBaseField(consoleWidth - 1);
-            var consoleField = GenerateInputField(consoleWidth - 1);
+            var consoleField = GenerateInputField(displayWidth);
             var statField = GenerateStatField();
+            var buttonField = GenerateButtonField(displayWidth);
 
+            int renderHeightWithoutBaseField = displayVerticalPaddingLength +
+                                               baseFieldPadding +
+                                               statField.Length +
+                                               statFieldPadding +
+                                               consoleField.Length +
+                                               buttonField.Length +
+                                               otherRenderGraphicsLength;
 
-            //Ensure the current console size will fit the header
+            var baseField = GenerateBaseField(displayWidth, displayHeight - 1 - renderHeightWithoutBaseField);
+
+            int renderHeight = baseField.Length +
+                               renderHeightWithoutBaseField;
+
             int renderWidth = new[] {
                 baseField.Length > 0 ? baseField.Max(line => line.Length) : 0,
                 statField.Max(line => line.Length),
                 consoleField.Length > 0 ? consoleField.Max(line => line.Length) : 0
             }.Max();
-
-            var buttonField = GenerateButtonField(renderWidth);
-
-            int renderHeight = baseField.Length +
-                               baseFieldPadding +
-                               statField.Length +
-                               statFieldPadding +
-                               consoleField.Length +
-                               buttonField.Length +
-                               otherRenderGraphicsLength;
 
             //Make sure the whole render can fit in the console
             if (consoleHeight - 1 >= renderHeight && consoleWidth - 1 >= renderWidth)
@@ -79,6 +82,12 @@ namespace SmashUp.Frontend.Pages
                 //Generate final combined render
                 string[] render = new string[renderHeight];
                 int i = 0;
+
+                for(int j= 0; j < displayVerticalPaddingLength; j++)
+                {
+                    render[i++] = "";
+                }
+
                 foreach (string line in baseField)
                 {
                     render[i++] = line;
@@ -87,7 +96,7 @@ namespace SmashUp.Frontend.Pages
 
                 //Separation Graphic
                 StringBuilder lineBuilder = new();
-                lineBuilder.Append('─', renderWidth);
+                lineBuilder.Append('─', displayWidth);
                 render[i++] = lineBuilder.ToString();
 
                 foreach (string line in statField)
@@ -122,7 +131,7 @@ namespace SmashUp.Frontend.Pages
         /// <summary>
         /// Generates the base graphics
         /// </summary>
-        private string[] GenerateBaseField(int fieldWidth)
+        private string[] GenerateBaseField(int fieldWidth, int availableHeight)
         {
             List<BaseCard> activeBases = _baseSlots.Select(x => x.BaseCard).ToList();
 
@@ -141,12 +150,14 @@ namespace SmashUp.Frontend.Pages
             // Calculate array size
             int baseGraphicHeight = activeBasesGraphics.Length > 0 ? activeBasesGraphics.Max(baseGraphic => baseGraphic.Length) : 0;
             int paddingHeight = 1;
-            int numCardFieldLines = Math.Max(attachedCardGraphics.Length > 0 ? attachedCardGraphics.Max(x => x.Length) : 0, CARD_FIELD_SIZE);
-            var baseField = new string[baseGraphicHeight + paddingHeight + numCardFieldLines];
+            int numCardFieldLines = availableHeight - baseGraphicHeight - paddingHeight;
+            int baseFieldHeight = baseGraphicHeight + paddingHeight;
+            if (numCardFieldLines > 0) baseFieldHeight += numCardFieldLines;
+            var baseField = new string[baseFieldHeight];
 
             // Calculate padding
             int baseGraphicWidth = activeBasesGraphics.Length > 0 ? activeBasesGraphics.Max(baseGraphic => baseGraphic.Max(line => line.Length)) : 0;
-            int horizontalPaddingLength = (fieldWidth - (baseGraphicWidth * activeBases.Count)) / (activeBases.Count + 1);
+            int horizontalPaddingLength = Math.Max(0, (fieldWidth - (baseGraphicWidth * activeBases.Count)) / (activeBases.Count + 1));
 
             // Generate combined graphics
             for (int i = 0; i < baseField.Length; i++)
@@ -155,10 +166,11 @@ namespace SmashUp.Frontend.Pages
 
                 for (int j = 0; j < activeBases.Count; j++)
                 {
+                    //Adding this line will make the bases centered, rather than left justified
+                    if(j == 0) lineBuilder.Append(' ', horizontalPaddingLength);
+
                     if (i < activeBasesGraphics[j].Length)
-                    {
-                        //Adding this line will make the bases centered, rather than left justified
-                        //if(j == 0) lineBuilder.Append(' ', horizontalPaddingLength);
+                    {                      
 
                         lineBuilder.Append(activeBasesGraphics[j][i]);
 

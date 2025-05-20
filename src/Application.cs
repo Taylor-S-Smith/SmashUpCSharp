@@ -14,25 +14,36 @@ internal class Application()
         KeyMapUtil.SetDefaultKeyMappings();
 
         //Run Start Page
-        var result = new StartPage().Run();
+        var startPage = new StartPage();
+        while(true)
+        {
+            var result = startPage.Run();
 
-        if(result == StartPageResult.Exit)
-        {
-            return;
-        }
-        else if (result == StartPageResult.StartGame)
-        {
-            Battle battle = new(new ConsoleApp2PlayerTestUI(), new GlobalEventManager(), new Random());
-            battle.StartBattle();
-        }
-        else if (result == StartPageResult.ShowCollection)
-        {
-            Console.WriteLine("Showing Collection...");
-        }
-        else if (result == StartPageResult.Options)
-        {
-            Console.WriteLine("Showing Options...");
-        }
+            if (result == StartPageResult.Exit)
+            {
+                return;
+            }
+            else if (result == StartPageResult.StartGame)
+            {
+                Battle battle = new(new ConsoleAppBattleUI(), new GlobalEventManager(), new Random());
+                battle.StartBattle();
+            }
+            else if (result == StartPageResult.RogueLike)
+            {
+                Console.WriteLine("Coming Soon!");
+                Console.ReadLine();
+            }
+            else if (result == StartPageResult.ShowCollection)
+            {
+                Console.WriteLine("Coming Soon!");
+                Console.ReadLine();
+            }
+            else if (result == StartPageResult.Options)
+            {
+                Console.WriteLine("Coming Soon!");
+                Console.ReadLine();
+            }
+        }      
 
     }
 }

@@ -19,7 +19,8 @@ internal class StartPage : ValuePage<StartPageResult>
     private int SelectedOption = 0;
     private readonly string[] Options =
     [
-        "Start",
+        "Classic Mode",
+        "Rogue",
         "Show Collection",
         "Options",
         "Exit"
@@ -43,19 +44,15 @@ internal class StartPage : ValuePage<StartPageResult>
                 _needToRender = true;
                 break;
             case UserKeyPress.Confirm:
-                switch (SelectedOption)
+                return SelectedOption switch
                 {
-                    case 0:
-                        return StartPageResult.StartGame;
-                    case 1:
-                        return StartPageResult.ShowCollection;
-                    case 2:
-                        return StartPageResult.Options;
-                    case 3:
-                        return StartPageResult.Exit;
-                    default:
-                        throw new NotImplementedException();
-                }
+                    0 => (StartPageResult?)StartPageResult.StartGame,
+                    1 => (StartPageResult?)StartPageResult.RogueLike,
+                    2 => (StartPageResult?)StartPageResult.ShowCollection,
+                    3 => (StartPageResult?)StartPageResult.Options,
+                    4 => (StartPageResult?)StartPageResult.Exit,
+                    _ => throw new NotImplementedException(),
+                };
             case UserKeyPress.Escape:
                 return StartPageResult.Exit;
         }
@@ -67,6 +64,7 @@ internal class StartPage : ValuePage<StartPageResult>
 internal enum StartPageResult
 {
     StartGame,
+    RogueLike,
     ShowCollection,
     Options,
     Exit

@@ -137,7 +137,7 @@ internal static class Database
         ]
     );
 
-    public static List<Faction> Factions = [Aliens, Dinosaurs, Pirates, Ninjas, Robots, Tricksters, Wizards, Zombies];
+    public static List<Faction> Factions = [Dinosaurs, Pirates, Robots, Wizards];
 
 
     // DINOSAURS
@@ -2619,14 +2619,14 @@ internal static class Database
     }
 
     //TEST
-    public static readonly Dictionary<Faction, List<Func<PlayableCard>>> PlayableCardsByFactionDict = new()
+    public static readonly Dictionary<Faction, List<Func<PlayableCard>>> _PlayableCardsByFactionDict = new()
     {
         //{ Dinosaurs, [MicrobotAlpha, MicrobotArchive, MicrobotFixer, SaucyWench, MicrobotAlpha, MicrobotArchive, MicrobotFixer, SaucyWench, MicrobotAlpha, MicrobotArchive, MicrobotFixer, SaucyWench] },
-        { Robots, [Zapbot] },
+        { Robots, [Zapbot, Zapbot, Zapbot, Zapbot, Zapbot, Zapbot, Zapbot, Zapbot, Zapbot, Zapbot] },
     };
 
     //REAL
-    public static readonly Dictionary<Faction, List<Func<PlayableCard>>> _PlayableCardsByFactionDict = new()
+    public static readonly Dictionary<Faction, List<Func<PlayableCard>>> PlayableCardsByFactionDict = new()
     {
         { Dinosaurs, [WarRaptor, WarRaptor, WarRaptor, WarRaptor, ArmoredStego, ArmoredStego, ArmoredStego, Laseratops, Laseratops, KingRex, Augmentation, Augmentation, Howl, Howl, NaturalSelection, Rampage, SurvivalOfTheFittest, ToothClawAndGuns, Upgrade, WildlifePreserve] },
         { Pirates, [FirstMate, FirstMate, FirstMate, FirstMate, SaucyWench, SaucyWench, SaucyWench, Buccaneer, Buccaneer, PirateKing, Broadside, Broadside, Cannon, Dinghy, Dinghy, FullSail, Powderkeg, SeaDogs, Shanghai, Swashbuckling] },

@@ -5,9 +5,6 @@ using SmashUp.Backend.Models;
 using SmashUp.Backend.API;
 using FluentResults;
 using LinqKit;
-using System.Linq;
-using System.Numerics;
-using static SmashUp.Backend.Models.ScoreResult;
 
 namespace SmashUp.Backend.GameObjects;
 
@@ -89,10 +86,10 @@ internal class Battle
         factionsRepresented = factionChoices.SelectMany(choice => choice.Factions).ToList();
 
         //Build Players and Decks
-        foreach (var choice in factionChoices)
+        foreach (var (PlayerName, Factions) in factionChoices)
         {
-            string playerName = choice.PlayerName;
-            List<Faction> factions = choice.Factions;
+            string playerName = PlayerName;
+            List<Faction> factions = Factions;
             List<PlayableCard> cards = Repository.GetPlayableCards(factions);
 
             var player = new Player(playerName, cards);
@@ -312,6 +309,7 @@ internal class Battle
             var activePlayer = _table.Players[playerIndex];
 
             List<PlayableCard> specialCards = activePlayer.Hand.Where(x => x.Tags.Contains(specialPhase)).ToList();
+            if (specialCards.Count == 0) return;
             Guid? specialId = _userInput.SelectCardOrInvokable(specialCards, [], $"{activePlayer.Name}, play special cards, or pass");
 
             if (specialId != null)
