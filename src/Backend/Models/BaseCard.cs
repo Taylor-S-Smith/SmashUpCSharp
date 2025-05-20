@@ -52,7 +52,7 @@ internal class BaseCard : Card
     /// After a card is played here. By default CurrentPower is updated and 
     /// we subscribe to the card's OnPowerChange event (See Constructor)
     /// </summary>
-    public Action<PlayableCard> OnAddCard;
+    public Action<Battle, PlayableCard> OnAddCard;
     /// <summary>
     /// After a card is removed here. By default CurrentPower is updated and 
     /// we unsubscribe to the card's OnPowerChange event (See Constructor)
@@ -69,7 +69,7 @@ internal class BaseCard : Card
 
     public Action<Battle, BaseSlot, ScoreResult> OnReplaced = delegate { };
 
-    public BaseCard(Faction faction, string name, string[] graphic, int breakpoint, int[] pointSpread) : base(faction, name, graphic)
+    public BaseCard(Faction faction, string name, string[] graphic, int breakpoint, int[] pointSpread) : base(faction, CardType.Base, name, graphic)
     {
         PrintedBreakpoint = breakpoint;
         CurrentBreakpoint = breakpoint;
@@ -80,7 +80,7 @@ internal class BaseCard : Card
             CurrentPower += amountChanged;
         }
 
-        OnAddCard = (PlayableCard card) =>
+        OnAddCard = (battle, card) =>
         {
             if (card.CurrentPower != null)
             {

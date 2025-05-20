@@ -123,7 +123,7 @@ internal class Battle
         player.DrawToHand(5);
 
         //Mulligan
-        if (!player.Hand.Any(x => x.CardType == PlayableCardType.Minion))
+        if (!player.Hand.Any(x => x.CardType == CardType.Minion))
         {
             Option yes = new("YES");
             Option no = new("NO");
@@ -243,7 +243,7 @@ internal class Battle
                 // Must have at least one minion on the base, or at least 1 total power on the base to receive VP
                 var playersCards = slotToScore.Cards.Where(card => card.Controller == player);
                 int totalPower = playersCards.Sum(x => x.CurrentPower) ?? 0;
-                if (playersCards.Any(card => card.CardType == PlayableCardType.Minion) || totalPower > 0)
+                if (playersCards.Any(card => card.CardType == CardType.Minion) || totalPower > 0)
                 {
                     if (playersByScore.TryGetValue(totalPower, out List<Player>? players)) players.Add(player);
                     else playersByScore.Add(totalPower, [player]);
@@ -413,11 +413,11 @@ internal class Battle
     }
     private static Result ValidatePlay(PlayableCard cardToPlay)
     {
-        if (cardToPlay.CardType == PlayableCardType.Minion)
+        if (cardToPlay.CardType == CardType.Minion)
         {
             return cardToPlay.Controller.HasMinionPlay(cardToPlay.CurrentPower ?? 0);
         }
-        else if (cardToPlay.CardType == PlayableCardType.Action)
+        else if (cardToPlay.CardType == CardType.Action)
         {
             if (cardToPlay.Controller.ActionPlays == 0) return Result.Fail("You don't have any more action plays");
         }
@@ -425,12 +425,12 @@ internal class Battle
     }
     private static void RemovePlayResource(Player player, PlayableCard cardToPlay)
     {
-        if (cardToPlay.CardType == PlayableCardType.Minion)
+        if (cardToPlay.CardType == CardType.Minion)
         {
             var result = player.UseMinionPlay(cardToPlay.CurrentPower ?? 0);
             if (!result) throw new Exception($"Attempted to remove minion play for power {cardToPlay.CurrentPower}, but no valid minion play exists");
         }
-        else if (cardToPlay.CardType == PlayableCardType.Action)
+        else if (cardToPlay.CardType == CardType.Action)
         {
             player.ActionPlays--;
         }
@@ -464,7 +464,7 @@ internal class Battle
 
         // Enter Base effects
         cardToPlay.EnterBase(this, slot);
-        slot.BaseCard.OnAddCard(cardToPlay);
+        slot.BaseCard.OnAddCard(this, cardToPlay);
         EventManager.TriggerCardEnteredBase(this, cardToPlay, slot);
     }
     private void PlayCardToDiscard(PlayableCard cardToPlay)
@@ -476,13 +476,13 @@ internal class Battle
     {
         SelectCardQuery query = new()
         {
-            CardType = PlayableCardType.Minion,
+            CardType = CardType.Minion,
         };
         PlayableCard? cardToAttachTo = SelectFieldCard(cardToPlay, $"Choose a minion to attach {cardToPlay.Name} to", query)?.SelectedCard;
 
         if (cardToAttachTo != null)
         {
-            if (AttemptToAffect(cardToAttachTo, EffectType.Attach, PlayableCardType.Action, cardToPlay.Controller))
+            if (AttemptToAffect(cardToAttachTo, EffectType.Attach, CardType.Action, cardToPlay.Controller))
             {
                 cardToAttachTo.Attach(cardToPlay);
                 cardToPlay.OnAttach(this, cardToAttachTo);
@@ -503,7 +503,7 @@ internal class Battle
             EventManager.TriggerBeforeDestroyCard(this, cardToDestroy);
             var baseSlot = DiscardFromField(cardToDestroy);
             cardToDestroy.OnDestroyed(this, baseSlot);
-            if(cardToDestroy.CardType == PlayableCardType.Minion) baseSlot.BaseCard.AfterMinionDestroyed(cardToDestroy);
+            if (cardToDestroy.CardType == CardType.Minion) baseSlot.BaseCard.AfterMinionDestroyed(cardToDestroy);
             EventManager.TriggerOnDestroyCard(this, cardToDestroy);
         }
     }
@@ -530,9 +530,9 @@ internal class Battle
             PerformMove(cardToMove, newBase);
         }
     }
-    public void Move(PlayableCard cardToMove, BaseCard newBase, Player affector)
+    public void Move(PlayableCard cardToMove, BaseCard newBase, BaseCard affector, Player? player = null)
     {
-        if (AttemptToAffect(cardToMove, EffectType.Move, null, affector))
+        if (AttemptToAffect(cardToMove, EffectType.Move, affector.CardType, player))
         {
             PerformMove(cardToMove, newBase);
         }
@@ -552,9 +552,9 @@ internal class Battle
     /// <param name="affectorCardType">Action or Minion. Leave null if a playable card is not
     ///                                causing the action to occur, e.g. Base or passive effect</param>
     /// <returns>True if card can be affected, otherwise false</returns>
-    public bool AttemptToAffect(PlayableCard cardToAffect, EffectType effect, PlayableCardType? affectorCardType, Player affectorPlayer)
+    public bool AttemptToAffect(PlayableCard cardToAffect, EffectType effect, CardType affectorCardType, Player? affectorPlayer)
     {
-        List<Protection> protections = cardToAffect.Protections.Where(x => x.From == effect && (x.CardType == null || x.CardType == affectorCardType) && (x.FromPlayers == null || x.FromPlayers.Contains(affectorPlayer))).ToList();
+        List<Protection> protections = cardToAffect.Protections.Where(x => x.From == effect && (x.CardType == null || x.CardType == affectorCardType) && (x.FromPlayers == null || (affectorPlayer != null && x.FromPlayers.Contains(affectorPlayer)))).ToList();
 
         if (protections.Count == 0) return true;
         else
@@ -697,7 +697,7 @@ internal class Battle
     // INTERACTING WITH UI
     public class SelectCardQuery
     {
-        public PlayableCardType? CardType { get; set; }
+        public CardType? CardType { get; set; }
         public Faction? Faction { get; set; }
         public BaseCard? BaseCard { get; set; }
         public int? MaxPower { get; set; }

@@ -3,11 +3,6 @@ using SmashUp.Backend.GameObjects;
 
 namespace SmashUp.Backend.Models;
 
-internal enum PlayableCardType
-{
-    Minion,
-    Action
-}
 internal enum PlayLocation
 {
     Base,
@@ -22,7 +17,6 @@ internal class PlayableCard : Card
 {
     public Player Owner { get; private set; } = null!;
     public Player Controller { get; private set; } = null!;
-    public PlayableCardType CardType { get; }
     public int? PrintedPower { get; set; }
     public int? CurrentPower { get; private set; }
     public PlayLocation PlayLocation { get; private set; }
@@ -55,12 +49,12 @@ internal class PlayableCard : Card
     /// <param name="from">The action the protection is for</param>
     /// <param name="cardType">The card type the protection is against. If null, it will protect against all card types</param>
     /// <param name="grantedBy">The card that grants this protection, important for triggering OnProtect effects</param>
-    public record Protection(EffectType from, PlayableCard grantedBy, List<Player>? fromPlayers=null, PlayableCardType? cardType=null)
+    public record Protection(EffectType from, PlayableCard grantedBy, List<Player>? fromPlayers=null, CardType? cardType=null)
     {
         public EffectType From { get; init; } = from;
         public PlayableCard GrantedBy { get; init; } = grantedBy;
         public List<Player>? FromPlayers { get; set; } = fromPlayers;
-        public PlayableCardType? CardType { get; init; } = cardType;
+        public CardType? CardType { get; init; } = cardType;
     }
     public List<Protection> Protections = [];
 
@@ -115,9 +109,8 @@ internal class PlayableCard : Card
     public Action<Battle, Player, Player> OnChangeController = delegate { };
 
 
-    public PlayableCard(Faction faction, PlayableCardType cardType, string name, string[] graphic, PlayLocation playLocation, int? power = null, List<Tag>? tags=null) : base(faction, name, graphic)
+    public PlayableCard(Faction faction, CardType cardType, string name, string[] graphic, PlayLocation playLocation, int? power = null, List<Tag>? tags=null) : base(faction, cardType, name, graphic)
     {
-        CardType = cardType;
         PrintedPower = power;
         CurrentPower = power;
         PlayLocation = playLocation;
@@ -154,6 +147,17 @@ internal class PlayableCard : Card
         }
         return false;
     }
+    public bool ApplyPowerChange(Battle battle, BaseCard affectingCard, int amountToChange)
+    {
+        if (battle.AttemptToAffect(this, EffectType.ApplyPower, affectingCard.CardType, null))
+        {
+            ChangeCurrentPower(amountToChange);
+            return true;
+        }
+        return false;
+    }
+
+
     /// <summary>
     /// Use when expiring an existing power change.
     /// NOT when power is directly applied
